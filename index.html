@@ -12,19 +12,255 @@
 
 <style>
 
-body{margin:0;background:#07111f;color:white;font-family:Arial}
+*{box-sizing:border-box}
 
-.box{max-width:420px;margin:70px auto;padding:25px}
+body{
 
-h1{color:#d8b45b;text-align:center}
+  margin:0;
 
-input,button{width:100%;box-sizing:border-box;padding:15px;margin:8px 0;border-radius:10px;border:0}
+  background:#07111f;
 
-input{background:#142235;color:white}
+  color:#fff;
 
-button{background:#d8b45b;color:#07111f;font-weight:bold;font-size:16px}
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif
 
-p{text-align:center;color:#9eabbc}
+}
+
+.app{max-width:520px;margin:auto;min-height:100vh}
+
+header{
+
+  padding:28px 20px 18px;
+
+  background:#0b1728;
+
+  border-bottom:1px solid #24324a
+
+}
+
+.logo{font-size:30px;font-weight:800;color:#d8b45b}
+
+.sub{color:#9eabbc;margin-top:5px}
+
+.user{margin-top:12px;font-size:14px;color:#dce3ec}
+
+main{padding:18px}
+
+.stats{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:12px
+
+}
+
+.card{
+
+  background:#142235;
+
+  border:1px solid #26364d;
+
+  border-radius:16px;
+
+  padding:16px
+
+}
+
+.card small{color:#9eabbc}
+
+.card strong{
+
+  display:block;
+
+  font-size:23px;
+
+  margin-top:7px;
+
+  color:#d8b45b
+
+}
+
+h2{font-size:20px;margin:24px 0 12px}
+
+.search{
+
+  width:100%;
+
+  padding:15px;
+
+  border:0;
+
+  border-radius:13px;
+
+  background:#142235;
+
+  color:white;
+
+  font-size:16px;
+
+  outline:none
+
+}
+
+.client{
+
+  margin-top:12px;
+
+  background:#101d2e;
+
+  border:1px solid #26364d;
+
+  border-radius:15px;
+
+  padding:15px
+
+}
+
+.client-top{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:10px
+
+}
+
+.name{font-weight:700;font-size:17px}
+
+.amount{color:#efc965;font-weight:700}
+
+.info{color:#aab5c5;font-size:14px;margin-top:8px;line-height:1.7}
+
+.badge{
+
+  display:inline-block;
+
+  margin-top:9px;
+
+  padding:6px 10px;
+
+  border-radius:20px;
+
+  font-size:12px;
+
+  background:#493d1c;
+
+  color:#f4cf70
+
+}
+
+.actions{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:8px;
+
+  margin-top:12px
+
+}
+
+button{
+
+  border:0;
+
+  border-radius:11px;
+
+  padding:11px;
+
+  font-weight:700;
+
+  cursor:pointer
+
+}
+
+.primary{background:#d8b45b;color:#07111f}
+
+.secondary{background:#22324a;color:#fff}
+
+.add{
+
+  position:fixed;
+
+  bottom:22px;
+
+  left:50%;
+
+  transform:translateX(-50%);
+
+  width:min(480px,calc(100% - 40px));
+
+  padding:15px;
+
+  background:#d8b45b;
+
+  color:#07111f;
+
+  border-radius:14px;
+
+  font-size:17px
+
+}
+
+.modal{
+
+  display:none;
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,.72);
+
+  padding:20px;
+
+  align-items:center;
+
+  justify-content:center
+
+}
+
+.modal-box{
+
+  width:100%;
+
+  max-width:470px;
+
+  background:#101d2e;
+
+  border-radius:18px;
+
+  padding:20px
+
+}
+
+.modal input,.modal select,.modal textarea{
+
+  width:100%;
+
+  margin:6px 0;
+
+  padding:13px;
+
+  border:1px solid #30415a;
+
+  border-radius:10px;
+
+  background:#142235;
+
+  color:#fff
+
+}
+
+.modal textarea{min-height:80px}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.empty{text-align:center;color:#8f9bad;padding:30px}
 
 </style>
 
@@ -32,57 +268,351 @@ p{text-align:center;color:#9eabbc}
 
 <body>
 
-<div class="box">
+<div class="app">
 
-<h1>Collection Pro</h1>
+<header>
 
-<p>نظام إدارة ومتابعة التحصيل</p>
+  <div class="logo">Collection Pro</div>
 
-<input id="email" type="email" placeholder="البريد الإلكتروني">
+  <div class="sub">نظام إدارة ومتابعة التحصيل</div>
 
-<input id="password" type="password" placeholder="كلمة المرور">
+  <div class="user">لوحة المشرف — مشعل عبدالقادر</div>
 
-<button onclick="login()">تسجيل الدخول</button>
+</header>
 
-<p id="msg"></p>
+<main>
+
+<div class="stats">
+
+  <div class="card">
+
+    <small>إجمالي المتأخرات</small>
+
+    <strong id="total">0 د.أ</strong>
+
+  </div>
+
+  <div class="card">
+
+    <small>عدد العملاء</small>
+
+    <strong id="count">0</strong>
+
+  </div>
+
+  <div class="card">
+
+    <small>وعود الدفع</small>
+
+    <strong id="promises">0</strong>
+
+  </div>
+
+  <div class="card">
+
+    <small>ملفات قانونية</small>
+
+    <strong id="legal">0</strong>
+
+  </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<h2>العملاء والمتابعة</h2>
+
+<input
+
+ class="search"
+
+ id="search"
+
+ placeholder="بحث باسم العميل أو رقم الهاتف..."
+
+ oninput="render()"
+
+>
+
+<div id="clients"></div>
+
+</main>
+
+<button class="add" onclick="openModal()">＋ إضافة عميل جديد</button>
+
+</div>
+
+<div class="modal" id="modal">
+
+<div class="modal-box">
+
+<h2>إضافة عميل</h2>
+
+<input id="name" placeholder="اسم العميل">
+
+<input id="phone" placeholder="رقم الهاتف">
+
+<div class="row">
+
+<input id="arrears" type="number" placeholder="المتأخرات">
+
+<input id="installment" type="number" placeholder="القسط">
+
+</div>
+
+<input id="guarantor" placeholder="اسم الكفيل">
+
+<input id="guarantorPhone" placeholder="هاتف الكفيل">
+
+<select id="status">
+
+<option value="متابعة">متابعة</option>
+
+<option value="وعد بالدفع">وعد بالدفع</option>
+
+<option value="إنذار نهائي">إنذار نهائي</option>
+
+<option value="قانوني">قانوني</option>
+
+<option value="مسدد">مسدد</option>
+
+</select>
+
+<input id="followup" type="date">
+
+<textarea id="notes" placeholder="ملاحظات المتابعة"></textarea>
+
+<div class="row">
+
+<button class="primary" onclick="saveClient()">حفظ العميل</button>
+
+<button class="secondary" onclick="closeModal()">إلغاء</button>
+
+</div>
+
+</div>
+
+</div>
 
 <script>
 
-const sb=supabase.createClient(
+let clients=JSON.parse(localStorage.getItem("collection_clients")||"[]");
 
-'https://rhqazngrxlwyrnsdhxsz.supabase.co',
+function money(n){
 
-'sb_publishable_F9WCYtiIU5nn51d6JlEA5Q_c1kFr0ZP'
+ return Number(n||0).toLocaleString("ar-JO")+" د.أ";
 
-);
+}
 
-async function login(){
+function save(){
 
- const email=document.getElementById('email').value;
+ localStorage.setItem("collection_clients",JSON.stringify(clients));
 
- const password=document.getElementById('password').value;
+}
 
- const msg=document.getElementById('msg');
+function render(){
 
- msg.textContent='جاري تسجيل الدخول...';
+ let q=document.getElementById("search").value.trim();
 
- const {data,error}=await sb.auth.signInWithPassword({email,password});
+ let list=clients.filter(c=>
 
- if(error){
+   c.name.includes(q) ||
 
-   msg.textContent='تعذر تسجيل الدخول. تأكد من البيانات.';
+   c.phone.includes(q)
+
+ );
+
+ document.getElementById("count").textContent=clients.length;
+
+ document.getElementById("total").textContent=
+
+   money(clients.reduce((s,c)=>s+Number(c.arrears||0),0));
+
+ document.getElementById("promises").textContent=
+
+   clients.filter(c=>c.status==="وعد بالدفع").length;
+
+ document.getElementById("legal").textContent=
+
+   clients.filter(c=>c.status==="قانوني").length;
+
+ let box=document.getElementById("clients");
+
+ if(!list.length){
+
+   box.innerHTML='<div class="empty">لا يوجد عملاء حالياً</div>';
 
    return;
 
  }
 
- msg.textContent='تم تسجيل الدخول بنجاح ✓';
+ box.innerHTML=list.map(c=>`
+
+ <div class="client">
+
+   <div class="client-top">
+
+     <div class="name">${escapeHTML(c.name)}</div>
+
+     <div class="amount">${money(c.arrears)}</div>
+
+   </div>
+
+   <div class="info">
+
+     الهاتف: ${escapeHTML(c.phone || "-")}<br>
+
+     القسط: ${money(c.installment)}<br>
+
+     الكفيل: ${escapeHTML(c.guarantor || "-")}<br>
+
+     المتابعة القادمة: ${escapeHTML(c.followup || "-")}
+
+   </div>
+
+   <span class="badge">${escapeHTML(c.status)}</span>
+
+   <div class="actions">
+
+     <button class="primary"
+
+       onclick="follow(${c.id})">تسجيل متابعة</button>
+
+     <button class="secondary"
+
+       onclick="removeClient(${c.id})">حذف</button>
+
+   </div>
+
+ </div>
+
+ `).join("");
 
 }
+
+function escapeHTML(value){
+
+ return String(value||"")
+
+   .replaceAll("&","&amp;")
+
+   .replaceAll("<","&lt;")
+
+   .replaceAll(">","&gt;")
+
+   .replaceAll('"',"&quot;")
+
+   .replaceAll("'","&#039;");
+
+}
+
+function openModal(){
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+function closeModal(){
+
+ document.getElementById("modal").style.display="none";
+
+}
+
+function saveClient(){
+
+ let name=document.getElementById("name").value.trim();
+
+ if(!name){
+
+   alert("أدخل اسم العميل");
+
+   return;
+
+ }
+
+ clients.unshift({
+
+   id:Date.now(),
+
+   name:name,
+
+   phone:document.getElementById("phone").value.trim(),
+
+   arrears:Number(document.getElementById("arrears").value||0),
+
+   installment:Number(document.getElementById("installment").value||0),
+
+   guarantor:document.getElementById("guarantor").value.trim(),
+
+   guarantorPhone:document.getElementById("guarantorPhone").value.trim(),
+
+   status:document.getElementById("status").value,
+
+   followup:document.getElementById("followup").value,
+
+   notes:document.getElementById("notes").value.trim()
+
+ });
+
+ save();
+
+ closeModal();
+
+ clearForm();
+
+ render();
+
+}
+
+function clearForm(){
+
+ ["name","phone","arrears","installment",
+
+  "guarantor","guarantorPhone","followup","notes"]
+
+ .forEach(id=>document.getElementById(id).value="");
+
+}
+
+function removeClient(id){
+
+ if(confirm("هل تريد حذف العميل؟")){
+
+   clients=clients.filter(c=>c.id!==id);
+
+   save();
+
+   render();
+
+ }
+
+}
+
+function follow(id){
+
+ let c=clients.find(x=>x.id===id);
+
+ let result=prompt(
+
+   "اكتب نتيجة المتابعة:\\n"+
+
+   "مثال: وعد بالدفع / لا يجيب / زيارة / رفض الدفع"
+
+ );
+
+ if(result){
+
+   c.notes=result;
+
+   c.lastFollowup=new Date().toLocaleString("ar-JO");
+
+   save();
+
+   alert("تم تسجيل المتابعة");
+
+ }
+
+}
+
+render();
 
 </script>
 
