@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Collection Pro</title>
+
+<style>
+
+body{margin:0;background:#07111f;color:white;font-family:Arial}
+
+.box{max-width:420px;margin:70px auto;padding:25px}
+
+h1{color:#d8b45b;text-align:center}
+
+input,button{width:100%;box-sizing:border-box;padding:15px;margin:8px 0;border-radius:10px;border:0}
+
+input{background:#142235;color:white}
+
+button{background:#d8b45b;color:#07111f;font-weight:bold;font-size:16px}
+
+p{text-align:center;color:#9eabbc}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>Collection Pro</h1>
+
+<p>نظام إدارة ومتابعة التحصيل</p>
+
+<input id="email" type="email" placeholder="البريد الإلكتروني">
+
+<input id="password" type="password" placeholder="كلمة المرور">
+
+<button onclick="login()">تسجيل الدخول</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const sb=supabase.createClient(
+
+'https://rhqazngrxlwyrnsdhxsz.supabase.co',
+
+'sb_publishable_F9WCYtiIU5nn51d6JlEA5Q_c1kFr0ZP'
+
+);
+
+async function login(){
+
+ const email=document.getElementById('email').value;
+
+ const password=document.getElementById('password').value;
+
+ const msg=document.getElementById('msg');
+
+ msg.textContent='جاري تسجيل الدخول...';
+
+ const {data,error}=await sb.auth.signInWithPassword({email,password});
+
+ if(error){
+
+   msg.textContent='تعذر تسجيل الدخول. تأكد من البيانات.';
+
+   return;
+
+ }
+
+ msg.textContent='تم تسجيل الدخول بنجاح ✓';
+
+}
+
+</script>
+
+</body>
+
+</html>
