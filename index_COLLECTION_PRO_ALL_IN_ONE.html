@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07111f">
+<title>Collection Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:105px}header{padding:20px 16px;background:#0b1728;border-bottom:1px solid #24324a;position:sticky;top:0;z-index:8}.logo{font-size:28px;font-weight:900;color:#d8b45b}.sub{color:#9eabbc;margin-top:3px}.user{margin-top:7px;font-size:14px}.topActions,.cloudbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.topActions button,.cloudbar button{background:#22324a;color:#fff}.cloudstatus{font-size:12px;color:#9eabbc}.cloudstatus.ok{color:#61d48b}main{padding:14px}.stats,.lateStats,.empStats,.paidStats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card,.mini{background:#142235;border:1px solid #26364d;border-radius:15px;padding:13px}.card small,.mini span{color:#9eabbc}.card strong,.mini b{display:block;font-size:21px;margin-top:6px;color:#d8b45b}h2{font-size:19px;margin:22px 0 10px}.box{background:#101d2e;border:1px solid #3c506c;border-radius:16px;padding:14px;margin-top:15px}.boxTitle{font-weight:900;font-size:18px;color:#e5c56c}.green{color:#61d48b!important}.yellow{color:#ffd66b!important}.red{color:#ff8e8e!important}.progress{height:10px;background:#26364d;border-radius:20px;margin-top:12px;overflow:hidden}.progress div{height:100%;background:#d8b45b;width:0}.fullBtn{width:100%;margin-top:12px;background:#d8b45b;color:#07111f;padding:12px;border-radius:11px}.alerts{background:#241d10;border:1px solid #66501c;border-radius:15px;padding:14px;margin-top:14px}.alert-title{color:#f1cb67;font-weight:800}.alert-item{background:#302711;padding:10px;border-radius:9px;margin-top:7px;font-size:14px}.employeeCard,.paidRow{background:#142235;border:1px solid #26364d;border-radius:12px;padding:11px;margin-top:8px}.employeeCard small,.paidRow small{display:block;color:#9eabbc;margin-top:4px}.search{width:100%;padding:14px;border:0;border-radius:12px;background:#142235;color:#fff;font-size:16px}.client{margin-top:11px;background:#101d2e;border:1px solid #26364d;border-radius:15px;padding:14px}.client.onepay{border-color:#2d8f55;background:#10291e}.client.twopay{border-color:#c29c38;background:#29230f}.client-top{display:flex;justify-content:space-between;gap:8px}.name{font-weight:800;font-size:17px}.amount{color:#efc965;font-weight:800}.number{font-size:12px;color:#7fa9d8;margin-top:3px}.info{color:#aab5c5;font-size:14px;margin-top:7px;line-height:1.75}.badge{display:inline-block;margin:6px 4px 0 0;padding:6px 10px;border-radius:20px;font-size:12px;background:#493d1c;color:#f4cf70}.lateBadge{background:#552626;color:#ffb1b1}.teamBadge{background:#193d59;color:#9fd7ff}.repeatBadge{background:#4a2f66;color:#e7c9ff}.moveBadge{background:#6b341d;color:#ffd0ae}.history{margin-top:10px;padding:10px;background:#0a1524;border-radius:10px;font-size:13px;line-height:1.7;color:#cbd4df}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}button{border:0;border-radius:10px;padding:11px;font-weight:700}.primary{background:#d8b45b;color:#07111f}.secondary{background:#22324a;color:#fff}.call{background:#236a46;color:#fff}.whatsapp{background:#198754;color:#fff}.pay{background:#7a5a08;color:#fff}.danger{background:#6c2730;color:#fff}.add{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:min(680px,calc(100% - 28px));padding:15px;background:#d8b45b;color:#07111f;border-radius:14px;font-size:16px;z-index:10}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);padding:15px;align-items:center;justify-content:center;z-index:30}.modal-box{width:100%;max-width:580px;max-height:91vh;overflow:auto;background:#101d2e;border-radius:18px;padding:18px}.modal input,.modal select,.modal textarea{width:100%;margin:5px 0;padding:12px;border:1px solid #30415a;border-radius:10px;background:#142235;color:#fff;font-size:15px}.modal textarea{min-height:75px}.row{display:grid;grid-template-columns:1fr 1fr;gap:7px}label{display:block;margin-top:8px;color:#c3ccd8;font-size:13px}.empty{text-align:center;color:#8f9bad;padding:20px}.note{font-size:12px;color:#8f9bad;margin-top:8px}.divider{height:1px;background:#26364d;margin:14px 0}.tabs{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}.tabs button{background:#22324a;color:#fff}.tabs button.active{background:#d8b45b;color:#07111f}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="logo">Collection Pro</div>
+<div class="sub">نظام إدارة ومتابعة التحصيل</div>
+<div class="user">لوحة المشرف — مشعل عبدالقادر</div>
+<div class="topActions">
+<button onclick="shareApp()">🔗 مشاركة التطبيق</button>
+<button onclick="showInstallHelp()">📲 إضافة للشاشة الرئيسية</button>
+</div>
+<div class="cloudbar"><button onclick="openCloud()">☁️ ربط السحابة</button><span id="cloudStatus" class="cloudstatus">محلي فقط</span></div>
+</header>
+<main>
+<div class="stats">
+<div class="card"><small>إجمالي المتأخرات</small><strong id="total">0 د.أ</strong></div>
+<div class="card"><small>عدد العملاء</small><strong id="count">0</strong></div>
+<div class="card"><small>وعود الدفع</small><strong id="promises">0</strong></div>
+<div class="card"><small>متابعات اليوم</small><strong id="todayCount">0</strong></div>
+</div>
+
+<div class="box">
+<div class="boxTitle">📊 Late Payment — 30 إلى 60 يوم</div>
+<div class="lateStats">
+<div class="mini"><span>بداية الشهر</span><b id="lateStart">0</b></div>
+<div class="mini"><span>المتبقي حاليًا</span><b class="yellow" id="lateRemaining">0</b></div>
+<div class="mini"><span>تمت المعالجة / السداد</span><b class="green" id="latePaid">0</b></div>
+<div class="mini"><span>نسبة الإنجاز</span><b id="latePercent">0%</b></div>
+</div>
+<div class="progress"><div id="lateProgress"></div></div>
+<button class="fullBtn" onclick="excelFile.click()">📥 تحديث Late Payment من Excel</button>
+<input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" onchange="importLate(event)">
+</div>
+
+<div class="box">
+<div class="boxTitle">💰 كشف المسددين</div>
+<div class="paidStats">
+<div class="mini"><span>سدد قسط واحد</span><b class="green" id="onePayCount">0</b></div>
+<div class="mini"><span>سدد قسطين</span><b class="yellow" id="twoPayCount">0</b></div>
+<div class="mini"><span>إجمالي المبالغ المسددة</span><b id="paidTotal">0 د.أ</b></div>
+<div class="mini"><span>عدد عمليات السداد</span><b id="paymentsCount">0</b></div>
+</div>
+<div class="tabs"><button id="tabOne" onclick="renderPaid('one')">قسط واحد</button><button id="tabTwo" onclick="renderPaid('two')">قسطين</button><button id="tabAll" class="active" onclick="renderPaid('all')">الكل</button></div>
+<div id="paidList"></div>
+</div>
+
+<div class="box">
+<div class="boxTitle">🔄 العملاء المتكررون والانتقالات</div>
+<div class="paidStats">
+<div class="mini"><span>متكررون شهريًا</span><b id="repeatCount">0</b></div>
+<div class="mini"><span>انتقلوا 30 ← 60</span><b class="red" id="moveCount">0</b></div>
+</div>
+<div id="repeatList"></div>
+</div>
+
+<div class="box">
+<div class="boxTitle">👥 الموظفون والـ Teams</div>
+<div class="empStats" style="margin-top:12px">
+<div class="mini"><span>عدد الموظفين</span><b id="employeeCount">0</b></div>
+<div class="mini"><span>عملاء غير مربوطين</span><b id="unassignedCount" class="yellow">0</b></div>
+</div>
+<div id="employeeSummary"></div>
+<button class="fullBtn" onclick="openTeamModal()">⚙️ إدارة الموظفين والفرق</button>
+</div>
+
+<div class="alerts"><div class="alert-title">🔔 التذكيرات والمتابعات</div><div id="alerts"></div></div>
+<h2>العملاء والمتابعة</h2>
+<input class="search" id="search" placeholder="بحث بالاسم أو الهاتف أو رقم العميل..." oninput="render()">
+<div id="clients"></div>
+</main>
+<button class="add" onclick="openModal()">＋ إضافة عميل جديد</button>
+</div>
+
+<div class="modal" id="modal"><div class="modal-box">
+<h2>إضافة عميل</h2>
+<input id="clientNo" placeholder="رقم العميل"><input id="name" placeholder="اسم العميل"><input id="phone" placeholder="رقم الهاتف">
+<div class="row"><input id="arrears" type="number" step="0.01" placeholder="المتأخرات"><input id="installment" type="number" step="0.01" placeholder="القسط"></div>
+<input id="guarantor" placeholder="اسم الكفيل"><input id="guarantorPhone" placeholder="هاتف الكفيل">
+<input id="company" placeholder="اسم الشركة"><input id="workLocation" placeholder="مكان العمل">
+<select id="workStatus"><option>على رأس عمله</option><option>ترك العمل</option><option>مكان العمل مجهول</option></select>
+<input id="managerPhone" placeholder="هاتف المسؤول في العمل">
+<select id="employee"></select>
+<select id="status"><option>متابعة</option><option>وعد بالدفع</option><option>إنذار نهائي</option><option>قانوني</option><option>مسدد</option></select>
+<input id="followup" type="date"><input id="promiseDate" type="date"><textarea id="notes" placeholder="ملاحظات"></textarea>
+<div class="row"><button class="primary" onclick="saveClient()">حفظ العميل</button><button class="secondary" onclick="closeModal()">إلغاء</button></div>
+</div></div>
+
+<div class="modal" id="teamModal"><div class="modal-box">
+<h2>إدارة الموظفين والـ Teams</h2>
+<input id="empName" placeholder="اسم الموظف"><input id="empCea" placeholder="رمز CEA"><input id="empTeam" placeholder="الفريق">
+<button class="primary" style="width:100%" onclick="addEmployee()">＋ إضافة الموظف</button><div class="divider"></div><div id="teamList"></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="closeTeamModal()">إغلاق</button>
+</div></div>
+
+<div class="modal" id="cloudModal"><div class="modal-box">
+<h2>☁️ ربط السحابة</h2>
+<input id="cloudEmail" type="email" value="ma.abdelqader@unrwa.org" placeholder="البريد الإلكتروني">
+<input id="cloudPassword" type="password" placeholder="كلمة المرور">
+<button class="primary" style="width:100%;margin-top:8px" onclick="cloudLogin()">تسجيل الدخول والمزامنة</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="syncCloud(true)">مزامنة الآن</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="cloudLogout()">تسجيل الخروج</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="closeCloud()">إغلاق</button>
+<div class="note">لن تُحفظ كلمة المرور داخل التطبيق.</div>
+</div></div>
+
+<div class="modal" id="installModal"><div class="modal-box">
+<h2>📲 إضافة التطبيق للشاشة الرئيسية</h2>
+<p class="info">على iPhone: اضغط زر المشاركة في Safari، ثم اختر <b>إضافة إلى الشاشة الرئيسية</b>، وبعدها اضغط <b>إضافة</b>.</p>
+<button class="primary" style="width:100%" onclick="closeInstallHelp()">تم</button>
+</div></div>
+
+<script>
+const CLIENTS_KEY="collection_clients",LATE_KEY="late_payment_30_60",EMP_KEY="collection_employees",META_KEY="collection_meta_v2";
+let clients=JSON.parse(localStorage.getItem(CLIENTS_KEY)||"[]");
+let lateData=JSON.parse(localStorage.getItem(LATE_KEY)||'{"month":"","startIds":[],"currentIds":[],"paidIds":[],"lastUpdate":"","records":{}}');
+let employees=JSON.parse(localStorage.getItem(EMP_KEY)||"[]");
+let meta=JSON.parse(localStorage.getItem(META_KEY)||'{"payments":[],"monthAppearances":{},"transitions":[],"paidCustomers":{}}');
+if(!employees.length)employees=[{id:"sup",name:"مشعل عبدالقادر",cea:"",team:"الإشراف"}];
+meta.payments=Array.isArray(meta.payments)?meta.payments:[];
+meta.monthAppearances=meta.monthAppearances||{};
+meta.transitions=Array.isArray(meta.transitions)?meta.transitions:[];
+meta.paidCustomers=meta.paidCustomers||{};
+
+const SB_URL="https://rhqazngrxlwyrnsdhxsz.supabase.co";
+const SB_KEY="sb_publishable_F9WCYtiIU5nn51d6JlEA5Q_c1kFr0ZP";
+const cloud=window.supabase?.createClient(SB_URL,SB_KEY);
+let cloudUser=null,pushTimer=null,currentPaidTab="all";
+const $=id=>document.getElementById(id),safe=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+function today(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function num(v){return Number(String(v??"").replace(/,/g,"").replace(/[^\d.-]/g,""))||0}
+function money(v){return num(v).toLocaleString("ar-JO",{maximumFractionDigits:2})+" د.أ"}
+function norm(v){return String(v??"").toLowerCase().replace(/\s+/g," ").trim()}
+function clean(v){return String(v??"").replace(/\.0$/,"").trim()}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function snapshot(){return{clients,lateData,employees,meta}}
+function weight(d){return (d.clients?.length||0)*100000+(d.lateData?.startIds?.length||0)*1000+(d.meta?.payments?.length||0)*100+(d.employees?.length||0)}
+function save(push=true){localStorage.setItem(CLIENTS_KEY,JSON.stringify(clients));localStorage.setItem(LATE_KEY,JSON.stringify(lateData));localStorage.setItem(EMP_KEY,JSON.stringify(employees));localStorage.setItem(META_KEY,JSON.stringify(meta));if(push&&cloudUser){clearTimeout(pushTimer);pushTimer=setTimeout(()=>pushCloud(false),700)}}
+function applySnapshot(d){if(Array.isArray(d.clients))clients=d.clients;if(d.lateData)lateData=d.lateData;if(Array.isArray(d.employees)&&d.employees.length)employees=d.employees;if(d.meta)meta={payments:Array.isArray(d.meta.payments)?d.meta.payments:[],monthAppearances:d.meta.monthAppearances||{},transitions:Array.isArray(d.meta.transitions)?d.meta.transitions:[],paidCustomers:d.meta.paidCustomers||{}};save(false);render()}
+function setCloudStatus(t,ok=false){$("cloudStatus").textContent=t;$("cloudStatus").className="cloudstatus"+(ok?" ok":"")}
+function openCloud(){$("cloudModal").style.display="flex"} function closeCloud(){$("cloudModal").style.display="none"}
+async function cloudLogin(){if(!cloud)return alert("تعذر تحميل خدمة السحابة");let email=$("cloudEmail").value.trim(),password=$("cloudPassword").value;if(!email||!password)return alert("أدخل البريد وكلمة المرور");setCloudStatus("جاري تسجيل الدخول...");let {data,error}=await cloud.auth.signInWithPassword({email,password});if(error){setCloudStatus("فشل الدخول");return alert(error.message)}cloudUser=data.user;await syncCloud(true);closeCloud()}
+async function pushCloud(show){if(!cloudUser)return;let {error}=await cloud.from("collection_app_snapshot").upsert({user_id:cloudUser.id,data:snapshot(),updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error){setCloudStatus("خطأ بالمزامنة");if(show)alert(error.message);return}setCloudStatus("متصل ومتزامن",true);if(show)alert("تمت المزامنة بنجاح ✅")}
+async function syncCloud(show=false){if(!cloud)return;if(!cloudUser){let {data}=await cloud.auth.getSession();cloudUser=data.session?.user||null}if(!cloudUser){setCloudStatus("محلي فقط");if(show)alert("سجل الدخول أولًا");return}setCloudStatus("جاري المزامنة...");let {data,error}=await cloud.from("collection_app_snapshot").select("data,updated_at").eq("user_id",cloudUser.id).maybeSingle();if(error){setCloudStatus("خطأ بالمزامنة");if(show)alert(error.message);return}let local=snapshot(),remote=data?.data;if(!remote||weight(local)>=weight(remote)){await pushCloud(false)}else{applySnapshot(remote);setCloudStatus("تم تحميل بيانات السحابة",true)}if(show)alert("تمت المزامنة ✅")}
+async function cloudLogout(){if(cloud)await cloud.auth.signOut();cloudUser=null;setCloudStatus("محلي فقط");closeCloud()}
+async function initCloud(){if(!cloud)return;let {data}=await cloud.auth.getSession();cloudUser=data.session?.user||null;if(cloudUser){setCloudStatus("متصل",true);await syncCloud(false)}}
+
+async function shareApp(){let data={title:"Collection Pro",text:"Collection Pro — نظام إدارة ومتابعة التحصيل",url:location.origin+location.pathname};if(navigator.share){try{await navigator.share(data)}catch(e){}}else{try{await navigator.clipboard.writeText(data.url);alert("تم نسخ رابط التطبيق ✅")}catch(e){prompt("انسخ رابط التطبيق:",data.url)}}}
+function showInstallHelp(){$("installModal").style.display="flex"} function closeInstallHelp(){$("installModal").style.display="none"}
+
+function renderLate(){let s=lateData.startIds?.length||0,r=lateData.currentIds?.length||0,p=lateData.paidIds?.filter(x=>lateData.startIds?.includes(x)).length||0,pc=s?Math.round(p/s*1000)/10:0;$("lateStart").textContent=s;$("lateRemaining").textContent=r;$("latePaid").textContent=p;$("latePercent").textContent=pc+"%";$("lateProgress").style.width=Math.min(pc,100)+"%"}
+function renderPaid(tab=currentPaidTab){currentPaidTab=tab;["One","Two","All"].forEach(x=>$("tab"+x).classList.remove("active"));$("tab"+(tab==="one"?"One":tab==="two"?"Two":"All")).classList.add("active");let paidMap=meta.paidCustomers||{},rows=Object.values(paidMap);$("onePayCount").textContent=rows.filter(x=>x.paymentCount===1).length;$("twoPayCount").textContent=rows.filter(x=>x.paymentCount>=2).length;$("paymentsCount").textContent=meta.payments.length;$("paidTotal").textContent=money(meta.payments.reduce((s,p)=>s+num(p.amount),0));let filtered=rows.filter(x=>tab==="all"||(tab==="one"?x.paymentCount===1:x.paymentCount>=2));filtered.sort((a,b)=>String(b.lastPaymentDate||"").localeCompare(String(a.lastPaymentDate||"")));$("paidList").innerHTML=filtered.length?filtered.map(x=>`<div class="paidRow"><b>${safe(x.name||"-")}</b><small>رقم العميل: ${safe(x.clientNo||"-")} | ${x.paymentCount>=2?"قسطين":"قسط واحد"} | آخر سداد: ${safe(x.lastPaymentDate||"-")} | المبلغ المسدد: ${money(x.totalPaid||0)} | الرصيد: ${money(x.balance||0)} | الموظف: ${safe(x.employee||"-")}</small></div>`).join(""):'<div class="empty">لا يوجد مسددون في هذا القسم</div>'}
+function getRepeatIds(){return Object.entries(meta.monthAppearances).filter(([id,months])=>Array.isArray(months)&&months.length>=2).map(([id])=>id)}
+function renderRepeat(){let ids=getRepeatIds(),moves=meta.transitions||[];$("repeatCount").textContent=ids.length;$("moveCount").textContent=moves.length;let rows=ids.map(id=>{let c=clients.find(x=>x.clientNo===id)||lateData.records?.[id]||meta.paidCustomers?.[id]||{};return `<div class="paidRow"><b>🔄 ${safe(c.name||id)}</b><small>رقم العميل: ${safe(id)} | عدد الأشهر: ${(meta.monthAppearances[id]||[]).length} | الأشهر: ${(meta.monthAppearances[id]||[]).join("، ")}</small></div>`}).join("");let trs=moves.slice().reverse().slice(0,20).map(t=>`<div class="paidRow"><b>⏱️ ${safe(t.name||t.clientNo)}</b><small>انتقل من ${safe(t.from)} يوم إلى ${safe(t.to)} يوم | ${safe(t.date)} | الموظف: ${safe(t.employee||"-")}</small></div>`).join("");$("repeatList").innerHTML=(rows+trs)||'<div class="empty">لا توجد حالات متكررة أو انتقالات بعد</div>'}
+function renderEmployees(){$("employeeCount").textContent=employees.length;$("unassignedCount").textContent=clients.filter(c=>!c.employee).length;$("employeeSummary").innerHTML=employees.map(e=>`<div class="employeeCard"><b>${safe(e.name)}</b><small>CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"-")} | العملاء: ${clients.filter(c=>c.employee===e.name).length} | Late: ${clients.filter(c=>c.employee===e.name&&c.inLate).length}</small></div>`).join("")}
+function renderAlerts(){let a=[];clients.forEach(c=>{if(c.promiseDate===today())a.push("اليوم موعد وعد السداد: "+c.name);if(c.followup===today()&&!c.followedToday)a.push("متابعة مطلوبة اليوم: "+c.name)});meta.transitions.filter(t=>t.date===today()).forEach(t=>a.push("⚠️ انتقل إلى 60 يوم: "+(t.name||t.clientNo)));$("alerts").innerHTML=a.length?a.map(x=>`<div class="alert-item">${safe(x)}</div>`).join(""):'<div class="empty">لا توجد تذكيرات حاليًا</div>'}
+function render(){let q=norm($("search").value),list=clients.filter(c=>norm(c.name).includes(q)||norm(c.phone).includes(q)||norm(c.clientNo).includes(q));$("total").textContent=money(clients.reduce((s,c)=>s+num(c.arrears),0));$("count").textContent=clients.length;$("promises").textContent=clients.filter(c=>c.promiseDate&&c.promiseDate>=today()&&c.status!=="مسدد").length;$("todayCount").textContent=clients.filter(c=>c.followup===today()&&!c.followedToday).length;$("clients").innerHTML=list.length?list.map(c=>{let i=clients.indexOf(c),pc=Number(c.paymentCount)||0,cls=pc===1?"onepay":pc>=2?"twopay":"",repeat=(meta.monthAppearances[c.clientNo]||[]).length>=2,moved=meta.transitions.some(t=>t.clientNo===c.clientNo);return `<div class="client ${cls}"><div class="client-top"><div><div class="name">${safe(c.name||"بدون اسم")}</div><div class="number">رقم العميل: ${safe(c.clientNo||"-")}</div></div><div class="amount">${money(c.arrears)}</div></div><div class="info">📞 ${safe(c.phone||"-")}<br>👤 ${safe(c.employee||"-")}<br>📅 ${safe(c.followup||"-")}${c.lateDays?`<br>⏱️ Late Days: ${safe(c.lateDays)}`:""}</div><span class="badge">${safe(c.status||"متابعة")}</span>${c.inLate?'<span class="badge lateBadge">Late 30–60</span>':""}${c.team?`<span class="badge teamBadge">${safe(c.team)}</span>`:""}${repeat?'<span class="badge repeatBadge">🔄 متكرر شهريًا</span>':""}${moved?'<span class="badge moveBadge">⏱️ انتقل 30→60</span>':""}<div class="actions"><button class="pay" onclick="registerPayment(${i})">💰 تسجيل دفعة</button><button class="call" onclick="callClient(${i})">📞 اتصال</button><button class="whatsapp" onclick="whatsappClient(${i})">WhatsApp</button><button class="secondary" onclick="followClient(${i})">📝 متابعة</button><button class="danger" onclick="deleteClient(${i})">🗑 حذف</button></div></div>`}).join(""):'<div class="empty">لا يوجد عملاء</div>';renderLate();renderPaid(currentPaidTab);renderRepeat();renderEmployees();renderAlerts();refreshEmployeeSelect()}
+function refreshEmployeeSelect(){$("employee").innerHTML='<option value="">— غير محدد —</option>'+employees.map(e=>`<option>${safe(e.name)}</option>`).join("")}
+function openModal(){refreshEmployeeSelect();$("modal").style.display="flex"} function closeModal(){$("modal").style.display="none"}
+function saveClient(){let c={id:uid(),clientNo:clean($("clientNo").value),name:$("name").value.trim(),phone:clean($("phone").value),arrears:num($("arrears").value),installment:num($("installment").value),guarantor:$("guarantor").value.trim(),guarantorPhone:clean($("guarantorPhone").value),company:$("company").value.trim(),workLocation:$("workLocation").value.trim(),workStatus:$("workStatus").value,managerPhone:clean($("managerPhone").value),employee:$("employee").value,status:$("status").value,followup:$("followup").value,promiseDate:$("promiseDate").value,notes:$("notes").value.trim(),history:[],paymentCount:0,totalPaid:0,inLate:false};let e=employees.find(x=>x.name===c.employee);if(e){c.cea=e.cea;c.team=e.team}clients.unshift(c);save();closeModal();render()}
+function callClient(i){if(clients[i].phone)location.href="tel:"+clients[i].phone}
+function whatsappClient(i){let c=clients[i];if(!c.phone)return alert("لا يوجد رقم هاتف");let text=prompt("نص رسالة WhatsApp:",`السلام عليكم ${c.name}، نرجو التواصل بخصوص الالتزام المالي المستحق.`);if(text===null)return;let p=String(c.phone).replace(/\D/g,"");if(p.startsWith("0"))p="962"+p.slice(1);c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:"تم تجهيز رسالة WhatsApp: "+text});save();location.href=`https://wa.me/${p}?text=${encodeURIComponent(text)}`}
+function followClient(i){let c=clients[i],r=prompt("نتيجة المتابعة:","تم التواصل");if(r===null)return;let n=prompt("تاريخ المتابعة القادمة YYYY-MM-DD:",c.followup||"");if(n!==null)c.followup=n.trim();let p=prompt("تاريخ وعد السداد YYYY-MM-DD:",c.promiseDate||"");if(p!==null)c.promiseDate=p.trim();c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:r});c.followedToday=true;save();render()}
+function registerPayment(i){let c=clients[i],def=num(c.installment)||num(c.arrears);let raw=prompt(`مبلغ الدفعة للعميل ${c.name}:`,def||"");if(raw===null)return;let amount=num(raw);if(amount<=0)return alert("أدخل مبلغًا صحيحًا");if(amount>num(c.arrears)&&num(c.arrears)>0){if(!confirm("المبلغ أكبر من الرصيد الحالي. هل تريد المتابعة؟"))return}let old=num(c.arrears);c.arrears=Math.max(0,old-amount);c.paymentCount=(Number(c.paymentCount)||0)+1;c.totalPaid=(num(c.totalPaid)||0)+amount;c.lastPaymentDate=today();c.status=c.paymentCount===1?"دفعة 1 من 2":"دفعتين من 2";c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:`سداد ${money(amount)} — الرصيد قبل ${money(old)} — المتبقي ${money(c.arrears)}`});meta.payments.push({id:uid(),clientNo:c.clientNo,name:c.name,employee:c.employee||"",amount,date:today(),paymentNo:c.paymentCount,balance:c.arrears});meta.paidCustomers[c.clientNo]={clientNo:c.clientNo,name:c.name,employee:c.employee||"",paymentCount:c.paymentCount,totalPaid:c.totalPaid,balance:c.arrears,lastPaymentDate:today()};if(c.clientNo){if(!lateData.paidIds.includes(c.clientNo))lateData.paidIds.push(c.clientNo);lateData.currentIds=(lateData.currentIds||[]).filter(id=>id!==c.clientNo);c.inLate=false}save();render();alert(`تم تسجيل السداد ✅\nالمبلغ: ${money(amount)}\nالمتبقي: ${money(c.arrears)}\nتم خصم العميل من كشف Late.`)}
+function deleteClient(i){if(confirm("حذف العميل؟")){clients.splice(i,1);save();render()}}
+function openTeamModal(){renderTeamList();$("teamModal").style.display="flex"} function closeTeamModal(){$("teamModal").style.display="none"}
+function addEmployee(){let n=$("empName").value.trim(),cea=$("empCea").value.trim(),team=$("empTeam").value.trim();if(!n&&!cea)return;employees.push({id:uid(),name:n||("CEA "+cea),cea,team});save();renderTeamList();render()}
+function renderTeamList(){$("teamList").innerHTML=employees.map(e=>`<div class="employeeCard"><b>${safe(e.name)}</b><small>CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"-")}</small></div>`).join("")}
+
+function detect(row,label){let c=row.map(x=>String(x??"").trim()).filter(Boolean);for(let i=0;i<c.length;i++)if(new RegExp(label,"i").test(c[i]))return c[i].replace(new RegExp("^.*?"+label+"\\s*[:：-]?\\s*","i"),"").trim()||c[i+1]||"";return""}
+function parseCea(raw){raw=String(raw||"").trim();let m=raw.match(/(?:CEA\s*)?(\d{2,})\s*[-–:]?\s*(.*)/i);return m?{cea:m[1],name:(m[2]||"").trim()||("CEA "+m[1])}:{cea:"",name:raw.replace(/^CEA\s*[:：-]?\s*/i,"").trim()}}
+function parseLateRows(rows){let h=null,ceaRaw="",records=[];for(let row of rows){let joined=row.map(x=>String(x??"")).join(" | "),ce=detect(row,"CEA");if(ce&&!/Cust No/i.test(joined))ceaRaw=ce;let ci=row.findIndex(x=>/Cust\s*No/i.test(String(x??"")));if(ci>=0){h={};row.forEach((v,i)=>h[norm(v)]=i);continue}if(!h)continue;let idx=(...n)=>{for(let z of n){let k=Object.keys(h).find(k=>norm(k)===norm(z)||norm(k).includes(norm(z)));if(k!==undefined)return h[k]}return-1},get=(...n)=>{let i=idx(...n);return i>=0?row[i]:""},id=clean(get("Cust No"));if(!id||!/\d/.test(id))continue;let cp=parseCea(ceaRaw);records.push({clientNo:id,name:String(get("Client Name","Name")||"").trim(),phone:clean(get("Client Mobile","Mobile")),lateAmount:num(get("Late Amount")),lateDays:num(get("Max Of Late Days","Late Days")),netToPay:num(get("Net To Pay")),guarantor:String(get("Guarantor Name")||"").trim(),guarantorPhone:clean(get("Guarantor Mobile")),cea:cp.cea,employee:cp.name})}return records}
+async function importLate(ev){let f=ev.target.files?.[0];if(!f)return;try{let wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""}),records=parseLateRows(rows);if(!records.length)throw Error("لم أتعرف على العملاء");let month=today().slice(0,7);if(lateData.month!==month)lateData={month,startIds:[],currentIds:[],paidIds:[],lastUpdate:"",records:{}};let ids=[...new Set(records.map(r=>r.clientNo))];if(!lateData.startIds.length)lateData.startIds=[...ids];(lateData.currentIds||[]).filter(id=>!ids.includes(id)&&lateData.startIds.includes(id)).forEach(id=>{if(!lateData.paidIds.includes(id))lateData.paidIds.push(id)});lateData.currentIds=[...ids];let ceaCaptured=0;records.forEach(r=>{if(r.cea)ceaCaptured++;meta.monthAppearances[r.clientNo]=meta.monthAppearances[r.clientNo]||[];if(!meta.monthAppearances[r.clientNo].includes(month))meta.monthAppearances[r.clientNo].push(month);let existing=clients.find(c=>c.clientNo===r.clientNo),prevDays=existing?num(existing.lateDays):num(lateData.records?.[r.clientNo]?.lateDays);if(prevDays>0&&prevDays<60&&r.lateDays>=60&&!meta.transitions.some(t=>t.clientNo===r.clientNo&&t.month===month)){meta.transitions.push({clientNo:r.clientNo,name:r.name,employee:r.employee||existing?.employee||"",from:prevDays,to:r.lateDays,date:today(),month})}let emp=null;if(r.cea){emp=employees.find(e=>e.cea===r.cea);if(!emp){emp={id:uid(),name:r.employee||("CEA "+r.cea),cea:r.cea,team:""};employees.push(emp)}}lateData.records[r.clientNo]={...r,month,lastSeen:today()};if(existing){existing.name=r.name||existing.name;existing.phone=r.phone||existing.phone;existing.guarantee=r.guarantor||existing.guarantor;existing.guarantorPhone=r.guarantorPhone||existing.guarantorPhone;existing.lateDays=r.lateDays;existing.arrears=r.lateAmount||r.netToPay||existing.arrears;existing.inLate=true;if(emp){existing.employee=emp.name;existing.cea=emp.cea;existing.team=emp.team}}else{clients.push({id:uid(),clientNo:r.clientNo,name:r.name,phone:r.phone,arrears:r.lateAmount||r.netToPay,installment:0,guarantor:r.guarantor,guarantorPhone:r.guarantorPhone,employee:emp?.name||r.employee||"",cea:emp?.cea||r.cea||"",team:emp?.team||"",status:"متابعة",followup:"",promiseDate:"",notes:"",history:[],paymentCount:0,totalPaid:0,inLate:true,lateDays:r.lateDays})}});clients.forEach(c=>{if(c.clientNo&&lateData.startIds.includes(c.clientNo)&&!ids.includes(c.clientNo))c.inLate=false});lateData.lastUpdate=new Date().toISOString();save();render();alert(`تم تحديث Late Payment ✅\nالعملاء الحاليون: ${ids.length}\nتم التقاط CEA لعدد: ${ceaCaptured}`)}catch(e){alert("تعذر قراءة الملف: "+e.message)}finally{ev.target.value=""}}
+
+render();initCloud();
+</script>
+</body>
+</html>
