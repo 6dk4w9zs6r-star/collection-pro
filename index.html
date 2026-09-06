@@ -1,267 +1,147 @@
-
-
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
-
 <meta name="theme-color" content="#07111f">
-
 <title>Collection Pro</title>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-
-*{box-sizing:border-box}body{margin:0;background:#07111f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}.app{max-width:680px;margin:auto;min-height:100vh;padding-bottom:100px}header{padding:24px 18px;background:#0b1728;border-bottom:1px solid #24324a}.logo{font-size:29px;font-weight:900;color:#d8b45b}.sub{color:#9eabbc;margin-top:4px}.user{margin-top:10px;font-size:14px}main{padding:15px}.stats,.lateStats,.empStats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card,.mini{background:#142235;border:1px solid #26364d;border-radius:15px;padding:13px}.card small,.mini span{color:#9eabbc}.card strong,.mini b{display:block;font-size:21px;margin-top:6px;color:#d8b45b}h2{font-size:19px;margin:22px 0 10px}.lateBox,.teamBox{background:#101d2e;border:1px solid #3c506c;border-radius:16px;padding:14px;margin-top:15px}.lateTitle,.teamTitle{font-weight:900;font-size:18px;color:#e5c56c}.green{color:#61d48b!important}.yellow{color:#ffd66b!important}.red{color:#ff7777!important}.progress{height:10px;background:#26364d;border-radius:20px;margin-top:12px;overflow:hidden}.progress div{height:100%;background:#d8b45b;width:0%}.importBtn,.manageBtn{width:100%;margin-top:12px;background:#d8b45b;color:#07111f;padding:12px;border-radius:11px}.alerts{background:#241d10;border:1px solid #66501c;border-radius:15px;padding:14px;margin-top:14px}.alert-title{color:#f1cb67;font-weight:800;margin-bottom:8px}.alert-item{background:#302711;padding:10px;border-radius:9px;margin-top:7px;font-size:14px}.employeeCard{background:#142235;border:1px solid #26364d;border-radius:12px;padding:11px;margin-top:8px}.employeeCard b{color:#fff}.employeeCard small{display:block;color:#9eabbc;margin-top:4px;line-height:1.6}.search{width:100%;padding:14px;border:0;border-radius:12px;background:#142235;color:#fff;font-size:16px;outline:none}.client{margin-top:11px;background:#101d2e;border:1px solid #26364d;border-radius:15px;padding:14px}.client.paid{border-color:#2d8f55;background:#10291e}.client.partial{border-color:#c29c38;background:#29230f}.client-top{display:flex;justify-content:space-between;gap:8px}.name{font-weight:800;font-size:17px}.amount{color:#efc965;font-weight:800}.number{font-size:12px;color:#7fa9d8;margin-top:3px}.info{color:#aab5c5;font-size:14px;margin-top:7px;line-height:1.75}.badge{display:inline-block;margin:6px 4px 0 0;padding:6px 10px;border-radius:20px;font-size:12px;background:#493d1c;color:#f4cf70}.lateBadge{background:#552626;color:#ffb1b1}.teamBadge{background:#193d59;color:#9fd7ff}.history{margin-top:10px;padding:10px;background:#0a1524;border-radius:10px;font-size:13px;line-height:1.7;color:#cbd4df}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}button{border:0;border-radius:10px;padding:11px;font-weight:700;cursor:pointer}.primary{background:#d8b45b;color:#07111f}.secondary{background:#22324a;color:#fff}.call{background:#236a46;color:#fff}.whatsapp{background:#198754;color:#fff}.danger{background:#6c2730;color:#fff}.add{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:min(640px,calc(100% - 30px));padding:15px;background:#d8b45b;color:#07111f;border-radius:14px;font-size:16px;z-index:5}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);padding:15px;align-items:center;justify-content:center;z-index:20}.modal-box{width:100%;max-width:560px;max-height:91vh;overflow:auto;background:#101d2e;border-radius:18px;padding:18px}.modal input,.modal select,.modal textarea{width:100%;margin:5px 0;padding:12px;border:1px solid #30415a;border-radius:10px;background:#142235;color:#fff;font-size:15px}.modal textarea{min-height:75px}.row{display:grid;grid-template-columns:1fr 1fr;gap:7px}label{display:block;margin-top:8px;color:#c3ccd8;font-size:13px}.empty{text-align:center;color:#8f9bad;padding:20px}.note{font-size:12px;color:#8f9bad;margin-top:8px}.divider{height:1px;background:#26364d;margin:14px 0}@media(max-width:430px){.stats,.lateStats,.empStats{grid-template-columns:1fr 1fr}.logo{font-size:26px}}
-
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}.app{max-width:680px;margin:auto;min-height:100vh;padding-bottom:100px}header{padding:22px 18px;background:#0b1728;border-bottom:1px solid #24324a}.logo{font-size:29px;font-weight:900;color:#d8b45b}.sub{color:#9eabbc;margin-top:4px}.user{margin-top:8px;font-size:14px}.cloudbar{display:flex;gap:8px;align-items:center;margin-top:12px}.cloudbar button{background:#22324a;color:#fff}.cloudstatus{font-size:12px;color:#9eabbc}.cloudstatus.ok{color:#61d48b}main{padding:15px}.stats,.lateStats,.empStats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card,.mini{background:#142235;border:1px solid #26364d;border-radius:15px;padding:13px}.card small,.mini span{color:#9eabbc}.card strong,.mini b{display:block;font-size:21px;margin-top:6px;color:#d8b45b}h2{font-size:19px;margin:22px 0 10px}.lateBox,.teamBox{background:#101d2e;border:1px solid #3c506c;border-radius:16px;padding:14px;margin-top:15px}.lateTitle,.teamTitle{font-weight:900;font-size:18px;color:#e5c56c}.green{color:#61d48b!important}.yellow{color:#ffd66b!important}.progress{height:10px;background:#26364d;border-radius:20px;margin-top:12px;overflow:hidden}.progress div{height:100%;background:#d8b45b;width:0}.importBtn,.manageBtn{width:100%;margin-top:12px;background:#d8b45b;color:#07111f;padding:12px;border-radius:11px}.alerts{background:#241d10;border:1px solid #66501c;border-radius:15px;padding:14px;margin-top:14px}.alert-title{color:#f1cb67;font-weight:800}.alert-item{background:#302711;padding:10px;border-radius:9px;margin-top:7px;font-size:14px}.employeeCard{background:#142235;border:1px solid #26364d;border-radius:12px;padding:11px;margin-top:8px}.employeeCard small{display:block;color:#9eabbc;margin-top:4px}.search{width:100%;padding:14px;border:0;border-radius:12px;background:#142235;color:#fff;font-size:16px}.client{margin-top:11px;background:#101d2e;border:1px solid #26364d;border-radius:15px;padding:14px}.client.paid{border-color:#2d8f55;background:#10291e}.client.partial{border-color:#c29c38;background:#29230f}.client-top{display:flex;justify-content:space-between;gap:8px}.name{font-weight:800;font-size:17px}.amount{color:#efc965;font-weight:800}.number{font-size:12px;color:#7fa9d8;margin-top:3px}.info{color:#aab5c5;font-size:14px;margin-top:7px;line-height:1.75}.badge{display:inline-block;margin:6px 4px 0 0;padding:6px 10px;border-radius:20px;font-size:12px;background:#493d1c;color:#f4cf70}.lateBadge{background:#552626;color:#ffb1b1}.teamBadge{background:#193d59;color:#9fd7ff}.history{margin-top:10px;padding:10px;background:#0a1524;border-radius:10px;font-size:13px;line-height:1.7;color:#cbd4df}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}button{border:0;border-radius:10px;padding:11px;font-weight:700}.primary{background:#d8b45b;color:#07111f}.secondary{background:#22324a;color:#fff}.call{background:#236a46;color:#fff}.whatsapp{background:#198754;color:#fff}.danger{background:#6c2730;color:#fff}.add{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:min(640px,calc(100% - 30px));padding:15px;background:#d8b45b;color:#07111f;border-radius:14px;font-size:16px;z-index:5}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);padding:15px;align-items:center;justify-content:center;z-index:20}.modal-box{width:100%;max-width:560px;max-height:91vh;overflow:auto;background:#101d2e;border-radius:18px;padding:18px}.modal input,.modal select,.modal textarea{width:100%;margin:5px 0;padding:12px;border:1px solid #30415a;border-radius:10px;background:#142235;color:#fff;font-size:15px}.modal textarea{min-height:75px}.row{display:grid;grid-template-columns:1fr 1fr;gap:7px}label{display:block;margin-top:8px;color:#c3ccd8;font-size:13px}.empty{text-align:center;color:#8f9bad;padding:20px}.note{font-size:12px;color:#8f9bad;margin-top:8px}.divider{height:1px;background:#26364d;margin:14px 0}
 </style>
-
 </head>
-
 <body>
-
 <div class="app">
-
 <header>
-
 <div class="logo">Collection Pro</div>
-
 <div class="sub">نظام إدارة ومتابعة التحصيل</div>
-
 <div class="user">لوحة المشرف — مشعل عبدالقادر</div>
-
+<div class="cloudbar"><button onclick="openCloud()">☁️ ربط السحابة</button><span id="cloudStatus" class="cloudstatus">محلي فقط</span></div>
 </header>
-
 <main>
-
 <div class="stats">
-
 <div class="card"><small>إجمالي المتأخرات</small><strong id="total">0 د.أ</strong></div>
-
 <div class="card"><small>عدد العملاء</small><strong id="count">0</strong></div>
-
 <div class="card"><small>وعود الدفع</small><strong id="promises">0</strong></div>
-
 <div class="card"><small>متابعات اليوم</small><strong id="todayCount">0</strong></div>
-
 </div>
-
 <div class="lateBox">
-
 <div class="lateTitle">📊 Late Payment — 30 إلى 60 يوم</div>
-
 <div class="lateStats">
-
 <div class="mini"><span>بداية الشهر</span><b id="lateStart">0</b></div>
-
 <div class="mini"><span>المتبقي حاليًا</span><b class="yellow" id="lateRemaining">0</b></div>
-
 <div class="mini"><span>تمت المعالجة / السداد</span><b class="green" id="latePaid">0</b></div>
-
 <div class="mini"><span>نسبة الإنجاز</span><b id="latePercent">0%</b></div>
-
 </div>
-
 <div class="progress"><div id="lateProgress"></div></div>
-
-<button class="importBtn" onclick="document.getElementById('excelFile').click()">📥 تحديث Late Payment من Excel</button>
-
+<button class="importBtn" onclick="excelFile.click()">📥 تحديث Late Payment من Excel</button>
 <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" onchange="importLate(event)">
-
-<div class="note">أول ملف في الشهر يحفظ خط البداية. أي تحديث لاحق يقارن العملاء برقم العميل ويحتفظ بسجل من خرج من القائمة.</div>
-
 </div>
-
 <div class="teamBox">
-
 <div class="teamTitle">👥 الموظفون والـ Teams</div>
-
 <div class="empStats" style="margin-top:12px">
-
 <div class="mini"><span>عدد الموظفين</span><b id="employeeCount">0</b></div>
-
 <div class="mini"><span>عملاء غير مربوطين</span><b id="unassignedCount" class="yellow">0</b></div>
-
 </div>
-
 <div id="employeeSummary"></div>
-
 <button class="manageBtn" onclick="openTeamModal()">⚙️ إدارة الموظفين والفرق</button>
-
-<div class="note">عند استيراد Late Payment سيحاول النظام التقاط اسم/رمز CEA وربط العملاء به تلقائيًا.</div>
-
 </div>
-
-<div class="alerts">
-
-<div class="alert-title">🔔 التذكيرات والمتابعات</div>
-
-<div id="alerts"></div>
-
-</div>
-
+<div class="alerts"><div class="alert-title">🔔 التذكيرات والمتابعات</div><div id="alerts"></div></div>
 <h2>العملاء والمتابعة</h2>
-
 <input class="search" id="search" placeholder="بحث بالاسم أو الهاتف أو رقم العميل..." oninput="render()">
-
 <div id="clients"></div>
-
 </main>
-
 <button class="add" onclick="openModal()">＋ إضافة عميل جديد</button>
-
 </div>
 
 <div class="modal" id="modal"><div class="modal-box">
-
 <h2>إضافة عميل</h2>
-
-<input id="clientNo" placeholder="رقم العميل">
-
-<input id="name" placeholder="اسم العميل">
-
-<input id="phone" placeholder="رقم الهاتف">
-
+<input id="clientNo" placeholder="رقم العميل"><input id="name" placeholder="اسم العميل"><input id="phone" placeholder="رقم الهاتف">
 <div class="row"><input id="arrears" type="number" placeholder="المتأخرات"><input id="installment" type="number" placeholder="القسط"></div>
-
 <input id="guarantor" placeholder="اسم الكفيل"><input id="guarantorPhone" placeholder="هاتف الكفيل">
-
-<label>اسم الشركة / جهة العمل</label><input id="company" placeholder="اسم الشركة">
-
-<label>مكان العمل / الموقع</label><input id="workLocation" placeholder="مكان العمل">
-
-<label>حالة العمل</label><select id="workStatus"><option>على رأس عمله</option><option>ترك العمل</option><option>مكان العمل مجهول</option></select>
-
+<input id="company" placeholder="اسم الشركة"><input id="workLocation" placeholder="مكان العمل">
+<select id="workStatus"><option>على رأس عمله</option><option>ترك العمل</option><option>مكان العمل مجهول</option></select>
 <input id="managerPhone" placeholder="هاتف المسؤول في العمل">
-
-<label>الموظف المسؤول</label><select id="employee"></select>
-
-<label>حالة العميل</label><select id="status"><option>متابعة</option><option>وعد بالدفع</option><option>إنذار نهائي</option><option>قانوني</option><option>مسدد</option></select>
-
-<label>تاريخ المتابعة القادمة</label><input id="followup" type="date">
-
-<label>تاريخ وعد السداد</label><input id="promiseDate" type="date">
-
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-
+<select id="employee"></select>
+<select id="status"><option>متابعة</option><option>وعد بالدفع</option><option>إنذار نهائي</option><option>قانوني</option><option>مسدد</option></select>
+<input id="followup" type="date"><input id="promiseDate" type="date"><textarea id="notes" placeholder="ملاحظات"></textarea>
 <div class="row"><button class="primary" onclick="saveClient()">حفظ العميل</button><button class="secondary" onclick="closeModal()">إلغاء</button></div>
-
 </div></div>
 
 <div class="modal" id="teamModal"><div class="modal-box">
-
 <h2>إدارة الموظفين والـ Teams</h2>
+<input id="empName" placeholder="اسم الموظف"><input id="empCea" placeholder="رمز CEA"><input id="empTeam" placeholder="الفريق">
+<button class="primary" style="width:100%" onclick="addEmployee()">＋ إضافة الموظف</button><div class="divider"></div><div id="teamList"></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="closeTeamModal()">إغلاق</button>
+</div></div>
 
-<label>اسم الموظف</label><input id="empName" placeholder="مثال: أحمد محمد">
-
-<label>رمز CEA إن وجد</label><input id="empCea" placeholder="مثال: 12345">
-
-<label>الفريق</label><input id="empTeam" placeholder="مثال: Team A">
-
-<button class="primary" style="width:100%;margin-top:8px" onclick="addEmployee()">＋ إضافة الموظف</button>
-
-<div class="divider"></div>
-
-<div id="teamList"></div>
-
-<div class="row" style="margin-top:12px"><button class="secondary" onclick="closeTeamModal()">إغلاق</button><button class="secondary" onclick="autoAssignByCea()">🔄 إعادة الربط بالـ CEA</button></div>
-
+<div class="modal" id="cloudModal"><div class="modal-box">
+<h2>☁️ ربط السحابة</h2>
+<input id="cloudEmail" type="email" value="ma.abdelqader@unrwa.org" placeholder="البريد الإلكتروني">
+<input id="cloudPassword" type="password" placeholder="كلمة المرور">
+<button class="primary" style="width:100%;margin-top:8px" onclick="cloudLogin()">تسجيل الدخول والمزامنة</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="syncCloud(true)">مزامنة الآن</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="cloudLogout()">تسجيل الخروج</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="closeCloud()">إغلاق</button>
+<div class="note">لن تُحفظ كلمة المرور داخل التطبيق.</div>
 </div></div>
 
 <script>
-
-const CLIENTS_KEY="collection_clients";
-
-const LATE_KEY="late_payment_30_60";
-
-const EMP_KEY="collection_employees";
-
+const CLIENTS_KEY="collection_clients",LATE_KEY="late_payment_30_60",EMP_KEY="collection_employees";
 let clients=JSON.parse(localStorage.getItem(CLIENTS_KEY)||"[]");
-
-let lateData=JSON.parse(localStorage.getItem(LATE_KEY)||JSON.stringify({month:"",startIds:[],currentIds:[],paidIds:[],lastUpdate:"",records:{}}));
-
+let lateData=JSON.parse(localStorage.getItem(LATE_KEY)||'{"month":"","startIds":[],"currentIds":[],"paidIds":[],"lastUpdate":"","records":{}}');
 let employees=JSON.parse(localStorage.getItem(EMP_KEY)||"[]");
-
-if(!employees.length){employees=[{id:"sup",name:"مشعل عبدالقادر",cea:"",team:"الإشراف"}];}
-
-function save(){localStorage.setItem(CLIENTS_KEY,JSON.stringify(clients));localStorage.setItem(LATE_KEY,JSON.stringify(lateData));localStorage.setItem(EMP_KEY,JSON.stringify(employees));}
-
-function localDate(d=new Date()){let y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`}
-
-function today(){return localDate()}function tomorrow(){let d=new Date();d.setDate(d.getDate()+1);return localDate(d)}
-
-function money(n){return Number(n||0).toLocaleString("ar-JO",{maximumFractionDigits:2})+" د.أ"}
-
-function safe(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-
-function normalize(v){return String(v??"").toLowerCase().replace(/\s+/g," ").trim()}
-
-function cleanNumber(v){if(v===undefined||v===null)return "";return String(v).replace(/\.0$/,"").trim()}
-
-function num(v){if(typeof v==="number")return v;let s=String(v??"").replace(/,/g,"").replace(/[^\d.-]/g,"");return Number(s)||0}
-
+if(!employees.length)employees=[{id:"sup",name:"مشعل عبدالقادر",cea:"",team:"الإشراف"}];
+const SB_URL="https://rhqazngrxlwyrnsdhxsz.supabase.co";
+const SB_KEY="sb_publishable_F9WCYtiIU5nn51d6JlEA5Q_c1kFr0ZP";
+const cloud=window.supabase.createClient(SB_URL,SB_KEY);
+let cloudUser=null,pushTimer=null;
+const $=id=>document.getElementById(id),safe=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+function today(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function tomorrow(){let d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function num(v){return Number(String(v??"").replace(/,/g,"").replace(/[^\d.-]/g,""))||0}
+function money(v){return num(v).toLocaleString("ar-JO",{maximumFractionDigits:2})+" د.أ"}
+function norm(v){return String(v??"").toLowerCase().replace(/\s+/g," ").trim()}
+function clean(v){return String(v??"").replace(/\.0$/,"").trim()}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-
-function currentMonth(){return today().slice(0,7)}
-
-function ensureEmployee(name,cea="",team=""){name=String(name||"").trim();cea=String(cea||"").trim();if(!name&&!cea)return null;let e=employees.find(x=>(cea&&x.cea===cea)||(name&&normalize(x.name)===normalize(name)));if(!e){e={id:uid(),name:name||("CEA "+cea),cea,team:team||"غير محدد"};employees.push(e)}else{if(cea&&!e.cea)e.cea=cea;if(name&&(!e.name||/^CEA /.test(e.name)))e.name=name;if(team&&!e.team)e.team=team}return e}
-
-function employeeDisplay(e){return e?`${e.name}${e.cea?` — CEA ${e.cea}`:""}${e.team?` — ${e.team}`:""}`:""}
-
-function refreshEmployeeSelect(){let s=document.getElementById("employee");if(!s)return;s.innerHTML='<option value="">— غير محدد —</option>'+employees.map(e=>`<option value="${safe(e.name)}">${safe(employeeDisplay(e))}</option>`).join("")}
-
-function renderLate(){let start=lateData.startIds?.length||0,remaining=lateData.currentIds?.length||0,paid=lateData.paidIds?.filter(id=>lateData.startIds.includes(id)).length||0,percent=start?Math.round((paid/start)*1000)/10:0;lateStart.textContent=start;lateRemaining.textContent=remaining;latePaid.textContent=paid;latePercent.textContent=percent+"%";lateProgress.style.width=Math.min(percent,100)+"%"}
-
-function renderEmployees(){employeeCount.textContent=employees.length;unassignedCount.textContent=clients.filter(c=>!c.employee).length;let active=employees.filter(e=>e.name!=="مشعل عبدالقادر"||clients.some(c=>c.employee===e.name));employeeSummary.innerHTML=active.length?active.map(e=>{let ec=clients.filter(c=>c.employee===e.name),late=ec.filter(c=>c.inLate).length,due=ec.filter(c=>c.followup===today()&&!c.followedToday).length;return `<div class="employeeCard"><b>${safe(e.name)}</b>${e.cea?` <span class="badge">CEA ${safe(e.cea)}</span>`:""}${e.team?` <span class="badge teamBadge">${safe(e.team)}</span>`:""}<small>العملاء: ${ec.length} | Late: ${late} | متابعات اليوم: ${due}</small></div>`}).join(""):'<div class="empty">لا يوجد موظفون مربوطون حتى الآن</div>'}
-
-function renderAlerts(){let t=today(),tm=tomorrow(),items=[];clients.forEach(c=>{if(c.promiseDate===tm)items.push("غدًا موعد وعد السداد: "+c.name);if(c.promiseDate===t)items.push("اليوم موعد وعد السداد: "+c.name);if(c.followup===t&&!c.followedToday)items.push("متابعة مطلوبة اليوم: "+c.name+" — "+(c.employee||"-"))});alerts.innerHTML=items.length?items.map(x=>'<div class="alert-item">'+safe(x)+'</div>').join(""):'<div class="empty">لا توجد تذكيرات حاليًا</div>'}
-
-function statusClass(c){if(c.status==="مسدد"||Number(c.paymentCount)===1)return"paid";if(Number(c.paymentCount)>=2)return"partial";return""}
-
-function render(){let q=normalize(search.value),list=clients.filter(c=>normalize(c.name).includes(q)||normalize(c.phone).includes(q)||normalize(c.clientNo).includes(q));total.textContent=money(clients.reduce((s,c)=>s+num(c.arrears),0));count.textContent=clients.length;promises.textContent=clients.filter(c=>c.promiseDate&&c.promiseDate>=today()&&c.status!=="مسدد").length;todayCount.textContent=clients.filter(c=>c.followup===today()&&!c.followedToday).length;document.getElementById("clients").innerHTML=list.length?list.map((c,i)=>`<div class="client ${statusClass(c)}"><div class="client-top"><div><div class="name">${safe(c.name||"بدون اسم")}</div><div class="number">رقم العميل: ${safe(c.clientNo||"-")}</div></div><div class="amount">${money(c.arrears)}</div></div><div class="info">📞 ${safe(c.phone||"-")}<br>👤 الموظف المسؤول: ${safe(c.employee||"-")}${c.cea?` — CEA ${safe(c.cea)}`:""}<br>📅 المتابعة: ${safe(c.followup||"-")}<br>🤝 الكفيل: ${safe(c.guarantor||"-")}${c.lateDays?`<br>⏱️ Late Days: ${safe(c.lateDays)}`:""}${c.netToPay!==undefined?`<br>💰 Net To Pay: ${money(c.netToPay)}`:""}</div><span class="badge">${safe(c.status||"متابعة")}</span>${c.inLate?'<span class="badge lateBadge">Late 30–60</span>':''}${c.team?`<span class="badge teamBadge">${safe(c.team)}</span>`:""}${c.history?.length?`<div class="history">${c.history.slice(-3).reverse().map(h=>`• ${safe(h.date||"")} — ${safe(h.text||"")}`).join("<br>")}</div>`:""}<div class="actions"><button class="call" onclick="callClient(${i})">📞 اتصال</button><button class="whatsapp" onclick="whatsappClient(${i})">WhatsApp</button><button class="secondary" onclick="followClient(${i})">📝 متابعة</button><button class="danger" onclick="deleteClient(${i})">🗑 حذف</button></div></div>`).join(""):'<div class="empty">لا يوجد عملاء</div>';renderLate();renderEmployees();renderAlerts();refreshEmployeeSelect();save()}
-
-function openModal(){refreshEmployeeSelect();modal.style.display="flex"}function closeModal(){modal.style.display="none"}
-
-function saveClient(){let c={id:uid(),clientNo:cleanNumber(clientNo.value),name:name.value.trim(),phone:cleanNumber(phone.value),arrears:num(arrears.value),installment:num(installment.value),guarantor:guarantor.value.trim(),guarantorPhone:cleanNumber(guarantorPhone.value),company:company.value.trim(),workLocation:workLocation.value.trim(),workStatus:workStatus.value,managerPhone:cleanNumber(managerPhone.value),employee:employee.value,status:status.value,followup:followup.value,promiseDate:promiseDate.value,notes:notes.value.trim(),history:[],paymentCount:0,inLate:false};let e=employees.find(x=>x.name===c.employee);if(e){c.cea=e.cea;c.team=e.team}clients.unshift(c);save();closeModal();document.querySelectorAll('#modal input,#modal textarea').forEach(x=>x.value="");render()}
-
-function callClient(i){let c=clients[i];if(c.phone)location.href="tel:"+c.phone}
-
-function whatsappClient(i){let c=clients[i];if(!c.phone)return alert("لا يوجد رقم هاتف");let text=prompt("نص رسالة WhatsApp:",`السلام عليكم ${c.name}، نرجو التواصل بخصوص الالتزام المالي المستحق.`);if(text===null)return;let p=String(c.phone).replace(/\D/g,"");if(p.startsWith("0"))p="962"+p.slice(1);c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:"تم تجهيز رسالة WhatsApp: "+text});save();render();location.href=`https://wa.me/${p}?text=${encodeURIComponent(text)}`}
-
-function followClient(i){let c=clients[i],result=prompt("نتيجة المتابعة:","تم التواصل");if(result===null)return;let next=prompt("تاريخ المتابعة القادمة YYYY-MM-DD:",c.followup||"");if(next!==null)c.followup=next.trim();let promise=prompt("تاريخ وعد السداد إن وجد YYYY-MM-DD:",c.promiseDate||"");if(promise!==null)c.promiseDate=promise.trim();c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:result});c.followedToday=true;if(/سداد|دفع|دفعة/.test(result)){c.paymentCount=(Number(c.paymentCount)||0)+1;if(c.paymentCount===1)c.status="دفعة 1 من 2";if(c.paymentCount>=2)c.status="دفعتين من 2"}save();render()}
-
+function weight(d){return (d.clients?.length||0)*1000+(d.lateData?.startIds?.length||0)*10+(d.employees?.length||0)}
+function snapshot(){return{clients,lateData,employees}}
+function applySnapshot(d){clients=Array.isArray(d.clients)?d.clients:[];lateData=d.lateData||lateData;employees=Array.isArray(d.employees)&&d.employees.length?d.employees:employees;save(false);render()}
+function save(push=true){localStorage.setItem(CLIENTS_KEY,JSON.stringify(clients));localStorage.setItem(LATE_KEY,JSON.stringify(lateData));localStorage.setItem(EMP_KEY,JSON.stringify(employees));if(push&&cloudUser){clearTimeout(pushTimer);pushTimer=setTimeout(()=>pushCloud(false),700)}}
+function setCloudStatus(t,ok=false){$("cloudStatus").textContent=t;$("cloudStatus").className="cloudstatus"+(ok?" ok":"")}
+function openCloud(){$("cloudModal").style.display="flex"}function closeCloud(){$("cloudModal").style.display="none"}
+async function cloudLogin(){let email=$("cloudEmail").value.trim(),password=$("cloudPassword").value;if(!email||!password)return alert("أدخل البريد وكلمة المرور");setCloudStatus("جاري تسجيل الدخول...");let {data,error}=await cloud.auth.signInWithPassword({email,password});if(error){setCloudStatus("فشل الدخول");return alert(error.message)}cloudUser=data.user;await syncCloud(true);closeCloud()}
+async function pushCloud(show){if(!cloudUser)return;let {error}=await cloud.from("collection_app_snapshot").upsert({user_id:cloudUser.id,data:snapshot(),updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error){setCloudStatus("خطأ بالمزامنة");if(show)alert(error.message);return}setCloudStatus("متصل ومتزامن",true);if(show)alert("تمت المزامنة بنجاح ✅")}
+async function syncCloud(show=false){if(!cloudUser){let {data}=await cloud.auth.getSession();cloudUser=data.session?.user||null}if(!cloudUser){setCloudStatus("محلي فقط");if(show)alert("سجل الدخول أولًا");return}
+setCloudStatus("جاري المزامنة...");
+let {data,error}=await cloud.from("collection_app_snapshot").select("data,updated_at").eq("user_id",cloudUser.id).maybeSingle();
+if(error){setCloudStatus("خطأ بالمزامنة");if(show)alert(error.message);return}
+let local=snapshot(),remote=data?.data;
+if(!remote||weight(local)>=weight(remote)){await pushCloud(false)}else{applySnapshot(remote);setCloudStatus("تم تحميل بيانات السحابة",true)}
+if(show)alert("تمت المزامنة ✅")}
+async function cloudLogout(){await cloud.auth.signOut();cloudUser=null;setCloudStatus("محلي فقط");closeCloud()}
+async function initCloud(){let {data}=await cloud.auth.getSession();cloudUser=data.session?.user||null;if(cloudUser){setCloudStatus("متصل",true);await syncCloud(false)}}
+function renderLate(){let s=lateData.startIds?.length||0,r=lateData.currentIds?.length||0,p=lateData.paidIds?.filter(x=>lateData.startIds?.includes(x)).length||0,pc=s?Math.round(p/s*1000)/10:0;$("lateStart").textContent=s;$("lateRemaining").textContent=r;$("latePaid").textContent=p;$("latePercent").textContent=pc+"%";$("lateProgress").style.width=Math.min(pc,100)+"%"}
+function renderEmployees(){$("employeeCount").textContent=employees.length;$("unassignedCount").textContent=clients.filter(c=>!c.employee).length;$("employeeSummary").innerHTML=employees.map(e=>`<div class="employeeCard"><b>${safe(e.name)}</b><small>CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"-")} | العملاء: ${clients.filter(c=>c.employee===e.name).length}</small></div>`).join("")}
+function renderAlerts(){let a=[];clients.forEach(c=>{if(c.promiseDate===today())a.push("اليوم موعد وعد السداد: "+c.name);if(c.followup===today()&&!c.followedToday)a.push("متابعة مطلوبة اليوم: "+c.name)});$("alerts").innerHTML=a.length?a.map(x=>`<div class="alert-item">${safe(x)}</div>`).join(""):'<div class="empty">لا توجد تذكيرات حاليًا</div>'}
+function render(){let q=norm($("search").value),list=clients.filter(c=>norm(c.name).includes(q)||norm(c.phone).includes(q)||norm(c.clientNo).includes(q));$("total").textContent=money(clients.reduce((s,c)=>s+num(c.arrears),0));$("count").textContent=clients.length;$("promises").textContent=clients.filter(c=>c.promiseDate&&c.promiseDate>=today()&&c.status!=="مسدد").length;$("todayCount").textContent=clients.filter(c=>c.followup===today()&&!c.followedToday).length;$("clients").innerHTML=list.length?list.map(c=>{let i=clients.indexOf(c),cls=c.status==="مسدد"||Number(c.paymentCount)===1?"paid":Number(c.paymentCount)>=2?"partial":"";return `<div class="client ${cls}"><div class="client-top"><div><div class="name">${safe(c.name||"بدون اسم")}</div><div class="number">رقم العميل: ${safe(c.clientNo||"-")}</div></div><div class="amount">${money(c.arrears)}</div></div><div class="info">📞 ${safe(c.phone||"-")}<br>👤 ${safe(c.employee||"-")}<br>📅 ${safe(c.followup||"-")}${c.lateDays?`<br>⏱️ Late Days: ${safe(c.lateDays)}`:""}</div><span class="badge">${safe(c.status||"متابعة")}</span>${c.inLate?'<span class="badge lateBadge">Late 30–60</span>':""}${c.team?`<span class="badge teamBadge">${safe(c.team)}</span>`:""}<div class="actions"><button class="call" onclick="callClient(${i})">📞 اتصال</button><button class="whatsapp" onclick="whatsappClient(${i})">WhatsApp</button><button class="secondary" onclick="followClient(${i})">📝 متابعة</button><button class="danger" onclick="deleteClient(${i})">🗑 حذف</button></div></div>`}).join(""):'<div class="empty">لا يوجد عملاء</div>';renderLate();renderEmployees();renderAlerts();refreshEmployeeSelect()}
+function refreshEmployeeSelect(){$("employee").innerHTML='<option value="">— غير محدد —</option>'+employees.map(e=>`<option>${safe(e.name)}</option>`).join("")}
+function openModal(){refreshEmployeeSelect();$("modal").style.display="flex"}function closeModal(){$("modal").style.display="none"}
+function saveClient(){let c={id:uid(),clientNo:clean($("clientNo").value),name:$("name").value.trim(),phone:clean($("phone").value),arrears:num($("arrears").value),installment:num($("installment").value),guarantor:$("guarantor").value.trim(),guarantorPhone:clean($("guarantorPhone").value),company:$("company").value.trim(),workLocation:$("workLocation").value.trim(),workStatus:$("workStatus").value,managerPhone:clean($("managerPhone").value),employee:$("employee").value,status:$("status").value,followup:$("followup").value,promiseDate:$("promiseDate").value,notes:$("notes").value.trim(),history:[],paymentCount:0,inLate:false};let e=employees.find(x=>x.name===c.employee);if(e){c.cea=e.cea;c.team=e.team}clients.unshift(c);save();closeModal();render()}
+function callClient(i){if(clients[i].phone)location.href="tel:"+clients[i].phone}
+function whatsappClient(i){let c=clients[i];if(!c.phone)return alert("لا يوجد رقم هاتف");let text=prompt("نص رسالة WhatsApp:",`السلام عليكم ${c.name}، نرجو التواصل بخصوص الالتزام المالي المستحق.`);if(text===null)return;let p=String(c.phone).replace(/\D/g,"");if(p.startsWith("0"))p="962"+p.slice(1);c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:"تم تجهيز رسالة WhatsApp: "+text});save();location.href=`https://wa.me/${p}?text=${encodeURIComponent(text)}`}
+function followClient(i){let c=clients[i],r=prompt("نتيجة المتابعة:","تم التواصل");if(r===null)return;let n=prompt("تاريخ المتابعة القادمة YYYY-MM-DD:",c.followup||"");if(n!==null)c.followup=n.trim();let p=prompt("تاريخ وعد السداد YYYY-MM-DD:",c.promiseDate||"");if(p!==null)c.promiseDate=p.trim();c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:r});c.followedToday=true;if(/سداد|دفع|دفعة/.test(r)){c.paymentCount=(Number(c.paymentCount)||0)+1;c.status=c.paymentCount===1?"دفعة 1 من 2":"دفعتين من 2"}save();render()}
 function deleteClient(i){if(confirm("حذف العميل؟")){clients.splice(i,1);save();render()}}
-
-function openTeamModal(){renderTeamList();teamModal.style.display="flex"}function closeTeamModal(){teamModal.style.display="none"}
-
-function addEmployee(){let n=empName.value.trim(),c=empCea.value.trim(),t=empTeam.value.trim();if(!n&&!c)return alert("أدخل اسم الموظف أو رمز CEA");ensureEmployee(n,c,t);empName.value=empCea.value=empTeam.value="";save();renderTeamList();render()}
-
-function renderTeamList(){teamList.innerHTML=employees.length?employees.map(e=>`<div class="employeeCard"><b>${safe(e.name)}</b><small>CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"غير محدد")}</small>${e.id!=="sup"?`<button class="danger" style="margin-top:7px" onclick="removeEmployee('${e.id}')">حذف الموظف</button>`:""}</div>`).join(""):'<div class="empty">لا يوجد موظفون</div>'}
-
-function removeEmployee(id){let e=employees.find(x=>x.id===id);if(!e)return;if(!confirm("حذف الموظف؟ العملاء سيبقون بدون تغيير."))return;employees=employees.filter(x=>x.id!==id);save();renderTeamList();render()}
-
-function autoAssignByCea(){let changed=0;clients.forEach(c=>{let e=employees.find(x=>(c.cea&&x.cea===c.cea)||(c.employee&&normalize(x.name)===normalize(c.employee)));if(e){if(c.employee!==e.name||c.team!==e.team){c.employee=e.name;c.team=e.team;changed++}}});save();render();alert("تم تحديث الربط لـ "+changed+" عميل")}
-
-function detectGroupValue(row,label){let cells=row.map(x=>String(x??"").trim()).filter(Boolean);for(let i=0;i<cells.length;i++){let s=cells[i];if(new RegExp(label,"i").test(s)){let cleaned=s.replace(new RegExp("^.*?"+label+"\\s*[:：-]?\\s*","i"),"").trim();if(cleaned&&cleaned.toLowerCase()!==label.toLowerCase())return cleaned;if(cells[i+1])return cells[i+1]}}return""}
-
-function parseCea(raw){raw=String(raw||"").replace(/\s+/g," ").trim();if(!raw)return{name:"",cea:""};let code="",name=raw;let m=raw.match(/(?:CEA\s*)?(\d{2,})\s*[-–:]?\s*(.*)/i);if(m){code=m[1];name=(m[2]||"").trim()||("CEA "+code)}else{name=raw.replace(/^CEA\s*[:：-]?\s*/i,"").trim()}return{name,cea:code}}
-
-function parseLateRows(rows){let header=null,currentCEA="",currentBranch="",records=[];for(let r=0;r<rows.length;r++){let row=rows[r]||[],joined=row.map(x=>String(x??"")).join(" | ");let b=detectGroupValue(row,"Branch");if(b&&!/Cust No/i.test(joined))currentBranch=b;let ce=detectGroupValue(row,"CEA");if(ce&&!/Cust No/i.test(joined))currentCEA=ce;let custIdx=row.findIndex(x=>/Cust\s*No/i.test(String(x??"")));if(custIdx>=0){header={};row.forEach((v,i)=>header[normalize(v)]=i);continue}if(!header)continue;let idx=(...names)=>{for(let n of names){let k=Object.keys(header).find(k=>normalize(k)===normalize(n)||normalize(k).includes(normalize(n)));if(k!==undefined)return header[k]}return-1};let ci=idx("Cust No");if(ci<0)continue;let id=cleanNumber(row[ci]);if(!id||!/\d/.test(id))continue;if(/total|num of customer|branch|cea/i.test(String(row[ci])))continue;let get=(...names)=>{let i=idx(...names);return i>=0?row[i]:""};let ceaParsed=parseCea(currentCEA);records.push({clientNo:id,name:String(get("Client Name","Name")||"").trim(),address:String(get("Client Home Address","Home Address")||"").trim(),phone:cleanNumber(get("Client Mobile","Mobile")),startingDate:get("Starting Date"),lateAmount:num(get("Late Amount")),lateDays:num(get("Max Of Late Days","Late Days")),netToPay:num(get("Net To Pay")),guarantor:String(get("Guarantor Name")||"").trim(),guarantorHome:String(get("Guarantor Home")||"").trim(),guarantorPhone:cleanNumber(get("Guarantor Mobile")),ceaRaw:currentCEA,cea:ceaParsed.cea,employee:ceaParsed.name,branch:currentBranch})}return records}
-
-async function importLate(event){let file=event.target.files?.[0];if(!file)return;try{let data=await file.arrayBuffer(),wb=XLSX.read(data,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""}),records=parseLateRows(rows);if(!records.length)throw new Error("لم أتعرف على صفوف العملاء في الملف");let month=currentMonth();if(lateData.month!==month){lateData={month,startIds:[],currentIds:[],paidIds:[],lastUpdate:"",records:{}}}let ids=[...new Set(records.map(r=>r.clientNo))];if(!lateData.startIds.length)lateData.startIds=[...ids];let previous=[...(lateData.currentIds||[])];previous.filter(id=>!ids.includes(id)&&lateData.startIds.includes(id)).forEach(id=>{if(!lateData.paidIds.includes(id))lateData.paidIds.push(id)});lateData.currentIds=[...ids];lateData.lastUpdate=new Date().toISOString();records.forEach(r=>{lateData.records[r.clientNo]=r;let e=null;if(r.employee||r.cea)e=ensureEmployee(r.employee,r.cea,"غير محدد");let c=clients.find(x=>cleanNumber(x.clientNo)===r.clientNo);let values={clientNo:r.clientNo,name:r.name,phone:r.phone,arrears:r.lateAmount,guarantor:r.guarantor,guarantorPhone:r.guarantorPhone,address:r.address,startingDate:r.startingDate,lateDays:r.lateDays,netToPay:r.netToPay,inLate:true,cea:r.cea||c?.cea||"",employee:e?.name||r.employee||c?.employee||"",team:e?.team||c?.team||"",branch:r.branch||c?.branch||""};if(c){Object.assign(c,values)}else{clients.push({id:uid(),...values,status:"متابعة",followup:"",promiseDate:"",history:[],paymentCount:0,installment:0,company:"",workLocation:"",workStatus:"",managerPhone:""})}});clients.forEach(c=>{let id=cleanNumber(c.clientNo);if(lateData.startIds.includes(id)&&!ids.includes(id)){c.inLate=false;c.history=c.history||[];if(!c.history.some(h=>h.text==="خرج من Late Payment في آخر تحديث"&&h.update===lateData.lastUpdate))c.history.push({date:new Date().toLocaleString("ar-JO"),text:"خرج من Late Payment في آخر تحديث",update:lateData.lastUpdate})}});save();render();let start=lateData.startIds.length,remaining=lateData.currentIds.length,paid=lateData.paidIds.filter(id=>lateData.startIds.includes(id)).length,pct=start?Math.round(paid/start*1000)/10:0,linked=records.filter(r=>r.employee||r.cea).length;alert(`تم تحديث Late Payment\n\nبداية الشهر: ${start}\nالمتبقي حاليًا: ${remaining}\nخرج من القائمة: ${paid}\nنسبة الإنجاز: ${pct}%\nتم التقاط CEA لعدد: ${linked}`)}catch(err){alert("تعذر قراءة الملف: "+err.message)}finally{event.target.value=""}}
-
-render();
-
+function openTeamModal(){renderTeamList();$("teamModal").style.display="flex"}function closeTeamModal(){$("teamModal").style.display="none"}
+function addEmployee(){let n=$("empName").value.trim(),cea=$("empCea").value.trim(),team=$("empTeam").value.trim();if(!n&&!cea)return;employees.push({id:uid(),name:n||("CEA "+cea),cea,team});save();renderTeamList();render()}
+function renderTeamList(){$("teamList").innerHTML=employees.map(e=>`<div class="employeeCard"><b>${safe(e.name)}</b><small>CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"-")}</small></div>`).join("")}
+function detect(row,label){let c=row.map(x=>String(x??"").trim()).filter(Boolean);for(let i=0;i<c.length;i++)if(new RegExp(label,"i").test(c[i]))return c[i].replace(new RegExp("^.*?"+label+"\\s*[:：-]?\\s*","i"),"").trim()||c[i+1]||"";return""}
+function parseCea(raw){raw=String(raw||"").trim();let m=raw.match(/(?:CEA\s*)?(\d{2,})\s*[-–:]?\s*(.*)/i);return m?{cea:m[1],name:(m[2]||"").trim()||("CEA "+m[1])}:{cea:"",name:raw.replace(/^CEA\s*[:：-]?\s*/i,"").trim()}}
+function parseLateRows(rows){let h=null,ceaRaw="",records=[];for(let row of rows){let joined=row.map(x=>String(x??"")).join(" | "),ce=detect(row,"CEA");if(ce&&!/Cust No/i.test(joined))ceaRaw=ce;let ci=row.findIndex(x=>/Cust\s*No/i.test(String(x??"")));if(ci>=0){h={};row.forEach((v,i)=>h[norm(v)]=i);continue}if(!h)continue;let idx=(...n)=>{for(let z of n){let k=Object.keys(h).find(k=>norm(k)===norm(z)||norm(k).includes(norm(z)));if(k!==undefined)return h[k]}return-1},get=(...n)=>{let i=idx(...n);return i>=0?row[i]:""},id=clean(get("Cust No"));if(!id||!/\d/.test(id))continue;let cp=parseCea(ceaRaw);records.push({clientNo:id,name:String(get("Client Name","Name")||"").trim(),phone:clean(get("Client Mobile","Mobile")),lateAmount:num(get("Late Amount")),lateDays:num(get("Max Of Late Days","Late Days")),netToPay:num(get("Net To Pay")),guarantor:String(get("Guarantor Name")||"").trim(),guarantorPhone:clean(get("Guarantor Mobile")),cea:cp.cea,employee:cp.name})}return records}
+async function importLate(ev){let f=ev.target.files?.[0];if(!f)return;try{let wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""}),records=parseLateRows(rows);if(!records.length)throw Error("لم أتعرف على العملاء");let month=today().slice(0,7);if(lateData.month!==month)lateData={month,startIds:[],currentIds:[],paidIds:[],lastUpdate:"",records:{}};let ids=[...new Set(records.map(r=>r.clientNo))];if(!lateData.startIds.length)lateData.startIds=[...ids];(lateData.currentIds||[]).filter(id=>!ids.includes(id)&&lateData.startIds.includes(id)).forEach(id=>{if(!lateData.paidIds.includes(id))lateData.paidIds.push(id)});lateData.currentIds=[...ids];records.forEach(r=>{let e=employees.find(x=>(r.cea&&x.cea===r.cea)||(r.employee&&norm(x.name)===norm(r.employee)));if(!e&&r.employee){e={id:uid(),name:r.employee,cea:r.cea,team:"غير محدد"};employees.push(e)}let c=clients.find(x=>clean(x.clientNo)===r.clientNo),v={clientNo:r.clientNo,name:r.name,phone:r.phone,arrears:r.lateAmount,guarantor:r.guarantor,guarantorPhone:r.guarantorPhone,lateDays:r.lateDays,netToPay:r.netToPay,inLate:true,cea:r.cea,employee:e?.name||r.employee,team:e?.team||""};if(c)Object.assign(c,v);else clients.push({id:uid(),...v,status:"متابعة",followup:"",promiseDate:"",history:[],paymentCount:0})});clients.forEach(c=>{if(lateData.startIds.includes(clean(c.clientNo))&&!ids.includes(clean(c.clientNo)))c.inLate=false});save();render();alert("تم تحديث Late Payment ✅")}catch(e){alert("تعذر قراءة الملف: "+e.message)}finally{ev.target.value=""}}
+render();initCloud();
 </script>
-
 </body>
-
 </html>
