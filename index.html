@@ -1,4 +1,3 @@
-DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -64,153 +63,153 @@ label{display:block;margin-top:8px;color:#c3ccd8;font-size:13px}
 <div class="app">
 <header>
 <div class="logo">MD-COLLECTION</div>
-<div class="sub">نظام إدارة ومتابعة التحصيل</div>
-<div class="user">لوحة المشرف — مشعل عبدالقادر</div>
+<div class="sub">ÙØ¸Ø§Ù Ø¥Ø¯Ø§Ø±Ø© ÙÙØªØ§Ø¨Ø¹Ø© Ø§ÙØªØ­ØµÙÙ</div>
+<div class="user">ÙÙØ­Ø© Ø§ÙÙØ´Ø±Ù â ÙØ´Ø¹Ù Ø¹Ø¨Ø¯Ø§ÙÙØ§Ø¯Ø±</div>
 <div class="topActions">
-<button onclick="shareApp()">🔗 مشاركة التطبيق</button>
-<button onclick="showInstallHelp()">📲 إضافة للشاشة الرئيسية</button>
-<button onclick="openSmsCenter()">✉️ SMS Center</button>
+<button onclick="shareApp()">ð ÙØ´Ø§Ø±ÙØ© Ø§ÙØªØ·Ø¨ÙÙ</button>
+<button onclick="showInstallHelp()">ð² Ø¥Ø¶Ø§ÙØ© ÙÙØ´Ø§Ø´Ø© Ø§ÙØ±Ø¦ÙØ³ÙØ©</button>
+<button onclick="openSmsCenter()">âï¸ SMS Center</button>
 </div>
-<div class="cloudbar"><button onclick="openCloud()">☁️ ربط السحابة</button><span id="cloudStatus" class="cloudstatus">محلي فقط</span></div>
+<div class="cloudbar"><button onclick="openCloud()">âï¸ Ø±Ø¨Ø· Ø§ÙØ³Ø­Ø§Ø¨Ø©</button><span id="cloudStatus" class="cloudstatus">ÙØ­ÙÙ ÙÙØ·</span></div>
 </header>
 
 <main>
 <div class="stats">
-<div class="card"><small>إجمالي المتأخرات</small><strong id="total">0 د.أ</strong></div>
-<div class="card"><small>عدد العملاء</small><strong id="count">0</strong></div>
-<div class="card"><small>وعود الدفع</small><strong id="promises">0</strong></div>
-<div class="card"><small>متابعات اليوم</small><strong id="todayCount">0</strong></div>
+<div class="card"><small>Ø¥Ø¬ÙØ§ÙÙ Ø§ÙÙØªØ£Ø®Ø±Ø§Øª</small><strong id="total">0 Ø¯.Ø£</strong></div>
+<div class="card"><small>Ø¹Ø¯Ø¯ Ø§ÙØ¹ÙÙØ§Ø¡</small><strong id="count">0</strong></div>
+<div class="card"><small>ÙØ¹ÙØ¯ Ø§ÙØ¯ÙØ¹</small><strong id="promises">0</strong></div>
+<div class="card"><small>ÙØªØ§Ø¨Ø¹Ø§Øª Ø§ÙÙÙÙ</small><strong id="todayCount">0</strong></div>
 </div>
 
 <div class="box">
-<div class="boxTitle">📊 Late Payment — الإجمالي العام</div>
+<div class="boxTitle">ð Late Payment â Ø§ÙØ¥Ø¬ÙØ§ÙÙ Ø§ÙØ¹Ø§Ù</div>
 <div class="lateStats">
-<div class="mini"><span>بداية الشهر</span><b id="lateStart">0</b></div>
-<div class="mini"><span>المتبقي حاليًا</span><b class="yellow" id="lateRemaining">0</b></div>
-<div class="mini"><span>تمت المعالجة / السداد</span><b class="green" id="latePaid">0</b></div>
-<div class="mini"><span>نسبة الإنجاز</span><b id="latePercent">0%</b></div>
+<div class="mini"><span>Ø¨Ø¯Ø§ÙØ© Ø§ÙØ´ÙØ±</span><b id="lateStart">0</b></div>
+<div class="mini"><span>Ø§ÙÙØªØ¨ÙÙ Ø­Ø§ÙÙÙØ§</span><b class="yellow" id="lateRemaining">0</b></div>
+<div class="mini"><span>ØªÙØª Ø§ÙÙØ¹Ø§ÙØ¬Ø© / Ø§ÙØ³Ø¯Ø§Ø¯</span><b class="green" id="latePaid">0</b></div>
+<div class="mini"><span>ÙØ³Ø¨Ø© Ø§ÙØ¥ÙØ¬Ø§Ø²</span><b id="latePercent">0%</b></div>
 </div>
 <div class="progress"><div id="lateProgress"></div></div>
-<button class="fullBtn" onclick="excelFile.click()">📥 تحديث Late Payment من Excel</button>
+<button class="fullBtn" onclick="excelFile.click()">ð¥ ØªØ­Ø¯ÙØ« Late Payment ÙÙ Excel</button>
 <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" onchange="importLate(event)">
-<div class="note">تم تضمين ملفات Late الأربعة الحالية داخل هذه النسخة. التحديث اللاحق يمكن رفعه لكل موظف بملف منفصل.</div>
+<div class="note">ØªÙ ØªØ¶ÙÙÙ ÙÙÙØ§Øª Late Ø§ÙØ£Ø±Ø¨Ø¹Ø© Ø§ÙØ­Ø§ÙÙØ© Ø¯Ø§Ø®Ù ÙØ°Ù Ø§ÙÙØ³Ø®Ø©. Ø§ÙØªØ­Ø¯ÙØ« Ø§ÙÙØ§Ø­Ù ÙÙÙÙ Ø±ÙØ¹Ù ÙÙÙ ÙÙØ¸Ù Ø¨ÙÙÙ ÙÙÙØµÙ.</div>
 </div>
 
 <div class="box">
-<div class="boxTitle">💰 كشف المسددين</div>
+<div class="boxTitle">ð° ÙØ´Ù Ø§ÙÙØ³Ø¯Ø¯ÙÙ</div>
 <div class="paidStats">
-<div class="mini"><span>سدد قسط واحد</span><b class="green" id="onePayCount">0</b></div>
-<div class="mini"><span>سدد قسطين</span><b class="yellow" id="twoPayCount">0</b></div>
-<div class="mini"><span>إجمالي المبالغ المسددة</span><b id="paidTotal">0 د.أ</b></div>
-<div class="mini"><span>عدد عمليات السداد</span><b id="paymentsCount">0</b></div>
+<div class="mini"><span>Ø³Ø¯Ø¯ ÙØ³Ø· ÙØ§Ø­Ø¯</span><b class="green" id="onePayCount">0</b></div>
+<div class="mini"><span>Ø³Ø¯Ø¯ ÙØ³Ø·ÙÙ</span><b class="yellow" id="twoPayCount">0</b></div>
+<div class="mini"><span>Ø¥Ø¬ÙØ§ÙÙ Ø§ÙÙØ¨Ø§ÙØº Ø§ÙÙØ³Ø¯Ø¯Ø©</span><b id="paidTotal">0 Ø¯.Ø£</b></div>
+<div class="mini"><span>Ø¹Ø¯Ø¯ Ø¹ÙÙÙØ§Øª Ø§ÙØ³Ø¯Ø§Ø¯</span><b id="paymentsCount">0</b></div>
 </div>
 <div class="tabs">
-<button id="tabOne" onclick="renderPaid('one')">قسط واحد</button>
-<button id="tabTwo" onclick="renderPaid('two')">قسطين</button>
-<button id="tabAll" class="active" onclick="renderPaid('all')">الكل</button>
+<button id="tabOne" onclick="renderPaid('one')">ÙØ³Ø· ÙØ§Ø­Ø¯</button>
+<button id="tabTwo" onclick="renderPaid('two')">ÙØ³Ø·ÙÙ</button>
+<button id="tabAll" class="active" onclick="renderPaid('all')">Ø§ÙÙÙ</button>
 </div>
 <div id="paidList"></div>
 </div>
 
 <div class="box">
-<div class="boxTitle">🔄 العملاء المتكررون والانتقالات</div>
+<div class="boxTitle">ð Ø§ÙØ¹ÙÙØ§Ø¡ Ø§ÙÙØªÙØ±Ø±ÙÙ ÙØ§ÙØ§ÙØªÙØ§ÙØ§Øª</div>
 <div class="paidStats">
-<div class="mini"><span>متكررون شهريًا</span><b id="repeatCount">0</b></div>
-<div class="mini"><span>انتقلوا 30 → 60</span><b class="red" id="moveCount">0</b></div>
+<div class="mini"><span>ÙØªÙØ±Ø±ÙÙ Ø´ÙØ±ÙÙØ§</span><b id="repeatCount">0</b></div>
+<div class="mini"><span>Ø§ÙØªÙÙÙØ§ 30 â 60</span><b class="red" id="moveCount">0</b></div>
 </div>
 <div id="repeatList"></div>
 </div>
 
 <div class="box">
-<div class="boxTitle">👥 الموظفون وصفحاتهم</div>
+<div class="boxTitle">ð¥ Ø§ÙÙÙØ¸ÙÙÙ ÙØµÙØ­Ø§ØªÙÙ</div>
 <div class="empStats" style="margin-top:12px">
-<div class="mini"><span>عدد الموظفين</span><b id="employeeCount">0</b></div>
-<div class="mini"><span>عملاء غير مربوطين</span><b id="unassignedCount" class="yellow">0</b></div>
+<div class="mini"><span>Ø¹Ø¯Ø¯ Ø§ÙÙÙØ¸ÙÙÙ</span><b id="employeeCount">0</b></div>
+<div class="mini"><span>Ø¹ÙÙØ§Ø¡ ØºÙØ± ÙØ±Ø¨ÙØ·ÙÙ</span><b id="unassignedCount" class="yellow">0</b></div>
 </div>
 <div id="employeeSummary"></div>
-<button class="fullBtn" onclick="openTeamModal()">⚙️ إدارة الموظفين والفرق</button>
+<button class="fullBtn" onclick="openTeamModal()">âï¸ Ø¥Ø¯Ø§Ø±Ø© Ø§ÙÙÙØ¸ÙÙÙ ÙØ§ÙÙØ±Ù</button>
 </div>
 
-<div class="alerts"><div class="alert-title">🔔 التذكيرات والمتابعات</div><div id="alerts"></div></div>
-<h2>العملاء والمتابعة</h2>
-<input class="search" id="search" placeholder="بحث بالاسم أو الهاتف أو رقم العميل..." oninput="render()">
+<div class="alerts"><div class="alert-title">ð Ø§ÙØªØ°ÙÙØ±Ø§Øª ÙØ§ÙÙØªØ§Ø¨Ø¹Ø§Øª</div><div id="alerts"></div></div>
+<h2>Ø§ÙØ¹ÙÙØ§Ø¡ ÙØ§ÙÙØªØ§Ø¨Ø¹Ø©</h2>
+<input class="search" id="search" placeholder="Ø¨Ø­Ø« Ø¨Ø§ÙØ§Ø³Ù Ø£Ù Ø§ÙÙØ§ØªÙ Ø£Ù Ø±ÙÙ Ø§ÙØ¹ÙÙÙ..." oninput="render()">
 <div id="clients"></div>
 </main>
-<button class="add" onclick="openModal()">＋ إضافة عميل جديد</button>
+<button class="add" onclick="openModal()">ï¼ Ø¥Ø¶Ø§ÙØ© Ø¹ÙÙÙ Ø¬Ø¯ÙØ¯</button>
 </div>
 
 <!-- Add Client -->
 <div class="modal" id="modal"><div class="modal-box">
-<h2>إضافة عميل</h2>
-<input id="clientNo" placeholder="رقم العميل"><input id="name" placeholder="اسم العميل"><input id="phone" placeholder="رقم هاتف العميل">
-<input id="clientAddress" placeholder="عنوان العميل">
-<div class="row"><input id="arrears" type="number" step="0.01" placeholder="المتأخرات"><input id="installment" type="number" step="0.01" placeholder="القسط"></div>
-<input id="guarantor" placeholder="اسم الكفيل"><input id="guarantorPhone" placeholder="رقم هاتف الكفيل"><input id="guarantorAddress" placeholder="عنوان الكفيل">
-<input id="company" placeholder="اسم الشركة"><input id="workLocation" placeholder="مكان العمل">
-<select id="workStatus"><option>على رأس عمله</option><option>ترك العمل</option><option>مكان العمل مجهول</option></select>
-<input id="managerPhone" placeholder="هاتف المسؤول في العمل">
+<h2>Ø¥Ø¶Ø§ÙØ© Ø¹ÙÙÙ</h2>
+<input id="clientNo" placeholder="Ø±ÙÙ Ø§ÙØ¹ÙÙÙ"><input id="name" placeholder="Ø§Ø³Ù Ø§ÙØ¹ÙÙÙ"><input id="phone" placeholder="Ø±ÙÙ ÙØ§ØªÙ Ø§ÙØ¹ÙÙÙ">
+<input id="clientAddress" placeholder="Ø¹ÙÙØ§Ù Ø§ÙØ¹ÙÙÙ">
+<div class="row"><input id="arrears" type="number" step="0.01" placeholder="Ø§ÙÙØªØ£Ø®Ø±Ø§Øª"><input id="installment" type="number" step="0.01" placeholder="Ø§ÙÙØ³Ø·"></div>
+<input id="guarantor" placeholder="Ø§Ø³Ù Ø§ÙÙÙÙÙ"><input id="guarantorPhone" placeholder="Ø±ÙÙ ÙØ§ØªÙ Ø§ÙÙÙÙÙ"><input id="guarantorAddress" placeholder="Ø¹ÙÙØ§Ù Ø§ÙÙÙÙÙ">
+<input id="company" placeholder="Ø§Ø³Ù Ø§ÙØ´Ø±ÙØ©"><input id="workLocation" placeholder="ÙÙØ§Ù Ø§ÙØ¹ÙÙ">
+<select id="workStatus"><option>Ø¹ÙÙ Ø±Ø£Ø³ Ø¹ÙÙÙ</option><option>ØªØ±Ù Ø§ÙØ¹ÙÙ</option><option>ÙÙØ§Ù Ø§ÙØ¹ÙÙ ÙØ¬ÙÙÙ</option></select>
+<input id="managerPhone" placeholder="ÙØ§ØªÙ Ø§ÙÙØ³Ø¤ÙÙ ÙÙ Ø§ÙØ¹ÙÙ">
 <select id="employee"></select>
-<select id="status"><option>متابعة</option><option>وعد بالدفع</option><option>إنذار نهائي</option><option>قانوني</option><option>مسدد</option></select>
-<input id="followup" type="date"><input id="promiseDate" type="date"><textarea id="notes" placeholder="ملاحظات"></textarea>
-<div class="row"><button class="primary" onclick="saveClient()">حفظ العميل</button><button class="secondary" onclick="closeModal()">إلغاء</button></div>
+<select id="status"><option>ÙØªØ§Ø¨Ø¹Ø©</option><option>ÙØ¹Ø¯ Ø¨Ø§ÙØ¯ÙØ¹</option><option>Ø¥ÙØ°Ø§Ø± ÙÙØ§Ø¦Ù</option><option>ÙØ§ÙÙÙÙ</option><option>ÙØ³Ø¯Ø¯</option></select>
+<input id="followup" type="date"><input id="promiseDate" type="date"><textarea id="notes" placeholder="ÙÙØ§Ø­Ø¸Ø§Øª"></textarea>
+<div class="row"><button class="primary" onclick="saveClient()">Ø­ÙØ¸ Ø§ÙØ¹ÙÙÙ</button><button class="secondary" onclick="closeModal()">Ø¥ÙØºØ§Ø¡</button></div>
 </div></div>
 
 <!-- Limited contact edit -->
 <div class="modal" id="editContactModal"><div class="modal-box">
-<h2>✏️ تعديل أرقام الاتصال فقط</h2>
-<input id="editClientPhone" placeholder="رقم هاتف العميل">
-<input id="editGuarantorPhone" placeholder="رقم هاتف الكفيل">
-<div class="note">التعديل في هذه الخانة مسموح فقط لرقم هاتف العميل ورقم هاتف الكفيل.</div>
-<div class="row"><button class="primary" onclick="saveContactEdit()">حفظ</button><button class="secondary" onclick="closeContactEdit()">إلغاء</button></div>
+<h2>âï¸ ØªØ¹Ø¯ÙÙ Ø£Ø±ÙØ§Ù Ø§ÙØ§ØªØµØ§Ù ÙÙØ·</h2>
+<input id="editClientPhone" placeholder="Ø±ÙÙ ÙØ§ØªÙ Ø§ÙØ¹ÙÙÙ">
+<input id="editGuarantorPhone" placeholder="Ø±ÙÙ ÙØ§ØªÙ Ø§ÙÙÙÙÙ">
+<div class="note">Ø§ÙØªØ¹Ø¯ÙÙ ÙÙ ÙØ°Ù Ø§ÙØ®Ø§ÙØ© ÙØ³ÙÙØ­ ÙÙØ· ÙØ±ÙÙ ÙØ§ØªÙ Ø§ÙØ¹ÙÙÙ ÙØ±ÙÙ ÙØ§ØªÙ Ø§ÙÙÙÙÙ.</div>
+<div class="row"><button class="primary" onclick="saveContactEdit()">Ø­ÙØ¸</button><button class="secondary" onclick="closeContactEdit()">Ø¥ÙØºØ§Ø¡</button></div>
 </div></div>
 
 <!-- Employee page -->
 <div class="modal" id="employeePageModal"><div class="modal-box">
 <div id="employeePageContent"></div>
-<button class="secondary" style="width:100%;margin-top:12px" onclick="closeEmployeePage()">إغلاق</button>
+<button class="secondary" style="width:100%;margin-top:12px" onclick="closeEmployeePage()">Ø¥ØºÙØ§Ù</button>
 </div></div>
 
 <!-- Teams -->
 <div class="modal" id="teamModal"><div class="modal-box">
-<h2>إدارة الموظفين والـ Teams</h2>
-<input id="empName" placeholder="اسم الموظف"><input id="empCea" placeholder="رمز CEA"><input id="empTeam" placeholder="الفريق">
-<button class="primary" style="width:100%" onclick="addEmployee()">＋ إضافة الموظف</button><div class="divider"></div><div id="teamList"></div>
-<button class="secondary" style="width:100%;margin-top:10px" onclick="closeTeamModal()">إغلاق</button>
+<h2>Ø¥Ø¯Ø§Ø±Ø© Ø§ÙÙÙØ¸ÙÙÙ ÙØ§ÙÙ Teams</h2>
+<input id="empName" placeholder="Ø§Ø³Ù Ø§ÙÙÙØ¸Ù"><input id="empCea" placeholder="Ø±ÙØ² CEA"><input id="empTeam" placeholder="Ø§ÙÙØ±ÙÙ">
+<button class="primary" style="width:100%" onclick="addEmployee()">ï¼ Ø¥Ø¶Ø§ÙØ© Ø§ÙÙÙØ¸Ù</button><div class="divider"></div><div id="teamList"></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="closeTeamModal()">Ø¥ØºÙØ§Ù</button>
 </div></div>
 
 <!-- Cloud -->
 <div class="modal" id="cloudModal"><div class="modal-box">
-<h2>☁️ ربط السحابة</h2>
-<input id="cloudEmail" type="email" value="ma.abdelqader@unrwa.org" placeholder="البريد الإلكتروني">
-<input id="cloudPassword" type="password" placeholder="كلمة المرور">
-<button class="primary" style="width:100%;margin-top:8px" onclick="cloudLogin()">تسجيل الدخول والمزامنة</button>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="syncCloud(true)">مزامنة الآن</button>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="cloudLogout()">تسجيل الخروج</button>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="closeCloud()">إغلاق</button>
-<div class="note">لن تُحفظ كلمة المرور داخل التطبيق.</div>
+<h2>âï¸ Ø±Ø¨Ø· Ø§ÙØ³Ø­Ø§Ø¨Ø©</h2>
+<input id="cloudEmail" type="email" value="ma.abdelqader@unrwa.org" placeholder="Ø§ÙØ¨Ø±ÙØ¯ Ø§ÙØ¥ÙÙØªØ±ÙÙÙ">
+<input id="cloudPassword" type="password" placeholder="ÙÙÙØ© Ø§ÙÙØ±ÙØ±">
+<button class="primary" style="width:100%;margin-top:8px" onclick="cloudLogin()">ØªØ³Ø¬ÙÙ Ø§ÙØ¯Ø®ÙÙ ÙØ§ÙÙØ²Ø§ÙÙØ©</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="syncCloud(true)">ÙØ²Ø§ÙÙØ© Ø§ÙØ¢Ù</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="cloudLogout()">ØªØ³Ø¬ÙÙ Ø§ÙØ®Ø±ÙØ¬</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="closeCloud()">Ø¥ØºÙØ§Ù</button>
+<div class="note">ÙÙ ØªÙØ­ÙØ¸ ÙÙÙØ© Ø§ÙÙØ±ÙØ± Ø¯Ø§Ø®Ù Ø§ÙØªØ·Ø¨ÙÙ.</div>
 </div></div>
 
 <!-- Install -->
 <div class="modal" id="installModal"><div class="modal-box">
-<h2>📲 إضافة التطبيق للشاشة الرئيسية</h2>
-<p class="info">على iPhone: افتح التطبيق في Safari، اضغط زر المشاركة، ثم اختر <b>إضافة إلى الشاشة الرئيسية</b> وبعدها <b>إضافة</b>.</p>
-<button class="primary" style="width:100%" onclick="closeInstallHelp()">تم</button>
+<h2>ð² Ø¥Ø¶Ø§ÙØ© Ø§ÙØªØ·Ø¨ÙÙ ÙÙØ´Ø§Ø´Ø© Ø§ÙØ±Ø¦ÙØ³ÙØ©</h2>
+<p class="info">Ø¹ÙÙ iPhone: Ø§ÙØªØ­ Ø§ÙØªØ·Ø¨ÙÙ ÙÙ SafariØ Ø§Ø¶ØºØ· Ø²Ø± Ø§ÙÙØ´Ø§Ø±ÙØ©Ø Ø«Ù Ø§Ø®ØªØ± <b>Ø¥Ø¶Ø§ÙØ© Ø¥ÙÙ Ø§ÙØ´Ø§Ø´Ø© Ø§ÙØ±Ø¦ÙØ³ÙØ©</b> ÙØ¨Ø¹Ø¯ÙØ§ <b>Ø¥Ø¶Ø§ÙØ©</b>.</p>
+<button class="primary" style="width:100%" onclick="closeInstallHelp()">ØªÙ</button>
 </div></div>
 
 <!-- SMS Center -->
 <div class="modal" id="smsModal"><div class="modal-box">
-<h2>✉️ SMS Center</h2>
-<label>رقم العميل</label><input id="smsPhone" placeholder="رقم الهاتف">
-<label>نص الرسالة</label><textarea id="smsText">نرجو التواصل بخصوص الالتزام المالي المستحق وتسوية الدفعة في أقرب وقت.</textarea>
+<h2>âï¸ SMS Center</h2>
+<label>Ø±ÙÙ Ø§ÙØ¹ÙÙÙ</label><input id="smsPhone" placeholder="Ø±ÙÙ Ø§ÙÙØ§ØªÙ">
+<label>ÙØµ Ø§ÙØ±Ø³Ø§ÙØ©</label><textarea id="smsText">ÙØ±Ø¬Ù Ø§ÙØªÙØ§ØµÙ Ø¨Ø®ØµÙØµ Ø§ÙØ§ÙØªØ²Ø§Ù Ø§ÙÙØ§ÙÙ Ø§ÙÙØ³ØªØ­Ù ÙØªØ³ÙÙØ© Ø§ÙØ¯ÙØ¹Ø© ÙÙ Ø£ÙØ±Ø¨ ÙÙØª.</textarea>
 <div class="row">
-<button class="primary" onclick="copySmsData()">نسخ الرقم والنص</button>
-<button class="sms" onclick="openSmsProvider()">فتح بوابة الرسائل</button>
+<button class="primary" onclick="copySmsData()">ÙØ³Ø® Ø§ÙØ±ÙÙ ÙØ§ÙÙØµ</button>
+<button class="sms" onclick="openSmsProvider()">ÙØªØ­ Ø¨ÙØ§Ø¨Ø© Ø§ÙØ±Ø³Ø§Ø¦Ù</button>
 </div>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="closeSmsCenter()">إغلاق</button>
-<div class="note">بوابة الرسائل: smsapi.theblunet.com:8441/websmpp — الموظف يسجل الدخول ويدخل OTP بنفسه.</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="closeSmsCenter()">Ø¥ØºÙØ§Ù</button>
+<div class="note">Ø¨ÙØ§Ø¨Ø© Ø§ÙØ±Ø³Ø§Ø¦Ù: smsapi.theblunet.com:8441/websmpp â Ø§ÙÙÙØ¸Ù ÙØ³Ø¬Ù Ø§ÙØ¯Ø®ÙÙ ÙÙØ¯Ø®Ù OTP Ø¨ÙÙØ³Ù.</div>
 </div></div>
 
 <script>
 const CLIENTS_KEY="collection_clients",LATE_KEY="late_payment_30_60",EMP_KEY="collection_employees",META_KEY="collection_meta_v3";
-const EMBED_VERSION="2026-09-07-late4-v1";
+const EMBED_VERSION="2026-09-07-late4-v2";
 const SMS_PROVIDER="https://smsapi.theblunet.com:8441/websmpp/";
