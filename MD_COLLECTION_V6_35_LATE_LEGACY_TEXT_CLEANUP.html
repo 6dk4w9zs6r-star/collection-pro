@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MD-COLLECTION V6.35</title>
+<style>
+html,body{margin:0;background:#07111f;color:#fff;font-family:Arial,Tahoma,sans-serif}
+#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center}
+#boot .box{padding:24px;border:1px solid #334b68;border-radius:18px;background:#101d2e}
+#boot b{color:#e0bf63;font-size:24px}
+#err{color:#ff9c9c;margin-top:12px;max-width:650px}
+</style>
+</head>
+<body>
+<div id="boot"><div class="box"><b>MD-COLLECTION V6.35</b><div style="margin-top:10px">جاري تحميل النسخة الآمنة…</div><div id="err"></div></div></div>
+
+<script>
+(async function(){
+  const baseFile = './MD_COLLECTION_V6_34_SECURE_SEARCH_FIX.html';
+
+  // Patch is deliberately limited to UI cleanup only.
+  // It does NOT alter authentication, Supabase queries, role scope, Due, Late logic, or permissions.
+  const cleanupPatch = `
+<script>
+(function(){
+  function cleanLegacyLateText(){
+    if (!document.body) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const targets = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      const t = (node.nodeValue || '').replace(/\\\\s+/g,' ').trim();
+      if (
+        (/108\\\\s*عميل/.test(t) && /Late/i.test(t)) ||
+        /المعتمد\\\\s*حالياً?[:：]?\\\\s*آخر\\\\s*4\\\\s*ملفات\\\\s*Late/i.test(t)
+      ) {
+        targets.push(node);
+      }
+    }
+    targets.forEach(n => { n.nodeValue = ''; });
+    document.title = 'MD-COLLECTION V6.35';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', cleanLegacyLateText);
+  } else {
+    cleanLegacyLateText();
+  }
+
+  new MutationObserver(cleanLegacyLateText).observe(document.documentElement, {
+    childList:true, subtree:true, characterData:true
+  });
+})();
+<\/script>`;
+
+  try{
+    const r = await fetch(baseFile + '?v=635', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    let src = await r.text();
+
+    if (/<\/body>/i.test(src)) {
+      src = src.replace(/<\/body>/i, cleanupPatch + '\n</body>');
+    } else {
+      src += cleanupPatch;
+    }
+
+    document.open();
+    document.write(src);
+    document.close();
+  }catch(e){
+    const el = document.getElementById('err');
+    if(el) el.textContent = 'تعذر تحميل V6.34: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
