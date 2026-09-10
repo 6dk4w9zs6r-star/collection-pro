@@ -235,7 +235,146 @@ body.secureLocked>header,body.secureLocked>main{display:none!important}
 .nestedLo button{width:100%;margin-top:8px;background:#263b59;color:#fff;border:0;border-radius:9px;padding:9px;font-weight:900}
 .branchMini.clickable{cursor:pointer}
 .branchMini.clickable:active{transform:scale(.99)}
+  /* =========================================
+   MD-COLLECTION V7 DESIGN FOUNDATION
+   Dark / Light Theme
+   ========================================= */
+
+:root{
+  --md-bg:#07111f;
+  --md-surface:#101d2e;
+  --md-card:#142235;
+  --md-card-2:#182a43;
+  --md-border:#30445f;
+  --md-text:#ffffff;
+  --md-muted:#9eabbc;
+  --md-gold:#d8b45b;
+  --md-gold-soft:#e5c56c;
+  --md-green:#61d48b;
+  --md-red:#ff8e8e;
+  --md-blue:#7fa9d8;
+  --md-shadow:0 12px 34px rgba(0,0,0,.22);
+}
+
+body{
+  background:var(--md-bg);
+  color:var(--md-text);
+}
+
+body.lightTheme{
+  --md-bg:#f4f6f9;
+  --md-surface:#ffffff;
+  --md-card:#ffffff;
+  --md-card-2:#f0f3f7;
+  --md-border:#d9dee7;
+  --md-text:#172033;
+  --md-muted:#687386;
+  --md-gold:#b58a25;
+  --md-gold-soft:#9c7419;
+  --md-green:#278654;
+  --md-red:#c64d58;
+  --md-blue:#356fa8;
+  --md-shadow:0 10px 30px rgba(20,35,60,.10);
+}
+
+body,
+header,
+.card,
+.mini,
+.box,
+.employeeCard,
+.paidRow,
+.client,
+.modal-box,
+.globalSearchBox,
+.authCard,
+.branchesTile,
+.branchCard,
+.branchMini,
+.alsCard,
+.loCard,
+.nestedLo,
+.branchSearchBox{
+  transition:
+    background-color .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+body.lightTheme header,
+body.lightTheme .mainMenuDrawer{
+  background:var(--md-surface);
+  color:var(--md-text);
+  border-color:var(--md-border);
+}
+
+body.lightTheme .card,
+body.lightTheme .mini,
+body.lightTheme .box,
+body.lightTheme .employeeCard,
+body.lightTheme .paidRow,
+body.lightTheme .client,
+body.lightTheme .modal-box,
+body.lightTheme .globalSearchBox,
+body.lightTheme .authCard,
+body.lightTheme .branchesTile,
+body.lightTheme .branchCard,
+body.lightTheme .branchMini,
+body.lightTheme .alsCard,
+body.lightTheme .loCard,
+body.lightTheme .nestedLo,
+body.lightTheme .branchSearchBox{
+  background:var(--md-card);
+  color:var(--md-text);
+  border-color:var(--md-border);
+  box-shadow:var(--md-shadow);
+}
+
+body.lightTheme .sub,
+body.lightTheme .info,
+body.lightTheme .note,
+body.lightTheme .cloudstatus,
+body.lightTheme .homeBlankNote,
+body.lightTheme .branchesSub,
+body.lightTheme .branchPageRole,
+body.lightTheme .authSub,
+body.lightTheme .authHint,
+body.lightTheme .menuSub{
+  color:var(--md-muted);
+}
+
+body.lightTheme .search,
+body.lightTheme .globalSearchInput,
+body.lightTheme .authInput,
+body.lightTheme .modal input,
+body.lightTheme .modal select,
+body.lightTheme .modal textarea,
+body.lightTheme .branchSearchBox input{
+  background:#f7f8fa;
+  color:#172033;
+  border-color:var(--md-border);
+}
+
+body.lightTheme .secondary,
+body.lightTheme .menuItem,
+body.lightTheme .loOpen{
+  background:#e9edf3;
+  color:#172033;
+  border-color:var(--md-border);
+}
+
+body.lightTheme .logo,
+body.lightTheme .boxTitle,
+body.lightTheme .employeePageTitle,
+body.lightTheme .branchesTitle,
+body.lightTheme .branchPageTitle,
+body.lightTheme .cfmpCode,
+body.lightTheme .loSectionTitle{
+  color:var(--md-gold-soft);
+}
 </style>
+  
 </head>
 <!-- MD-COLLECTION V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
