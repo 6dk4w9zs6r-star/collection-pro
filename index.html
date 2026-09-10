@@ -1570,6 +1570,11 @@ async function secureGlobalSearch(q){
       الكفيل: ${safe(c.guarantor||"-")} | هاتف الكفيل: ${safe(c.guarantorPhone||"-")}<br>
       الموظف المسؤول: ${safe(c.employee||"-")} | الفرع: ${safe(c.branchCode||"-")}
     </small>
+    <div class="actions" style="margin-top:10px">
+      <button class="secondary" onclick="followClient(${clients.indexOf(c)})">📝 متابعة</button>
+      <button class="call" onclick="callClient(${clients.indexOf(c)})">📞 اتصال</button>
+      <button class="whatsapp" onclick="whatsappClient(${clients.indexOf(c)})">WhatsApp</button>
+    </div>
   </div>`).join("")||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
 }
 
