@@ -259,7 +259,7 @@ body.secureLocked>header,body.secureLocked>main{display:none!important}
 <div class="app">
 <header>
 <div class="logo">MD-COLLECTION</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.38</div>
+<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.39</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
@@ -2027,6 +2027,33 @@ if(typeof renderAlerts!=="function") window.renderAlerts=function(){};
 if(typeof renderReminders!=="function") window.renderReminders=function(){};
 if(typeof renderMessages!=="function") window.renderMessages=function(){};
 if(typeof renderChat!=="function") window.renderChat=function(){};
+
+/* V6.39: final authoritative global-search renderer.
+   Kept at the end so older bundled search implementations cannot override it. */
+window.secureGlobalSearch=function(q){
+  q=String(q||"").trim();
+  const out=document.getElementById("globalSearchResults");
+  if(!out)return;
+  if(q.length<2){out.innerHTML="";return;}
+  const needle=norm(q);
+  const data=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>
+    [c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.employee]
+      .some(v=>norm(String(v||"")).includes(needle))
+  ).slice(0,100);
+  out.innerHTML=data.map(({c,i})=>`<div class="searchResult">
+    <b>${safe(c.name||"-")}</b>
+    <small>
+      رقم العميل: ${safe(c.clientNo||"-")} | هاتف: ${safe(c.phone||"-")}<br>
+      الكفيل: ${safe(c.guarantor||"-")} | هاتف الكفيل: ${safe(c.guarantorPhone||"-")}<br>
+      الموظف المسؤول: ${safe(c.employee||"-")} | الفرع: ${safe(c.branchCode||"-")}
+    </small>
+    <div style="display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:7px!important;margin-top:12px!important">
+      <button type="button" class="secondary" style="display:block!important" onclick="followClient(${i})">📝 متابعة</button>
+      <button type="button" class="call" style="display:block!important" onclick="callClient(${i})">📞 اتصال</button>
+      <button type="button" class="whatsapp" style="display:block!important" onclick="whatsappClient(${i})">WhatsApp</button>
+    </div>
+  </div>`).join("")||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
+};
 
 secureInit();
 </script>
