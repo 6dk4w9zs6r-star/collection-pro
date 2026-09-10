@@ -259,7 +259,7 @@ body.secureLocked>header,body.secureLocked>main{display:none!important}
 <div class="app">
 <header>
 <div class="logo">MD-COLLECTION</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.41</div>
+<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
@@ -2190,6 +2190,61 @@ window.openBranchPage=async function(branchRef){
     <div class="alsTeam"><div class="alsTeamTitle">الموظفون — LO</div>${cards||'<div class="empty">لا يوجد موظفون مربوطون بهذا الفرع</div>'}</div></div>`;
   if($("standaloneLoSection"))$("standaloneLoSection").style.display="none";
   $("branchesHub").style.display="none";$("branchPageModal").style.display="flex";
+};
+
+/* V6.42: BM can open only the branch assigned in profiles.branch_code. */
+function canBrowseBranches(){
+  return roleIs("founder","cfmp","bm");
+}
+
+window.loadBranches=async function(){
+  if(!canBrowseBranches())return [];
+  sb=await getSecureClient();if(!sb)return [];
+  let rows=[];
+  const res=await sb.from("branches").select("id,code,name,is_active").eq("is_active",true).order("code");
+  if(!res.error&&Array.isArray(res.data))rows=res.data;
+  const codes=new Set((clients||[]).map(c=>String(c.branchCode||"").trim().toUpperCase()).filter(Boolean));
+  if(CURRENT_PROFILE&&CURRENT_PROFILE.branch_code)codes.add(String(CURRENT_PROFILE.branch_code).trim().toUpperCase());
+  codes.forEach(code=>{if(!rows.some(b=>String(b.code||"").toUpperCase()===code))rows.push({id:code,code,name:code==="B1"?"AL-BALAD":code,is_active:true});});
+  if(roleIs("bm")){
+    const own=String(CURRENT_PROFILE.branch_code||"").trim().toUpperCase();
+    rows=rows.filter(b=>String(b.code||"").trim().toUpperCase()===own);
+  }
+  BRANCH_CACHE=rows;return rows;
+};
+
+window.openBranchesHub=async function(){
+  if(!canBrowseBranches())return denyScope();
+  const title=$("branchesHubTitle");if(title)title.textContent="🏢 الفروع";
+  const list=await window.loadBranches();
+  $("branchesGrid").innerHTML=list.map(b=>`<button class="branchCard" onclick="openBranchPage('${safe(String(b.code||b.id)).replace(/'/g,"&#39;")}')">
+    <b>${safe(b.name||b.code)}</b><small>${safe(b.code||"")} — فتح هيكل الفرع</small>
+  </button>`).join("")||'<div class="empty">لا يوجد فرع مربوط بهذا الحساب</div>';
+  $("branchesHub").style.display="flex";
+};
+
+const applySecureMenuVisibilityV641=applySecureMenuVisibility;
+applySecureMenuVisibility=function(){
+  applySecureMenuVisibilityV641();
+  const drawer=document.querySelector(".mainMenuDrawer");
+  if(!drawer)return;
+  drawer.querySelectorAll("button.menuItem").forEach(btn=>{
+    const oc=String(btn.getAttribute("onclick")||"");
+    if(oc.includes("openBranchesHub"))btn.style.display=canBrowseBranches()?"block":"none";
+  });
+};
+
+applyRoleHomeSecurity=function(){
+  const cfmp=$("cfmpHomeCard"),branches=$("branchesHomeTile");
+  const high=roleIs("founder","cfmp"),branchAllowed=canBrowseBranches();
+  if(cfmp)cfmp.style.display=high?"block":"none";
+  if(branches)branches.style.display=branchAllowed?"block":"none";
+  if(!branchAllowed&&$("branchesHub"))$("branchesHub").style.display="none";
+  if(roleIs("als","lo")){
+    if($("branchPage"))$("branchPage").style.display="none";
+    if($("branchPageModal"))$("branchPageModal").style.display="none";
+    if($("employeePageModal"))$("employeePageModal").style.display="none";
+  }
 };
 
 secureInit();
