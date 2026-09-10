@@ -259,7 +259,7 @@ body.secureLocked>header,body.secureLocked>main{display:none!important}
 <div class="app">
 <header>
 <div class="logo">MD-COLLECTION</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.40</div>
+<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.41</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
@@ -2080,6 +2080,116 @@ window.secureUniversalSearch=function(q){
       <button type="button" class="whatsapp" style="display:block!important" onclick="whatsappClient(${i})">WhatsApp</button>
     </div>
   </div>`).join("")||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
+};
+
+/* V6.41: accept both YYYY-MM-DD and DD-MM-YYYY (also slash-separated). */
+function normalizeEnteredDate(value){
+  const raw=String(value||"").trim();
+  if(!raw)return "";
+  let m=raw.match(/^(\d{4})[-\/]([01]?\d)[-\/]([0-3]?\d)$/);
+  let y,mo,d;
+  if(m){y=+m[1];mo=+m[2];d=+m[3];}
+  else{
+    m=raw.match(/^([0-3]?\d)[-\/]([01]?\d)[-\/](\d{4})$/);
+    if(!m)throw new Error("صيغة التاريخ غير صحيحة");
+    d=+m[1];mo=+m[2];y=+m[3];
+  }
+  const check=new Date(Date.UTC(y,mo-1,d));
+  if(check.getUTCFullYear()!==y||check.getUTCMonth()!==mo-1||check.getUTCDate()!==d)
+    throw new Error("التاريخ غير صحيح");
+  return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+
+window.followClient=async function(i){
+  const c=clients[i];
+  const r=prompt("نتيجة المتابعة:","تم التواصل");
+  if(r===null)return;
+  let n=prompt("تاريخ المتابعة القادمة (مثال 2026-09-15 أو 15-09-2026):",c.followup||"");
+  if(n===null)return;
+  let p=prompt("تاريخ وعد السداد (اختياري، ويمكن كتابته 15-09-2026):",c.promiseDate||"");
+  if(p===null)return;
+  try{
+    n=normalizeEnteredDate(n);p=normalizeEnteredDate(p);
+    sb=await getSecureClient();
+    if(!sb||!c.id)throw new Error("بيانات العميل غير مكتملة");
+    const payload={client_id:c.id,follow_up_type:"call",result:r,notes:r,
+      promise_date:p||null,next_follow_up_at:n?`${n}T09:00:00+03:00`:null,
+      status:n?"pending":"completed",completed_at:n?null:new Date().toISOString()};
+    const {data,error}=await sb.from("follow_ups").insert(payload).select().single();
+    if(error)throw error;
+    const {error:updateError}=await sb.from("clients").update({
+      follow_up_status:n?"متابعة قادمة":"تمت المتابعة",promise_date:p||null,follow_up_notes:r
+    }).eq("id",c.id);
+    if(updateError)throw updateError;
+    followUps.unshift(data);c.followup=n;c.promiseDate=p;c.notes=r;
+    c.status=n?"متابعة قادمة":"تمت المتابعة";c.followedToday=true;
+    render();alert("تم حفظ المتابعة في قاعدة البيانات ✅");
+  }catch(e){alert("تعذر حفظ المتابعة: "+(e&&e.message?e.message:String(e)));}
+};
+
+/* V6.41: branch hierarchy uses the real schema (branch_code and assigned_user_id).
+   If branches has no rows, derive active branches from loaded client/profile data. */
+window.canOpenBranch=function(branchRef){
+  if(roleIs("founder","cfmp"))return true;
+  if(roleIs("bm"))return String(CURRENT_PROFILE.branch_code||"").toUpperCase()===String(branchRef||"").toUpperCase();
+  return false;
+};
+window.canOpenBm=function(branchRef){return window.canOpenBranch(branchRef);};
+
+window.loadBranches=async function(){
+  if(!canOpenAllBranches())return [];
+  sb=await getSecureClient();if(!sb)return [];
+  let rows=[];
+  const res=await sb.from("branches").select("id,code,name,is_active").eq("is_active",true).order("code");
+  if(!res.error&&Array.isArray(res.data))rows=res.data;
+  const codes=new Set((clients||[]).map(c=>String(c.branchCode||"").trim().toUpperCase()).filter(Boolean));
+  if(CURRENT_PROFILE&&CURRENT_PROFILE.branch_code)codes.add(String(CURRENT_PROFILE.branch_code).trim().toUpperCase());
+  codes.forEach(code=>{if(!rows.some(b=>String(b.code||"").toUpperCase()===code))rows.push({id:code,code,name:code==="B1"?"AL-BALAD":code,is_active:true});});
+  BRANCH_CACHE=rows;return rows;
+};
+
+window.openBranchesHub=async function(){
+  if(!canOpenAllBranches())return denyScope();
+  const title=$("branchesHubTitle");if(title)title.textContent="🏢 الفروع";
+  const list=await window.loadBranches();
+  $("branchesGrid").innerHTML=list.map(b=>`<button class="branchCard" onclick="openBranchPage('${safe(String(b.code||b.id)).replace(/'/g,"&#39;")}')">
+    <b>${safe(b.name||b.code)}</b><small>${safe(b.code||"")} — فتح هيكل الفرع</small>
+  </button>`).join("")||'<div class="empty">لا توجد فروع مرتبطة بالبيانات</div>';
+  $("branchesHub").style.display="flex";
+};
+
+window.openBranchPage=async function(branchRef){
+  sb=await getSecureClient();
+  let branch=(BRANCH_CACHE||[]).find(b=>String(b.code||"").toUpperCase()===String(branchRef||"").toUpperCase()||String(b.id)===String(branchRef));
+  if(!branch){await window.loadBranches();branch=BRANCH_CACHE.find(b=>String(b.code||"").toUpperCase()===String(branchRef||"").toUpperCase()||String(b.id)===String(branchRef));}
+  if(!branch)return;
+  if(!window.canOpenBranch(branch.code))return denyScope();
+  ACTIVE_BRANCH=branch;const code=String(branch.code||"").toUpperCase();
+  $("branchPageTitle").textContent="فرع "+(branch.name||code);
+  $("branchPageRole").textContent=CURRENT_PROFILE?roleLabel(CURRENT_PROFILE.role):"";
+  const peopleRes=await sb.from("profiles").select("id,full_name,email,role,branch_code,supervisor_email,is_active").eq("branch_code",code).eq("is_active",true);
+  const people=peopleRes.error?[]:(peopleRes.data||[]);
+  const clientRes=await sb.from("clients").select("id,assigned_user_id,assigned_employee,days_overdue,paid_amount,overdue_amount,branch_code").eq("branch_code",code);
+  const rows=clientRes.error?[]:(clientRes.data||[]);
+  const active=rows.filter(c=>num(c.paid_amount)<=0);
+  const late=active.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+  const due=active.filter(c=>num(c.days_overdue)>0).length;
+  const bm=people.find(p=>String(p.role||"").toLowerCase()==="bm");
+  $("branchManagementSummary").innerHTML=`<div class="branchMini"><span>BM</span><b>${safe(bm?bm.full_name:"غير محدد")}</b></div>
+    <div class="branchMini"><span>Late</span><b>${late}</b></div><div class="branchMini"><span>Due</span><b>${due}</b></div>`;
+  const los=people.filter(p=>String(p.role||"").toLowerCase()==="lo");
+  const supervisor=(CURRENT_PROFILE&&["founder","als"].includes(CURRENT_PROFILE.role))?CURRENT_PROFILE:null;
+  const cards=los.map(lo=>{
+    const mine=rows.filter(c=>String(c.assigned_user_id||"")===String(lo.id));
+    const ml=mine.filter(c=>num(c.paid_amount)<=0&&num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+    const md=mine.filter(c=>num(c.paid_amount)<=0&&num(c.days_overdue)>0).length;
+    return `<div class="nestedLo"><b>${safe(lo.full_name||lo.email||"LO")}</b><small>LO | Late: <span class="red">${ml}</span> | Due: <span class="yellow">${md}</span></small></div>`;
+  }).join("");
+  $("alsGrid").innerHTML=`<div class="alsCard"><div class="alsName">${safe(supervisor?supervisor.full_name:"فريق الفرع")}</div>
+    <div class="alsCounts"><span>Late: <b class="red">${late}</b></span><span>Due: <b class="yellow">${due}</b></span></div>
+    <div class="alsTeam"><div class="alsTeamTitle">الموظفون — LO</div>${cards||'<div class="empty">لا يوجد موظفون مربوطون بهذا الفرع</div>'}</div></div>`;
+  if($("standaloneLoSection"))$("standaloneLoSection").style.display="none";
+  $("branchesHub").style.display="none";$("branchPageModal").style.display="flex";
 };
 
 secureInit();
