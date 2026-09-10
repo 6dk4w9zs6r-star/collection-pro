@@ -397,6 +397,15 @@ body.lightTheme .loSectionTitle{
 
 <div class="app">
 <header>
+  <!-- MD-COLLECTION THEME SWITCH -->
+<button id="themeToggleBtn"
+        type="button"
+        class="themeToggleBtn"
+        onclick="toggleMDTheme()"
+        aria-label="تبديل الوضع">
+  <span id="themeToggleIcon">☀️</span>
+  <span id="themeToggleText">Light</span>
+</button>
 <div class="logo">MD-COLLECTION</div>
 <div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
@@ -551,6 +560,45 @@ body.lightTheme .loSectionTitle{
 
 <div id="sectionViewer" class="modal">
   <div class="modal-box sectionViewerBox">
+    <script>
+function applyMDTheme(theme){
+  const isLight = theme === "light";
+
+  document.body.classList.toggle("lightTheme", isLight);
+
+  const icon = document.getElementById("themeToggleIcon");
+  const text = document.getElementById("themeToggleText");
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  if(icon){
+    icon.textContent = isLight ? "🌙" : "☀️";
+  }
+
+  if(text){
+    text.textContent = isLight ? "Dark" : "Light";
+  }
+
+  if(metaTheme){
+    metaTheme.setAttribute("content", isLight ? "#f4f6f9" : "#07111f");
+  }
+
+  localStorage.setItem("mdCollectionTheme", theme);
+}
+
+function toggleMDTheme(){
+  const currentTheme =
+    localStorage.getItem("mdCollectionTheme") || "dark";
+
+  applyMDTheme(currentTheme === "dark" ? "light" : "dark");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  const savedTheme =
+    localStorage.getItem("mdCollectionTheme") || "dark";
+
+  applyMDTheme(savedTheme);
+});
+</script>
     <div id="sectionViewerBody"></div>
     <button class="secondary" style="width:100%;margin-top:12px" onclick="closeSectionViewer()">&#1573;&#1594;&#1604;&#1575;&#1602;</button>
   </div>
@@ -1031,6 +1079,14 @@ function render(){let q=norm($("search").value),list=clients.filter(c=>norm(c.na
 function refreshEmployeeSelect(){$("employee").innerHTML='<option value="">\u2014 \u063a\u064a\u0631 \u0645\u062d\u062f\u062f \u2014</option>'+employees.filter(e=>e.id!=="sup").map(e=>`<option>${safe(e.name)}</option>`).join("")}
 function openModal(){refreshEmployeeSelect();$("modal").style.display="flex"} function closeModal(){$("modal").style.display="none"}
 function saveClient(){let c={id:uid(),clientNo:clean($("clientNo").value),name:$("name").value.trim(),phone:clean($("phone").value),clientAddress:$("clientAddress").value.trim(),arrears:num($("arrears").value),installment:num($("installment").value),guarantor:$("guarantor").value.trim(),guarantorPhone:clean($("guarantorPhone").value),guarantorAddress:$("guarantorAddress").value.trim(),company:$("company").value.trim(),workLocation:$("workLocation").value.trim(),workStatus:$("workStatus").value,managerPhone:clean($("managerPhone").value),employee:$("employee").value,status:$("status").value,followup:$("followup").value,promiseDate:$("promiseDate").value,notes:$("notes").value.trim(),history:[],paymentCount:0,totalPaid:0,inLate:false};let e=employees.find(x=>x.name===c.employee);if(e){c.cea=e.cea;c.team=e.team}clients.unshift(c);save();closeModal();render()}
+  function setMDThemeButtonState(){
+  const isLight = document.body.classList.contains("lightTheme");
+  const icon = document.getElementById("themeToggleIcon");
+  const text = document.getElementById("themeToggleText");
+
+  if(icon) icon.textContent = isLight ? "🌙" : "☀️";
+  if(text) text.textContent = isLight ? "Dark" : "Light";
+}
 function callClient(i){if(clients[i].phone)location.href="tel:"+clients[i].phone}
 function whatsappClient(i){let c=clients[i];if(!c.phone)return alert("\u0644\u0627 \u064a\u0648\u062c\u062f \u0631\u0642\u0645 \u0647\u0627\u062a\u0641");let text=prompt("\u0646\u0635 \u0631\u0633\u0627\u0644\u0629 WhatsApp:",`\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064a\u0643\u0645 ${c.name}\u060c \u0646\u0631\u062c\u0648 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0628\u062e\u0635\u0648\u0635 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642.`);if(text===null)return;let p=String(c.phone).replace(/\D/g,"");if(p.startsWith("0"))p="962"+p.slice(1);c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:"\u062a\u0645 \u062a\u062c\u0647\u064a\u0632 \u0631\u0633\u0627\u0644\u0629 WhatsApp: "+text});save();location.href=`https://wa.me/${p}?text=${encodeURIComponent(text)}`}
 async function followClient(i){
@@ -2387,6 +2443,45 @@ applyRoleHomeSecurity=function(){
 };
 
 secureInit();
+</script>
+  <script>
+function applyMDTheme(theme){
+  const isLight = theme === "light";
+
+  document.body.classList.toggle("lightTheme", isLight);
+
+  const icon = document.getElementById("themeToggleIcon");
+  const text = document.getElementById("themeToggleText");
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  if(icon){
+    icon.textContent = isLight ? "🌙" : "☀️";
+  }
+
+  if(text){
+    text.textContent = isLight ? "Dark" : "Light";
+  }
+
+  if(metaTheme){
+    metaTheme.setAttribute("content", isLight ? "#f4f6f9" : "#07111f");
+  }
+
+  localStorage.setItem("mdCollectionTheme", theme);
+}
+
+function toggleMDTheme(){
+  const currentTheme =
+    localStorage.getItem("mdCollectionTheme") || "dark";
+
+  applyMDTheme(currentTheme === "dark" ? "light" : "dark");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  const savedTheme =
+    localStorage.getItem("mdCollectionTheme") || "dark";
+
+  applyMDTheme(savedTheme);
+});
 </script>
 </body>
 </html>
