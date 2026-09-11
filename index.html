@@ -5,7 +5,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#07111f">
-<title>MD-COLLECTION</title>
+<title>MF-NEXA</title>
+<!-- GITHUB 05: Banking Home + cleanup -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -373,6 +374,87 @@ body.lightTheme .cfmpCode,
 body.lightTheme .loSectionTitle{
   color:var(--md-gold-soft);
 }
+
+
+/* =========================================
+   GITHUB 05 — BANKING HOME EXPERIENCE
+   Professional collection dashboard layer
+   ========================================= */
+.themeToggleBtn{
+  position:absolute;right:14px;top:14px;display:flex;align-items:center;gap:7px;
+  min-height:42px;padding:9px 12px;border:1px solid var(--md-border);border-radius:12px;
+  background:var(--md-card);color:var(--md-text);box-shadow:var(--md-shadow);z-index:3;
+}
+.themeToggleBtn span:last-child{font-size:12px;font-weight:900}
+header{background:linear-gradient(180deg,var(--md-surface),var(--md-bg));border-color:var(--md-border)}
+header .logo{letter-spacing:.2px}
+.newHome{width:100%;max-width:760px;margin:0 auto;padding:16px 0 28px;align-items:stretch}
+.bankHero{
+  position:relative;overflow:hidden;background:linear-gradient(135deg,#102a46 0%,#0b1b2e 58%,#10253d 100%);
+  border:1px solid #35516f;border-radius:24px;padding:20px;margin-bottom:12px;box-shadow:var(--md-shadow);
+}
+.bankHero:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;left:-72px;top:-92px;background:rgba(216,180,91,.10)}
+.bankHeroEyebrow{font-size:12px;color:#b7c5d8;font-weight:800}
+.bankHeroTitle{font-size:26px;line-height:1.2;font-weight:1000;margin-top:6px;color:#fff}
+.bankHeroSub{font-size:13px;line-height:1.7;color:#aebbd0;margin-top:7px;max-width:560px}
+.bankSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 2px 9px;font-weight:1000;font-size:16px}
+.bankSectionTitle small{color:var(--md-muted);font-size:11px;font-weight:700}
+.bankKpiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.bankKpi{background:var(--md-card);border:1px solid var(--md-border);border-radius:17px;padding:13px;box-shadow:var(--md-shadow);min-width:0}
+.bankKpiLabel{color:var(--md-muted);font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bankKpiValue{font-size:21px;font-weight:1000;margin-top:7px;color:var(--md-gold-soft)}
+.bankKpiHint{font-size:10px;color:var(--md-muted);margin-top:3px}
+.bankQuickGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.bankQuick{
+  min-height:82px;background:var(--md-card);color:var(--md-text);border:1px solid var(--md-border);
+  border-radius:17px;padding:10px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;box-shadow:var(--md-shadow);font-size:12px;font-weight:900;
+}
+.bankQuickIcon{font-size:24px;line-height:1}
+.bankQuick:active{transform:scale(.98)}
+.bankOrgGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
+.bankOrgGrid .cfmpCard,.bankOrgGrid .branchesTile{width:100%;margin:0;min-height:150px}
+.bankOrgGrid .cfmpCard{display:flex;flex-direction:column;justify-content:center}
+.bankOrgGrid .branchesTile{display:flex;flex-direction:column;justify-content:center;align-items:center}
+.bankFooterNote{text-align:center;color:var(--md-muted);font-size:11px;margin:16px 8px 2px}
+body.lightTheme .bankHero{background:linear-gradient(135deg,#ffffff 0%,#f3f6fa 100%);border-color:var(--md-border)}
+body.lightTheme .bankHeroTitle{color:#172033}
+body.lightTheme .bankHeroEyebrow,body.lightTheme .bankHeroSub{color:var(--md-muted)}
+body.lightTheme .themeToggleBtn,body.lightTheme .bankKpi,body.lightTheme .bankQuick{background:#fff;color:#172033;border-color:var(--md-border)}
+@media(max-width:620px){
+  header{padding-top:68px}
+  .themeToggleBtn{right:14px;top:14px}
+  .menuBtn{left:14px;top:14px}
+  header .logo{padding-left:0;text-align:center}
+  header .sub,header .user{text-align:center}
+  .bankHero{border-radius:20px;padding:17px}
+  .bankHeroTitle{font-size:22px}
+  .bankKpiGrid{grid-template-columns:1fr 1fr}
+  .bankQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+  .bankQuick{min-height:76px;font-size:10px;padding:8px 4px}
+  .bankQuickIcon{font-size:22px}
+  .bankOrgGrid{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+  .bankQuickGrid{grid-template-columns:1fr 1fr}
+}
+
+/* MF-NEXA GITHUB 05 — approved frontend foundation */
+.authTagline{text-align:center;color:#91a7c2;font-size:12px;margin:-12px 0 14px}
+.mfnexaLogo{text-align:center;font-size:46px;color:#3d8ed8;line-height:1;margin-bottom:8px}
+.loginModeRow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
+.loginModeBtn{background:#182a43;color:#fff;border:1px solid #3c506c}
+.loginModeBtn.active{background:#2f83d5;border-color:#2f83d5;color:#fff}
+.forgotBtn{width:100%;background:transparent;color:#8ebcf0;padding:8px}
+.toolGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.toolCard{background:var(--md-card);color:var(--md-text);border:1px solid var(--md-border);border-radius:15px;padding:14px;text-align:right}
+.toolCard b{display:block;color:var(--md-gold-soft);margin-bottom:5px}.toolCard small{color:var(--md-muted);line-height:1.55}
+.toolStatus{background:var(--md-card);border:1px solid var(--md-border);border-radius:14px;padding:12px;margin-top:10px}
+.calcResult{background:var(--md-card-2);border:1px solid var(--md-border);border-radius:12px;padding:11px;margin-top:9px;line-height:1.8}
+.gpsReadout{direction:ltr;text-align:left;font-family:monospace}
+body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .loginModeBtn.active{background:#2f83d5;color:#fff}
+@media(max-width:480px){.toolGrid{grid-template-columns:1fr}}
+
 </style>
   
 </head>
@@ -380,9 +462,15 @@ body.lightTheme .loSectionTitle{
 <body class="secureLocked">
 <div id="authGate" class="authGate">
   <div class="authCard">
-    <div class="authBrand">MD-COLLECTION</div>
+    <div class="mfnexaLogo" aria-hidden="true">◉</div>
+    <div class="authBrand">MF-NEXA</div>
+    <div class="authTagline">MicroFinance Next-Generation Operations &amp; Intelligence</div>
     <div class="authSub">&#1583;&#1582;&#1608;&#1604; &#1570;&#1605;&#1606; &#1604;&#1604;&#1605;&#1589;&#1585;&#1581; &#1604;&#1607;&#1605; &#1601;&#1602;&#1591;</div>
-    <input id="loginEmail" class="authInput" type="email" inputmode="email" placeholder="البريد الإلكتروني" autocomplete="username" autocapitalize="none">
+    <div class="loginModeRow">
+      <button type="button" id="loginModeEmail" class="loginModeBtn active" onclick="setMFLoginMode('email')">📧 البريد الإلكتروني</button>
+      <button type="button" id="loginModePhone" class="loginModeBtn" onclick="setMFLoginMode('phone')">📱 رقم الهاتف</button>
+    </div>
+    <input id="loginEmail" class="authInput" type="text" inputmode="email" placeholder="البريد الإلكتروني" autocomplete="username" autocapitalize="none">
     <input id="loginPassword" class="authInput" type="password" placeholder="Password" autocomplete="current-password">
     <label class="rememberRow">
       <input id="rememberMe" type="checkbox">
@@ -390,7 +478,8 @@ body.lightTheme .loSectionTitle{
     </label>
 
     <button class="authPrimary" onclick="secureLogin()">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1583;&#1582;&#1608;&#1604;</button>
-    <div class="authHint">الحسابات ينشئها المؤسس من داخل MD-COLLECTION. استخدم البريد وكلمة المرور المؤقتة.</div>
+    <div class="authHint">الدخول بكلمة المرور بدون إرسال بريد أو SMS. ربط دخول الهاتف الفعلي سيتم آمنًا في Supabase.
+    </div><button type="button" class="forgotBtn" onclick="openMFRecovery()">نسيت كلمة المرور؟</button><div class="authHint">يمكن لاحقًا تفعيل فتح الجهاز بالبصمة/Face ID بدون تخزين كلمة المرور كنص.</div>
     <div id="authMsg" class="authMsg"></div>
   </div>
 </div>
@@ -406,8 +495,8 @@ body.lightTheme .loSectionTitle{
   <span id="themeToggleIcon">☀️</span>
   <span id="themeToggleText">Light</span>
 </button>
-<div class="logo">MD-COLLECTION</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
+<div class="logo">دائرة التمويل الصغير</div>
+<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.44</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
@@ -417,18 +506,47 @@ body.lightTheme .loSectionTitle{
 <main>
 
 <div id="newHome" class="newHome">
-  <div id="cfmpHomeCard" class="cfmpCard" onclick="openCfmpView()">
-    <div class="cfmpCode">CFMP</div>
-    <div class="cfmpTitle">مدير الدائرة</div>
-    <div id="cfmpName" class="cfmpName">غير محدد حاليًا</div>
-    <div class="cfmpSub">يشاهد جميع الفروع</div>
-  </div>
-  <button id="branchesHomeTile" class="branchesTile" onclick="openBranchesHub()">
-    <div class="branchesIcon">&#127970;</div>
-    <div class="branchesTitle">&#1575;&#1604;&#1601;&#1585;&#1608;&#1593;</div>
-    <div class="branchesSub">&#1575;&#1601;&#1578;&#1581; &#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1601;&#1585;&#1608;&#1593;</div>
-  </button>
-  <div class="homeBlankNote">&#1575;&#1604;&#1588;&#1575;&#1588;&#1577; &#1575;&#1604;&#1585;&#1574;&#1610;&#1587;&#1610;&#1577; &#1605;&#1582;&#1589;&#1589;&#1577; &#1604;&#1604;&#1573;&#1590;&#1575;&#1601;&#1575;&#1578; &#1575;&#1604;&#1602;&#1575;&#1583;&#1605;&#1577;.</div>
+  <section class="bankHero" aria-label="لوحة التحصيل">
+    <div class="bankHeroEyebrow">دائرة التمويل الصغير • Microfinance Department</div>
+    <div class="bankHeroTitle">لوحة التحصيل الذكية</div>
+    <div class="bankHeroSub">نظرة سريعة على المحفظة والمتابعات اليومية، مع وصول مباشر لأهم إجراءات التحصيل.</div>
+  </section>
+
+  <div class="bankSectionTitle"><span>المؤشرات الرئيسية</span><small>تتحدث تلقائيًا حسب البيانات المتاحة</small></div>
+  <section class="bankKpiGrid" aria-label="المؤشرات الرئيسية">
+    <div class="bankKpi"><div class="bankKpiLabel">العملاء</div><div id="bankClientsCount" class="bankKpiValue">0</div><div class="bankKpiHint">ضمن صلاحيتك</div></div>
+    <div class="bankKpi"><div class="bankKpiLabel">Late</div><div id="bankLateCount" class="bankKpiValue">0</div><div class="bankKpiHint">الحالات الحالية</div></div>
+    <div class="bankKpi"><div class="bankKpiLabel">Due</div><div id="bankDueCount" class="bankKpiValue">0</div><div class="bankKpiHint">المتبقي حاليًا</div></div>
+    <div class="bankKpi"><div class="bankKpiLabel">متابعات اليوم</div><div id="bankFollowupCount" class="bankKpiValue">0</div><div class="bankKpiHint">تحتاج إجراء</div></div>
+  </section>
+
+  <div class="bankSectionTitle"><span>إجراءات سريعة</span><small>الأكثر استخدامًا</small></div>
+  <section class="bankQuickGrid" aria-label="إجراءات سريعة">
+    <button class="bankQuick" onclick="openUniversalSearch()"><span class="bankQuickIcon">👥</span><span>العملاء</span></button>
+    <button class="bankQuick" onclick="openSectionFromMenu('paidSection')"><span class="bankQuickIcon">💳</span><span>الدفعات</span></button>
+    <button class="bankQuick" onclick="openSectionFromMenu('alertsSection')"><span class="bankQuickIcon">📅</span><span>المتابعات</span></button>
+    <button class="bankQuick" onclick="openSectionFromMenu('lateSection')"><span class="bankQuickIcon">📊</span><span>Late</span></button>
+    <button class="bankQuick" onclick="openSectionFromMenu('dueSection')"><span class="bankQuickIcon">⏳</span><span>Due</span></button>
+    <button class="bankQuick" onclick="openBranchesHub()"><span class="bankQuickIcon">🏢</span><span>الفروع</span></button>
+    <button class="bankQuick" onclick="openModal()"><span class="bankQuickIcon">➕</span><span>إضافة عميل</span></button>
+    <button class="bankQuick" onclick="openMainMenu()"><span class="bankQuickIcon">☰</span><span>المزيد</span></button>
+  </section>
+
+  <div class="bankSectionTitle"><span>الهيكل الإداري</span><small>حسب الصلاحية</small></div>
+  <section class="bankOrgGrid">
+    <div id="cfmpHomeCard" class="cfmpCard" onclick="openCfmpView()">
+      <div class="cfmpCode">CFMP</div>
+      <div class="cfmpTitle">مدير الدائرة</div>
+      <div id="cfmpName" class="cfmpName">غير محدد حاليًا</div>
+      <div class="cfmpSub">يشاهد جميع الفروع</div>
+    </div>
+    <button id="branchesHomeTile" class="branchesTile" onclick="openBranchesHub()">
+      <div class="branchesIcon">🏢</div>
+      <div class="branchesTitle">الفروع</div>
+      <div class="branchesSub">افتح قائمة الفروع</div>
+    </button>
+  </section>
+  <div class="bankFooterNote">Microfinance Department • Operations Dashboard</div>
 </div>
 <div id="legacyOperationalArea" style="display:none">
 
@@ -531,7 +649,7 @@ body.lightTheme .loSectionTitle{
 <div id="mainMenuOverlay" class="mainMenuOverlay" onclick="if(event.target===this)closeMainMenu()">
   <div class="mainMenuDrawer">
     <button class="menuClose" onclick="closeMainMenu()">&#10005;</button>
-    <div class="menuLogo">MD-COLLECTION</div>
+    <div class="menuLogo">دائرة التمويل الصغير</div>
     <div class="menuSub">&#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1582;&#1610;&#1575;&#1585;&#1575;&#1578;</div>
 
     <button class="menuItem" onclick="openSectionFromMenu('summarySection')">&#128202; &#1575;&#1604;&#1605;&#1604;&#1582;&#1589; &#1575;&#1604;&#1593;&#1575;&#1605;</button>
@@ -552,11 +670,55 @@ body.lightTheme .loSectionTitle{
     <button class="menuItem" onclick="closeMainMenu();openSmsCenter()">&#9993;&#65039; SMS Center</button>
     <button class="menuItem" onclick="closeMainMenu();openSupervisorMessages()">&#128221; &#1605;&#1585;&#1575;&#1587;&#1604;&#1575;&#1578; &#1575;&#1604;&#1605;&#1608;&#1592;&#1601;&#1610;&#1606;</button>
     <button class="menuItem" onclick="closeMainMenu();openChat()">&#128172; &#1575;&#1604;&#1588;&#1575;&#1578;</button>
+    <button class="menuItem" onclick="closeMainMenu();openMFTools()">🧩 مركز الأدوات والعمليات</button>
     <button class="menuItem" onclick="closeMainMenu();openCloud()">&#9729;&#65039; &#1585;&#1576;&#1591; &#1575;&#1604;&#1587;&#1581;&#1575;&#1576;&#1577;</button>
     <button id="shareAppMenuItem" class="menuItem" style="display:none" onclick="closeMainMenu();shareApp()">&#128279; &#1605;&#1588;&#1575;&#1585;&#1603;&#1577; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</button>
     <button id="installAppMenuItem" class="menuItem" style="display:none" onclick="closeMainMenu();showInstallHelp()">&#128242; &#1573;&#1590;&#1575;&#1601;&#1577; &#1604;&#1604;&#1588;&#1575;&#1588;&#1577; &#1575;&#1604;&#1585;&#1574;&#1610;&#1587;&#1610;&#1577;</button>
   </div>
 </div>
+
+
+<div id="mfRecoveryModal" class="modal"><div class="modal-box">
+<h3>🔐 استعادة كلمة المرور</h3><div class="note">أدخل البريد أو رقم الهاتف. الطلب سيظهر داخليًا للمسؤول بعد ربطه بقاعدة البيانات، بدون Email/SMS تلقائي.</div>
+<input id="mfRecoveryId" placeholder="البريد الإلكتروني أو رقم الهاتف">
+<button class="primary" style="width:100%;margin-top:8px" onclick="mfRecoveryRequest()">إرسال الطلب</button>
+<div id="mfRecoveryMsg" class="note"></div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfRecoveryModal').style.display='none'">إغلاق</button>
+</div></div>
+
+<div id="mfToolsModal" class="modal"><div class="modal-box">
+<div class="hubHeader"><h3>🧩 مركز الأدوات والعمليات</h3><button class="secondary smallClose" onclick="$('mfToolsModal').style.display='none'">✕</button></div>
+<div class="toolStatus"><b>🔄 التحديث التلقائي</b><div class="note">الدفعات + R-O: الواجهة جاهزة، والتشغيل التلقائي وسجل آخر تحديث سيتم من Supabase.</div></div>
+<div class="toolGrid">
+<button class="toolCard" onclick="openMFCalc()"><b>🧮 الحاسبة</b><small>حسابات سريعة</small></button>
+<button class="toolCard" onclick="openMFLoan()"><b>💰 حاسبة القرض</b><small>نسبة فائدة متغيرة حسب إدخال المستخدم</small></button>
+<button class="toolCard" onclick="openMFDaily()"><b>📋 خطة LO اليومية</b><small>متابعة، ترويج، طلب قرض، GPS ووصف ميداني</small></button>
+<button class="toolCard" onclick="mfBackendNotice('المحتوى الصباحي')"><b>🌅 المحتوى الصباحي</b><small>اختياري عند نشر المسؤول فقط</small></button>
+<button class="toolCard" onclick="mfBackendNotice('Team Spirit')"><b>🤝 روح الفريق</b><small>قسم منفصل، اختياري عند النشر</small></button>
+<button class="toolCard" onclick="mfBackendNotice('Backup Status')"><b>🛡️ Backup Status</b><small>آخر نسخة وحالة الاستعادة بعد الربط الفعلي</small></button>
+</div></div></div>
+
+<div id="mfCalcModal" class="modal"><div class="modal-box"><h3>🧮 الحاسبة</h3>
+<input id="mfCalcExpr" placeholder="مثال: 1250 + 340 - 50" inputmode="decimal">
+<button class="primary" style="width:100%" onclick="mfCalculate()">احسب</button><div id="mfCalcOut" class="calcResult">النتيجة: —</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfCalcModal').style.display='none'">إغلاق</button></div></div>
+
+<div id="mfLoanModal" class="modal"><div class="modal-box"><h3>💰 حاسبة القرض</h3>
+<label>مبلغ القرض</label><input id="mfLoanAmount" type="number" min="0" step=".01">
+<label>المدة بالشهور</label><input id="mfLoanMonths" type="number" min="1" step="1">
+<label>نسبة الفائدة الشهرية %</label><input id="mfLoanRate" type="number" min="0" step=".01" placeholder="مثال: 2">
+<button class="primary" style="width:100%;margin-top:8px" onclick="mfLoanCalculate()">احسب</button><div id="mfLoanOut" class="calcResult">أدخل البيانات.</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfLoanModal').style.display='none'">إغلاق</button></div></div>
+
+<div id="mfDailyModal" class="modal"><div class="modal-box"><h3>📋 LO Daily Work Plan</h3>
+<label>نوع النشاط</label><select id="mfActivityType"><option value="followup">متابعة Late / Due</option><option value="promotion">ترويج</option><option value="application">تعبئة طلب قرض</option></select>
+<label>العميل / الشخص</label><input id="mfActivityPerson" placeholder="ربط متابعة Late/Due سيتم من البيانات الفعلية">
+<label>النتيجة / الملاحظة</label><textarea id="mfActivityNote"></textarea>
+<button class="secondary" style="width:100%" onclick="mfCaptureGps()">📍 تحديد موقعي الحالي</button>
+<input id="mfGps" class="gpsReadout" readonly placeholder="GPS غير محدد">
+<label>وصف الموقع الميداني *</label><textarea id="mfLocationDesc" placeholder="مثال: مقابل صيدلية الحياة، بجانب مخبز السلام، عمارة 12، المدخل الشرقي"></textarea>
+<button class="primary" style="width:100%" onclick="mfValidateDaily()">حفظ النشاط</button><div id="mfDailyMsg" class="note"></div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfDailyModal').style.display='none'">إغلاق</button></div></div>
 
 <div id="sectionViewer" class="modal">
   <div class="modal-box sectionViewerBox">
@@ -1079,22 +1241,6 @@ function render(){let q=norm($("search").value),list=clients.filter(c=>norm(c.na
 function refreshEmployeeSelect(){$("employee").innerHTML='<option value="">\u2014 \u063a\u064a\u0631 \u0645\u062d\u062f\u062f \u2014</option>'+employees.filter(e=>e.id!=="sup").map(e=>`<option>${safe(e.name)}</option>`).join("")}
 function openModal(){refreshEmployeeSelect();$("modal").style.display="flex"} function closeModal(){$("modal").style.display="none"}
 function saveClient(){let c={id:uid(),clientNo:clean($("clientNo").value),name:$("name").value.trim(),phone:clean($("phone").value),clientAddress:$("clientAddress").value.trim(),arrears:num($("arrears").value),installment:num($("installment").value),guarantor:$("guarantor").value.trim(),guarantorPhone:clean($("guarantorPhone").value),guarantorAddress:$("guarantorAddress").value.trim(),company:$("company").value.trim(),workLocation:$("workLocation").value.trim(),workStatus:$("workStatus").value,managerPhone:clean($("managerPhone").value),employee:$("employee").value,status:$("status").value,followup:$("followup").value,promiseDate:$("promiseDate").value,notes:$("notes").value.trim(),history:[],paymentCount:0,totalPaid:0,inLate:false};let e=employees.find(x=>x.name===c.employee);if(e){c.cea=e.cea;c.team=e.team}clients.unshift(c);save();closeModal();render()}
-  function setMDThemeButtonState(){
-  const isLight = document.body.classList.contains("lightTheme");
-  const icon = document.getElementById("themeToggleIcon");
-  const text = document.getElementById("themeToggleText");
-
-  if(icon) icon.textContent = isLight ? "🌙" : "☀️";
-  if(text) text.textContent = isLight ? "Dark" : "Light";
-}
-  function setMDThemeButtonState(){
-  const isLight = document.body.classList.contains("lightTheme");
-  const icon = document.getElementById("themeToggleIcon");
-  const text = document.getElementById("themeToggleText");
-
-  if(icon) icon.textContent = isLight ? "🌙" : "☀️";
-  if(text) text.textContent = isLight ? "Dark" : "Light";
-}
 function callClient(i){if(clients[i].phone)location.href="tel:"+clients[i].phone}
 function whatsappClient(i){let c=clients[i];if(!c.phone)return alert("\u0644\u0627 \u064a\u0648\u062c\u062f \u0631\u0642\u0645 \u0647\u0627\u062a\u0641");let text=prompt("\u0646\u0635 \u0631\u0633\u0627\u0644\u0629 WhatsApp:",`\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064a\u0643\u0645 ${c.name}\u060c \u0646\u0631\u062c\u0648 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0628\u062e\u0635\u0648\u0635 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642.`);if(text===null)return;let p=String(c.phone).replace(/\D/g,"");if(p.startsWith("0"))p="962"+p.slice(1);c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:"\u062a\u0645 \u062a\u062c\u0647\u064a\u0632 \u0631\u0633\u0627\u0644\u0629 WhatsApp: "+text});save();location.href=`https://wa.me/${p}?text=${encodeURIComponent(text)}`}
 async function followClient(i){
@@ -2450,6 +2596,30 @@ applyRoleHomeSecurity=function(){
   }
 };
 
+
+
+/* GITHUB 05 — Banking dashboard live counters */
+function refreshBankDashboard(){
+  try{
+    const scopeClients=Array.isArray(clients)?clients:[];
+    const late=scopeClients.filter(c=>c && c.inLate).length;
+    const due=scopeClients.filter(c=>c && (Number(c.dueAmount)>0 || c.inDue)).length;
+    const followups=scopeClients.filter(c=>c && c.followup===today() && !c.followedToday).length;
+    const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value)};
+    setText('bankClientsCount',scopeClients.length);
+    setText('bankLateCount',late);
+    setText('bankDueCount',due);
+    setText('bankFollowupCount',followups);
+  }catch(e){console.warn('Bank dashboard refresh skipped',e)}
+}
+const renderBeforeBankV705=render;
+render=function(){
+  const result=renderBeforeBankV705.apply(this,arguments);
+  refreshBankDashboard();
+  return result;
+};
+document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshBankDashboard,250));
+
 secureInit();
 </script>
   <script>
@@ -2491,5 +2661,27 @@ document.addEventListener("DOMContentLoaded", function(){
   applyMDTheme(savedTheme);
 });
 </script>
+
+<script>
+let mfLoginMode="email", mfFreshGps=null;
+function setMFLoginMode(mode){
+ mfLoginMode=mode==="phone"?"phone":"email";
+ const i=document.getElementById("loginEmail"),e=document.getElementById("loginModeEmail"),p=document.getElementById("loginModePhone");
+ if(e)e.classList.toggle("active",mfLoginMode==="email");if(p)p.classList.toggle("active",mfLoginMode==="phone");
+ if(i){i.inputMode=mfLoginMode==="phone"?"tel":"email";i.placeholder=mfLoginMode==="phone"?"رقم الهاتف":"البريد الإلكتروني";i.value=""}
+}
+function openMFRecovery(){document.getElementById("mfRecoveryModal").style.display="flex"}
+function mfRecoveryRequest(){const v=(document.getElementById("mfRecoveryId").value||"").trim(),o=document.getElementById("mfRecoveryMsg");o.textContent=v?"✓ واجهة الطلب جاهزة. الحفظ الداخلي سيتم في Supabase.":"أدخل البريد أو رقم الهاتف."}
+function openMFTools(){document.getElementById("mfToolsModal").style.display="flex"}
+function openMFCalc(){document.getElementById("mfCalcModal").style.display="flex"}
+function openMFLoan(){document.getElementById("mfLoanModal").style.display="flex"}
+function openMFDaily(){mfFreshGps=null;document.getElementById("mfGps").value="";document.getElementById("mfDailyModal").style.display="flex"}
+function mfBackendNotice(x){alert(x+" — واجهته معتمدة، والحفظ/الصلاحيات/الأتمتة الفعلية ستُربط في Supabase.")}
+function mfCalculate(){const s=(document.getElementById("mfCalcExpr").value||"").trim(),o=document.getElementById("mfCalcOut");if(!/^[0-9+\-*/().\s]+$/.test(s)){o.textContent="النتيجة: صيغة غير صالحة";return}try{const v=Function('"use strict";return ('+s+')')();o.textContent="النتيجة: "+(Number.isFinite(v)?v:"غير صالحة")}catch(e){o.textContent="النتيجة: صيغة غير صالحة"}}
+function mfLoanCalculate(){const a=+document.getElementById("mfLoanAmount").value,m=+document.getElementById("mfLoanMonths").value,r=+document.getElementById("mfLoanRate").value,o=document.getElementById("mfLoanOut");if(a<=0||m<=0||r<0){o.textContent="تحقق من البيانات.";return}const mi=a*r/100,ti=mi*m,tr=a+ti,ins=tr/m,f=n=>n.toLocaleString("ar-JO",{minimumFractionDigits:2,maximumFractionDigits:2});o.innerHTML="أصل القرض: <b>"+f(a)+"</b><br>إجمالي الفائدة: <b>"+f(ti)+"</b><br>إجمالي السداد: <b>"+f(tr)+"</b><br>القسط الشهري: <b>"+f(ins)+"</b>"}
+function mfCaptureGps(){const o=document.getElementById("mfDailyMsg");if(!navigator.geolocation){o.textContent="الموقع غير مدعوم.";return}o.textContent="جارٍ تحديد الموقع...";navigator.geolocation.getCurrentPosition(p=>{mfFreshGps={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,at:new Date().toISOString()};document.getElementById("mfGps").value=mfFreshGps.lat.toFixed(6)+", "+mfFreshGps.lng.toFixed(6)+" | ±"+Math.round(mfFreshGps.accuracy)+"m";o.textContent="✓ تم التقاط موقع جديد لهذا النشاط.";},()=>{mfFreshGps=null;o.textContent="تعذر تحديد الموقع؛ لا يمكن إكمال النشاط.";},{enableHighAccuracy:true,maximumAge:0,timeout:15000})}
+function mfValidateDaily(){const d=(document.getElementById("mfLocationDesc").value||"").trim(),o=document.getElementById("mfDailyMsg");if(!mfFreshGps){o.textContent="يجب تحديد الموقع الحالي أولًا.";return}if(!d){o.textContent="وصف الموقع الميداني إلزامي.";return}o.textContent="✓ التحقق مكتمل. الحفظ الفعلي وربط الموظف والعميل سيتم في Supabase."}
+</script>
+
 </body>
 </html>
