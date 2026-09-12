@@ -382,11 +382,11 @@ body.lightTheme .loSectionTitle{
    Professional collection dashboard layer
    ========================================= */
 .themeToggleBtn{
-  position:absolute;right:14px;top:14px;display:flex;align-items:center;gap:7px;
-  min-height:42px;padding:9px 12px;border:1px solid var(--md-border);border-radius:12px;
-  background:var(--md-card);color:var(--md-text);box-shadow:var(--md-shadow);z-index:3;
+  position:absolute;right:14px;top:14px;display:flex;align-items:center;justify-content:center;gap:7px;
+  width:88px;min-height:44px;padding:9px 10px;border:2px solid var(--md-border);border-radius:14px;
+  background:var(--md-card);color:var(--md-text);box-shadow:var(--md-shadow);z-index:3;white-space:nowrap;
 }
-.themeToggleBtn span:last-child{font-size:12px;font-weight:900}
+.themeToggleBtn span:first-child{font-size:16px;line-height:1}.themeToggleBtn span:last-child{font-size:13px;font-weight:1000;line-height:1}
 header{background:linear-gradient(180deg,var(--md-surface),var(--md-bg));border-color:var(--md-border)}
 header .logo{letter-spacing:.2px}
 .newHome{width:100%;max-width:760px;margin:0 auto;padding:16px 0 28px;align-items:stretch}
@@ -455,10 +455,11 @@ body.lightTheme{
 }
 header{border-bottom-color:var(--nexa-line)}
 header .logo{color:var(--nexa-blue);font-weight:1000}
-.nexaHeaderIdentity{display:flex;align-items:center;gap:11px;margin-top:7px;max-width:calc(100% - 130px)}
-.nexaUnrwaLogo{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:11px;padding:4px;border:1px solid rgba(255,255,255,.2)}
-.nexaHeaderDept{min-width:0}.nexaHeaderDept b{display:block;font-size:14px;color:var(--nexa-ink)}
-.nexaHeaderDept span{display:block;color:var(--nexa-muted);font-size:12px;margin-top:2px}
+.nexaHeaderIdentity{display:flex;align-items:center;justify-content:center;gap:13px;margin:0 auto;max-width:calc(100% - 150px);min-height:58px}
+.nexaUnrwaLogo{width:54px;height:54px;object-fit:contain;background:#fff;border-radius:12px;padding:5px;border:1px solid rgba(255,255,255,.2);flex:0 0 auto}
+.nexaHeaderDept{min-width:0;text-align:right}.nexaHeaderDept b{display:block;font-size:17px;color:var(--nexa-ink);font-weight:900}
+.nexaHeaderDept span{display:block;color:var(--nexa-muted);font-size:13px;margin-top:3px;font-weight:700}
+header>.user{text-align:center;margin-top:8px}
 .mfHiddenLegacy{display:none!important}
 .mfHome{width:100%;max-width:760px;margin:0 auto;padding:14px 0 30px}
 .mfBrandPanel{background:linear-gradient(135deg,#0b3355,#071a2d 64%,#0a2944);border:1px solid #285f86;border-radius:22px;padding:17px;box-shadow:var(--nexa-shadow)}
@@ -540,9 +541,13 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   <span id="themeToggleIcon">☀️</span>
   <span id="themeToggleText">Light</span>
 </button>
-<div class="logo">MF-NEXA</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
-<div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
+<div id="nexaHeaderIdentity" class="nexaHeaderIdentity">
+  <img class="nexaUnrwaLogo" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/UNRWA-logo.svg" alt="UNRWA" onerror="this.style.display='none'">
+  <div class="nexaHeaderDept">
+    <b>دائرة التمويل الصغير</b>
+    <span>Microfinance Department</span>
+  </div>
+</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
 <div class="cloudbar" style="display:none"><button onclick="openCloud()">&#9729;&#65039; &#1585;&#1576;&#1591; &#1575;&#1604;&#1587;&#1581;&#1575;&#1576;&#1577;</button><span id="cloudStatus" class="cloudstatus">&#1605;&#1581;&#1604;&#1610; &#1601;&#1602;&#1591;</span></div>
@@ -24523,11 +24528,9 @@ function mfInstallStage5Dom(){
     <section id="mfStage5Home" class="mfHome" aria-label="الصفحة الرئيسية MF-NEXA">
       <div class="mfBrandPanel"><div class="mfBrandTop"><div><div class="mfBrandName">MF-NEXA</div><div class="mfBrandDesc">MicroFinance Next-Generation Operations &amp; Intelligence</div></div><span class="mfVersion">V6.42 • PHASE 5</span></div></div>
       <div class="mfSearchWrap"><div class="mfSearchRow"><input id="mfHomeSearch" class="mfSearchInput" placeholder="ابحث باسم العميل أو رقمه أو هاتفه أو الكفيل أو المعرّفين" oninput="mfRunHomeSearch()"><button id="mfVoiceSearchBtn" class="mfIconButton" onclick="mfVoiceSearch('mfHomeSearch',mfRunHomeSearch)" aria-label="بحث صوتي">🎙️</button></div><div class="mfSearchFilters"><select id="mfSearchStatus" onchange="mfRunHomeSearch()"><option value="all">الكل</option><option value="active">Active</option><option value="late">Late</option><option value="due">Due</option></select><select id="mfSearchEmployee" onchange="mfRunHomeSearch()"><option value="">كل الموظفين</option></select><select id="mfSearchBranch" onchange="mfRunHomeSearch()"><option value="">كل الفروع</option></select></div><div id="mfHomeSearchResults" class="mfSearchResults"></div></div>
-      <div class="mfHomeTiles"><button class="mfPrimaryTile ai" onclick="mfOpenAi()"><span class="mfTileIcon">✦</span><div class="mfTileTitle">ChatGPT / AI Assistant</div><div class="mfTileSub">تلخيص العملاء، صياغة الرسائل، وتحليل Late وDue ضمن صلاحيتك</div></button><button class="mfPrimaryTile allocation" onclick="mfOpenAllocation()"><span class="mfTileIcon">▦</span><div class="mfTileTitle">Allocation</div><div class="mfTileSub">الفروع، الفرق، الموظفون، ثم Late وDue وملف العميل</div></button></div>
-      <div class="mfHomePulse"><button class="mfPulseCard" onclick="mfOpenToday()"><b id="mfTodayCount">0</b><span>مهامي اليوم</span></button><button class="mfPulseCard" onclick="mfOpenPromises()"><b id="mfPromiseCount">0</b><span>وعود Pending</span></button><button class="mfPulseCard" onclick="mfOpenEscalated()"><b id="mfEscalatedCount">0</b><span>Escalated Cases</span></button></div><div class="mfSlogan"><b>معًا نستطيع النجاح</b></div>
+      <div class="mfHomeTiles"><button class="mfPrimaryTile ai" onclick="mfOpenAi()"><span class="mfTileIcon">✦</span><div class="mfTileTitle">المساعد الذكي</div><div class="mfTileSub">تلخيص العملاء، صياغة الرسائل، وتحليل Late وDue ضمن صلاحيتك</div></button><button class="mfPrimaryTile allocation" onclick="mfOpenAllocation()"><span class="mfTileIcon">▦</span><div class="mfTileTitle">Allocation</div><div class="mfTileSub">الفروع، الفرق، الموظفون، ثم Late وDue وملف العميل</div></button></div>
+      <div class="mfSlogan"><b>معًا نستطيع النجاح</b></div>
     </section>`)}
-  const headerLogo=document.querySelector("header .logo");
-  if(headerLogo&&!$("nexaHeaderIdentity"))headerLogo.insertAdjacentHTML("afterend",`<div id="nexaHeaderIdentity" class="nexaHeaderIdentity"><img class="nexaUnrwaLogo" src="${MF_UNRWA_LOGO}" alt="UNRWA" onerror="this.style.display='none'"><div class="nexaHeaderDept"><b>Microfinance Department</b><span>دائرة التمويل الصغير</span></div></div>`);
   document.body.insertAdjacentHTML("beforeend",`
     <div id="mfToast" class="mfToast"></div>
     ${mfModalShell("mfAllocationModal","Allocation","mfAllocationBody",true)}
@@ -24537,7 +24540,7 @@ function mfInstallStage5Dom(){
     ${mfModalShell("mfEscalatedModal","Escalated Cases","mfEscalatedBody",true)}
     ${mfModalShell("mfDashboardModal","Supervisor Dashboard","mfDashboardBody",true)}
     ${mfModalShell("mfChatModal","المحادثات الداخلية","mfChatBody",true)}
-    ${mfModalShell("mfAiModal","ChatGPT / AI Assistant","mfAiBody",true)}
+    ${mfModalShell("mfAiModal","المساعد الذكي","mfAiBody",true)}
     ${mfModalShell("mfReportsModal","التقارير والكشوفات","mfReportsBody",true)}
     ${mfModalShell("mfAuditModal","Audit Log","mfAuditBody",true)}
     ${mfModalShell("mfOrgModal","الفروع والفرق والموظفون","mfOrgBody",true)}
@@ -24582,7 +24585,9 @@ function mfUpdateHome(){
   const dueToday=s.followups.filter(f=>f.status==="pending"&&mfDateOnly(f.dueAt)===d).length;
   const pending=s.promises.filter(p=>p.status==="pending").length;
   const escalated=s.escalations.filter(e=>["open","in_progress","returned"].includes(e.status)&&mfEscalationVisible(e)).length;
-  $("mfTodayCount").textContent=dueToday;$("mfPromiseCount").textContent=pending;$("mfEscalatedCount").textContent=escalated;
+  if($("mfTodayCount"))$("mfTodayCount").textContent=dueToday;
+  if($("mfPromiseCount"))$("mfPromiseCount").textContent=pending;
+  if($("mfEscalatedCount"))$("mfEscalatedCount").textContent=escalated;
   const emp=$("mfSearchEmployee"),br=$("mfSearchBranch");
   if(emp){const val=emp.value,items=[...new Set((clients||[]).map(c=>c.employee).filter(Boolean))].sort();emp.innerHTML='<option value="">كل الموظفين</option>'+items.map(x=>`<option value="${mfAttr(x)}">${safe(x)}</option>`).join("");emp.value=items.includes(val)?val:""}
   if(br){const val=br.value,items=[...new Set((clients||[]).map(c=>c.branchCode||c.branch).filter(Boolean))].sort();br.innerHTML='<option value="">كل الفروع</option>'+items.map(x=>`<option value="${mfAttr(x)}">${safe(x)}</option>`).join("");br.value=items.includes(val)?val:""}
@@ -24941,7 +24946,7 @@ async function mfBeginRtc(id,initiator,kind){
 function mfToggleCallMute(){const t=mfCallState?.stream?.getAudioTracks()?.[0];if(t)t.enabled=!t.enabled}
 function mfEndCall(){try{mfCallState?.stream?.getTracks().forEach(t=>t.stop());mfCallState?.pc?.close();mfCallState?.channel?.unsubscribe()}catch(_){}mfCallState=null;mfClose("mfCallModal")}
 
-function mfOpenAi(){const out=$("mfAiBody");out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">MF-NEXA AI Assistant <small>التحليل محصور ببيانات وصلاحيات المستخدم</small></div><div class="mfSearchRow"><input id="mfAiPrompt" class="mfSearchInput" placeholder="مثال: لخص Late أو اكتب رسالة قوية للعميل الحالي"><button class="mfIconButton" onclick="mfVoiceSearch('mfAiPrompt',mfAskAi)">🎙️</button><button class="mfIconButton" onclick="mfAskAi()">➤</button></div></div><div id="mfAiOutput" class="mfAiOutput">أستطيع تلخيص المحفظة، تحليل Late وDue، ترتيب الأولويات، وصياغة رسائل المتابعة.</div>`;mfOpen("mfAiModal")}
+function mfOpenAi(){const out=$("mfAiBody");out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">المساعد الذكي <small>التحليل محصور ببيانات وصلاحيات المستخدم</small></div><div class="mfSearchRow"><input id="mfAiPrompt" class="mfSearchInput" placeholder="مثال: لخص Late أو اكتب رسالة قوية للعميل الحالي"><button class="mfIconButton" onclick="mfVoiceSearch('mfAiPrompt',mfAskAi)">🎙️</button><button class="mfIconButton" onclick="mfAskAi()">➤</button></div></div><div id="mfAiOutput" class="mfAiOutput">أستطيع تلخيص المحفظة، تحليل Late وDue، ترتيب الأولويات، وصياغة رسائل المتابعة.</div>`;mfOpen("mfAiModal")}
 function mfAskAi(){
   const q=norm($("mfAiPrompt")?.value),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>c.inLate),due=scope.filter(c=>c.inDue),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score),out=$("mfAiOutput");let answer="";
   if(!q)answer="اكتب طلبك أو استخدم الميكروفون.";
