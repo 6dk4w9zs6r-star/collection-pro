@@ -5,8 +5,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#07111f">
-<title>MF-NEXA</title>
-<!-- GITHUB 05: Banking Home + cleanup -->
+<title>NEXA-MF</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -236,241 +235,36 @@ body.secureLocked>header,body.secureLocked>main{display:none!important}
 .nestedLo button{width:100%;margin-top:8px;background:#263b59;color:#fff;border:0;border-radius:9px;padding:9px;font-weight:900}
 .branchMini.clickable{cursor:pointer}
 .branchMini.clickable:active{transform:scale(.99)}
-  /* =========================================
-   MD-COLLECTION V7 DESIGN FOUNDATION
-   Dark / Light Theme
-   ========================================= */
-
-:root{
-  --md-bg:#07111f;
-  --md-surface:#101d2e;
-  --md-card:#142235;
-  --md-card-2:#182a43;
-  --md-border:#30445f;
-  --md-text:#ffffff;
-  --md-muted:#9eabbc;
-  --md-gold:#d8b45b;
-  --md-gold-soft:#e5c56c;
-  --md-green:#61d48b;
-  --md-red:#ff8e8e;
-  --md-blue:#7fa9d8;
-  --md-shadow:0 12px 34px rgba(0,0,0,.22);
-}
-
-body{
-  background:var(--md-bg);
-  color:var(--md-text);
-}
-
-body.lightTheme{
-  --md-bg:#f4f6f9;
-  --md-surface:#ffffff;
-  --md-card:#ffffff;
-  --md-card-2:#f0f3f7;
-  --md-border:#d9dee7;
-  --md-text:#172033;
-  --md-muted:#687386;
-  --md-gold:#b58a25;
-  --md-gold-soft:#9c7419;
-  --md-green:#278654;
-  --md-red:#c64d58;
-  --md-blue:#356fa8;
-  --md-shadow:0 10px 30px rgba(20,35,60,.10);
-}
-
-body,
-header,
-.card,
-.mini,
-.box,
-.employeeCard,
-.paidRow,
-.client,
-.modal-box,
-.globalSearchBox,
-.authCard,
-.branchesTile,
-.branchCard,
-.branchMini,
-.alsCard,
-.loCard,
-.nestedLo,
-.branchSearchBox{
-  transition:
-    background-color .25s ease,
-    color .25s ease,
-    border-color .25s ease,
-    box-shadow .25s ease;
-}
-
-body.lightTheme header,
-body.lightTheme .mainMenuDrawer{
-  background:var(--md-surface);
-  color:var(--md-text);
-  border-color:var(--md-border);
-}
-
-body.lightTheme .card,
-body.lightTheme .mini,
-body.lightTheme .box,
-body.lightTheme .employeeCard,
-body.lightTheme .paidRow,
-body.lightTheme .client,
-body.lightTheme .modal-box,
-body.lightTheme .globalSearchBox,
-body.lightTheme .authCard,
-body.lightTheme .branchesTile,
-body.lightTheme .branchCard,
-body.lightTheme .branchMini,
-body.lightTheme .alsCard,
-body.lightTheme .loCard,
-body.lightTheme .nestedLo,
-body.lightTheme .branchSearchBox{
-  background:var(--md-card);
-  color:var(--md-text);
-  border-color:var(--md-border);
-  box-shadow:var(--md-shadow);
-}
-
-body.lightTheme .sub,
-body.lightTheme .info,
-body.lightTheme .note,
-body.lightTheme .cloudstatus,
-body.lightTheme .homeBlankNote,
-body.lightTheme .branchesSub,
-body.lightTheme .branchPageRole,
-body.lightTheme .authSub,
-body.lightTheme .authHint,
-body.lightTheme .menuSub{
-  color:var(--md-muted);
-}
-
-body.lightTheme .search,
-body.lightTheme .globalSearchInput,
-body.lightTheme .authInput,
-body.lightTheme .modal input,
-body.lightTheme .modal select,
-body.lightTheme .modal textarea,
-body.lightTheme .branchSearchBox input{
-  background:#f7f8fa;
-  color:#172033;
-  border-color:var(--md-border);
-}
-
-body.lightTheme .secondary,
-body.lightTheme .menuItem,
-body.lightTheme .loOpen{
-  background:#e9edf3;
-  color:#172033;
-  border-color:var(--md-border);
-}
-
-body.lightTheme .logo,
-body.lightTheme .boxTitle,
-body.lightTheme .employeePageTitle,
-body.lightTheme .branchesTitle,
-body.lightTheme .branchPageTitle,
-body.lightTheme .cfmpCode,
-body.lightTheme .loSectionTitle{
-  color:var(--md-gold-soft);
-}
-
-
-/* =========================================
-   GITHUB 05 — BANKING HOME EXPERIENCE
-   Professional collection dashboard layer
-   ========================================= */
-.themeToggleBtn{
-  position:absolute;right:14px;top:14px;display:flex;align-items:center;gap:7px;
-  min-height:42px;padding:9px 12px;border:1px solid var(--md-border);border-radius:12px;
-  background:var(--md-card);color:var(--md-text);box-shadow:var(--md-shadow);z-index:3;
-}
-.themeToggleBtn span:last-child{font-size:12px;font-weight:900}
-header{background:linear-gradient(180deg,var(--md-surface),var(--md-bg));border-color:var(--md-border)}
-header .logo{letter-spacing:.2px}
-.newHome{width:100%;max-width:760px;margin:0 auto;padding:16px 0 28px;align-items:stretch}
-.bankHero{
-  position:relative;overflow:hidden;background:linear-gradient(135deg,#102a46 0%,#0b1b2e 58%,#10253d 100%);
-  border:1px solid #35516f;border-radius:24px;padding:20px;margin-bottom:12px;box-shadow:var(--md-shadow);
-}
-.bankHero:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;left:-72px;top:-92px;background:rgba(216,180,91,.10)}
-.bankHeroEyebrow{font-size:12px;color:#b7c5d8;font-weight:800}
-.bankHeroTitle{font-size:26px;line-height:1.2;font-weight:1000;margin-top:6px;color:#fff}
-.bankHeroSub{font-size:13px;line-height:1.7;color:#aebbd0;margin-top:7px;max-width:560px}
-.bankSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 2px 9px;font-weight:1000;font-size:16px}
-.bankSectionTitle small{color:var(--md-muted);font-size:11px;font-weight:700}
-.bankKpiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
-.bankKpi{background:var(--md-card);border:1px solid var(--md-border);border-radius:17px;padding:13px;box-shadow:var(--md-shadow);min-width:0}
-.bankKpiLabel{color:var(--md-muted);font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bankKpiValue{font-size:21px;font-weight:1000;margin-top:7px;color:var(--md-gold-soft)}
-.bankKpiHint{font-size:10px;color:var(--md-muted);margin-top:3px}
-.bankQuickGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
-.bankQuick{
-  min-height:82px;background:var(--md-card);color:var(--md-text);border:1px solid var(--md-border);
-  border-radius:17px;padding:10px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:6px;box-shadow:var(--md-shadow);font-size:12px;font-weight:900;
-}
-.bankQuickIcon{font-size:24px;line-height:1}
-.bankQuick:active{transform:scale(.98)}
-.bankOrgGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
-.bankOrgGrid .cfmpCard,.bankOrgGrid .branchesTile{width:100%;margin:0;min-height:150px}
-.bankOrgGrid .cfmpCard{display:flex;flex-direction:column;justify-content:center}
-.bankOrgGrid .branchesTile{display:flex;flex-direction:column;justify-content:center;align-items:center}
-.bankFooterNote{text-align:center;color:var(--md-muted);font-size:11px;margin:16px 8px 2px}
-body.lightTheme .bankHero{background:linear-gradient(135deg,#ffffff 0%,#f3f6fa 100%);border-color:var(--md-border)}
-body.lightTheme .bankHeroTitle{color:#172033}
-body.lightTheme .bankHeroEyebrow,body.lightTheme .bankHeroSub{color:var(--md-muted)}
-body.lightTheme .themeToggleBtn,body.lightTheme .bankKpi,body.lightTheme .bankQuick{background:#fff;color:#172033;border-color:var(--md-border)}
-@media(max-width:620px){
-  header{padding-top:68px}
-  .themeToggleBtn{right:14px;top:14px}
-  .menuBtn{left:14px;top:14px}
-  header .logo{padding-left:0;text-align:center}
-  header .sub,header .user{text-align:center}
-  .bankHero{border-radius:20px;padding:17px}
-  .bankHeroTitle{font-size:22px}
-  .bankKpiGrid{grid-template-columns:1fr 1fr}
-  .bankQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-  .bankQuick{min-height:76px;font-size:10px;padding:8px 4px}
-  .bankQuickIcon{font-size:22px}
-  .bankOrgGrid{grid-template-columns:1fr}
-}
-@media(max-width:390px){
-  .bankQuickGrid{grid-template-columns:1fr 1fr}
-}
-
-/* MF-NEXA GITHUB 05 — approved frontend foundation */
-.authTagline{text-align:center;color:#91a7c2;font-size:12px;margin:-12px 0 14px}
-.mfnexaLogo{text-align:center;font-size:46px;color:#3d8ed8;line-height:1;margin-bottom:8px}
-.loginModeRow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
-.loginModeBtn{background:#182a43;color:#fff;border:1px solid #3c506c}
-.loginModeBtn.active{background:#2f83d5;border-color:#2f83d5;color:#fff}
-.forgotBtn{width:100%;background:transparent;color:#8ebcf0;padding:8px}
-.toolGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-.toolCard{background:var(--md-card);color:var(--md-text);border:1px solid var(--md-border);border-radius:15px;padding:14px;text-align:right}
-.toolCard b{display:block;color:var(--md-gold-soft);margin-bottom:5px}.toolCard small{color:var(--md-muted);line-height:1.55}
-.toolStatus{background:var(--md-card);border:1px solid var(--md-border);border-radius:14px;padding:12px;margin-top:10px}
-.calcResult{background:var(--md-card-2);border:1px solid var(--md-border);border-radius:12px;padding:11px;margin-top:9px;line-height:1.8}
-.gpsReadout{direction:ltr;text-align:left;font-family:monospace}
-body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .loginModeBtn.active{background:#2f83d5;color:#fff}
-@media(max-width:480px){.toolGrid{grid-template-columns:1fr}}
+/* ===== NEXA-MF PHASE 5 FINAL UI OVERRIDE ===== */
+:root{--nexa-blue:#0b4f91;--nexa-blue2:#0a3768;--nexa-bg:#f4f7fb;--nexa-card:#fff;--nexa-text:#172033;--nexa-muted:#6c7788;--nexa-border:#dfe6ef;--nexa-purple:#6657d9}
+body:not(.secureLocked){background:var(--nexa-bg);color:var(--nexa-text)}
+body:not(.secureLocked) .app{background:var(--nexa-bg);min-height:100vh}
+body:not(.secureLocked) header{background:linear-gradient(135deg,var(--nexa-blue2),var(--nexa-blue));border:0;border-radius:0 0 22px 22px;padding:14px 18px 18px;min-height:76px;box-shadow:0 8px 24px #092f571f}
+body:not(.secureLocked) header .logo{font-size:0!important;display:inline-flex;align-items:center;gap:10px;color:#fff}
+body:not(.secureLocked) header .logo:after{content:"دائرة التمويل الصغير  |  Microfinance Department";font-size:16px;font-weight:800;white-space:normal}
+body:not(.secureLocked) header .logo:before{content:"UNRWA";font-size:12px;font-weight:900;border:1px solid #ffffff88;padding:6px 8px;border-radius:7px}
+body:not(.secureLocked) header>.sub,body:not(.secureLocked) header>div[style*="V6"]{display:none!important}
+body:not(.secureLocked) header .user{margin-top:10px;background:#fff;color:var(--nexa-text);border:1px solid #ffffff55;border-radius:14px;padding:9px 12px;min-width:190px;box-shadow:0 4px 12px #00000012}
+.header-user-name{font-size:14px;font-weight:850;color:#172033;line-height:1.3;direction:ltr;text-align:left}.header-user-role{font-size:12px;font-weight:700;color:#6c7788;margin-top:2px;direction:ltr;text-align:left}
+body:not(.secureLocked) .menuBtn{background:#ffffff18;color:#fff;border:1px solid #ffffff44}
+#newHome{display:block!important;max-width:1050px;margin:0 auto;padding:18px 14px 80px}.cfmpCard,.branchesTile,.homeBlankNote{display:none!important}
+.p5-profile{background:#fff;border:1px solid var(--nexa-border);border-radius:18px;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 6px 20px #20334d0c}.p5-profile-name{font-weight:900;font-size:17px}.p5-profile-role{font-size:12px;color:var(--nexa-muted);margin-top:3px}.p5-branch{border:1px solid var(--nexa-border);border-radius:11px;padding:8px 10px;color:var(--nexa-blue);font-weight:800;font-size:12px}
+.p5-search{margin-top:14px;background:#fff;border:1px solid var(--nexa-border);border-radius:16px;padding:12px;box-shadow:0 5px 16px #20334d0b}.p5-search-row{display:flex;gap:8px}.p5-search input{margin:0;flex:1;background:#f8fafc;color:var(--nexa-text);border:1px solid var(--nexa-border)}.p5-search button{background:var(--nexa-blue);color:#fff;min-width:48px}.p5-helper{font-size:11px;color:var(--nexa-muted);margin-top:7px}
+.p5-home-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.p5-tile{border:0;border-radius:18px;min-height:126px;padding:18px;text-align:right;color:#fff;box-shadow:0 8px 20px #20334d1a}.p5-tile strong{display:block;font-size:19px}.p5-tile span{display:block;font-size:12px;opacity:.88;margin-top:5px}.p5-chat{background:linear-gradient(135deg,#5142c6,#7668e7)}.p5-allocation{background:linear-gradient(135deg,#0a4b89,#1375c8)}.p5-motto{text-align:center;color:var(--nexa-muted);font-weight:800;margin:30px 0 0}
+.mainMenuDrawer{background:#fff!important;color:var(--nexa-text)!important;border:0!important;box-shadow:8px 0 30px #10243d2b}.mainMenuDrawer .menuLogo{color:var(--nexa-blue)!important;font-size:0!important}.mainMenuDrawer .menuLogo:after{content:"دائرة التمويل الصغير";font-size:18px;font-weight:900}.mainMenuDrawer .menuSub{color:var(--nexa-muted)!important}.mainMenuDrawer .menuItem{background:#f7f9fc!important;color:var(--nexa-text)!important;border:1px solid var(--nexa-border)!important;margin:7px 0!important;text-align:right!important}.mainMenuDrawer .menuItem.p5-active{background:#eaf3fc!important;color:var(--nexa-blue)!important;border-color:#bcd8f1!important}.mainMenuDrawer .menuClose{color:var(--nexa-text)!important}
+.p5-modal{position:fixed;inset:0;z-index:1200;background:#0008;display:none;align-items:center;justify-content:center;padding:14px}.p5-modal.open{display:flex}.p5-page{width:min(1180px,100%);height:min(90vh,900px);overflow:auto;background:var(--nexa-bg);border-radius:20px;padding:18px;color:var(--nexa-text)}.p5-page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.p5-page-title{font-size:23px;font-weight:900}.p5-close{background:#fff;border:1px solid var(--nexa-border);color:var(--nexa-text)}.p5-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.p5-tabs button{background:#fff;color:var(--nexa-text);border:1px solid var(--nexa-border)}.p5-tabs button.active{background:var(--nexa-blue);color:#fff}.p5-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.p5-kpi{background:#fff;border:1px solid var(--nexa-border);border-radius:14px;padding:13px}.p5-kpi small{color:var(--nexa-muted)}.p5-kpi b{display:block;font-size:22px;margin-top:5px}.p5-panel{background:#fff;border:1px solid var(--nexa-border);border-radius:16px;padding:14px;margin-top:12px}.p5-table-wrap{overflow:auto}.p5-table{width:100%;border-collapse:collapse;min-width:850px}.p5-table th,.p5-table td{padding:10px;border-bottom:1px solid var(--nexa-border);text-align:right;font-size:13px}.p5-table th{color:var(--nexa-muted);font-size:12px;background:#f8fafc}.p5-btn{background:var(--nexa-blue);color:#fff}.p5-btn.alt{background:#fff;color:var(--nexa-blue);border:1px solid #bcd8f1}.p5-empty{text-align:center;color:var(--nexa-muted);padding:30px}.p5-role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.p5-role-card{background:#fff;border:1px solid var(--nexa-border);border-radius:15px;padding:15px}.p5-role-card b{font-size:16px}.p5-role-card small{display:block;color:var(--nexa-muted);margin-top:5px}
+.authBrand{font-size:0!important}.authBrand:after{content:"NEXA-MF";font-size:28px;font-weight:900}.authSub:after{content:"MicroFinance Next-Generation Operations & Intelligence";display:block;font-size:12px;margin-top:6px}.authHint{font-size:0}.authHint:after{content:"Authorized Microfinance Department employees only";font-size:12px}
+@media(max-width:720px){body:not(.secureLocked) header .logo:after{font-size:12px}.p5-home-actions{grid-template-columns:1fr 1fr}.p5-kpis{grid-template-columns:1fr 1fr}.p5-role-grid{grid-template-columns:1fr}.p5-page{height:94vh;padding:12px}.p5-page-title{font-size:19px}.p5-profile{align-items:flex-start}.header-user-name{font-size:13px}}
 
 </style>
-  
 </head>
 <!-- MD-COLLECTION V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
 <div id="authGate" class="authGate">
   <div class="authCard">
-    <div class="mfnexaLogo" aria-hidden="true">◉</div>
-    <div class="authBrand">MF-NEXA</div>
-    <div class="authTagline">MicroFinance Next-Generation Operations &amp; Intelligence</div>
+    <div class="authBrand">MD-COLLECTION</div>
     <div class="authSub">&#1583;&#1582;&#1608;&#1604; &#1570;&#1605;&#1606; &#1604;&#1604;&#1605;&#1589;&#1585;&#1581; &#1604;&#1607;&#1605; &#1601;&#1602;&#1591;</div>
-    <div class="loginModeRow">
-      <button type="button" id="loginModeEmail" class="loginModeBtn active" onclick="setMFLoginMode('email')">📧 البريد الإلكتروني</button>
-      <button type="button" id="loginModePhone" class="loginModeBtn" onclick="setMFLoginMode('phone')">📱 رقم الهاتف</button>
-    </div>
-    <input id="loginEmail" class="authInput" type="text" inputmode="email" placeholder="البريد الإلكتروني" autocomplete="username" autocapitalize="none">
+    <input id="loginEmail" class="authInput" type="email" inputmode="email" placeholder="البريد الإلكتروني" autocomplete="username" autocapitalize="none">
     <input id="loginPassword" class="authInput" type="password" placeholder="Password" autocomplete="current-password">
     <label class="rememberRow">
       <input id="rememberMe" type="checkbox">
@@ -478,25 +272,15 @@ body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .
     </label>
 
     <button class="authPrimary" onclick="secureLogin()">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1583;&#1582;&#1608;&#1604;</button>
-    <div class="authHint">الدخول بكلمة المرور بدون إرسال بريد أو SMS. ربط دخول الهاتف الفعلي سيتم آمنًا في Supabase.
-    </div><button type="button" class="forgotBtn" onclick="openMFRecovery()">نسيت كلمة المرور؟</button><div class="authHint">يمكن لاحقًا تفعيل فتح الجهاز بالبصمة/Face ID بدون تخزين كلمة المرور كنص.</div>
+    <div class="authHint">الحسابات ينشئها المؤسس من داخل MD-COLLECTION. استخدم البريد وكلمة المرور المؤقتة.</div>
     <div id="authMsg" class="authMsg"></div>
   </div>
 </div>
 
 <div class="app">
 <header>
-  <!-- MD-COLLECTION THEME SWITCH -->
-<button id="themeToggleBtn"
-        type="button"
-        class="themeToggleBtn"
-        onclick="toggleMDTheme()"
-        aria-label="تبديل الوضع">
-  <span id="themeToggleIcon">☀️</span>
-  <span id="themeToggleText">Light</span>
-</button>
-<div class="logo">دائرة التمويل الصغير</div>
-<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.44</div>
+<div class="logo">MD-COLLECTION</div>
+<div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
 <button id="menuBtn" class="menuBtn" onclick="openMainMenu()">&#9776;</button>
@@ -506,47 +290,18 @@ body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .
 <main>
 
 <div id="newHome" class="newHome">
-  <section class="bankHero" aria-label="لوحة التحصيل">
-    <div class="bankHeroEyebrow">دائرة التمويل الصغير • Microfinance Department</div>
-    <div class="bankHeroTitle">لوحة التحصيل الذكية</div>
-    <div class="bankHeroSub">نظرة سريعة على المحفظة والمتابعات اليومية، مع وصول مباشر لأهم إجراءات التحصيل.</div>
-  </section>
-
-  <div class="bankSectionTitle"><span>المؤشرات الرئيسية</span><small>تتحدث تلقائيًا حسب البيانات المتاحة</small></div>
-  <section class="bankKpiGrid" aria-label="المؤشرات الرئيسية">
-    <div class="bankKpi"><div class="bankKpiLabel">العملاء</div><div id="bankClientsCount" class="bankKpiValue">0</div><div class="bankKpiHint">ضمن صلاحيتك</div></div>
-    <div class="bankKpi"><div class="bankKpiLabel">Late</div><div id="bankLateCount" class="bankKpiValue">0</div><div class="bankKpiHint">الحالات الحالية</div></div>
-    <div class="bankKpi"><div class="bankKpiLabel">Due</div><div id="bankDueCount" class="bankKpiValue">0</div><div class="bankKpiHint">المتبقي حاليًا</div></div>
-    <div class="bankKpi"><div class="bankKpiLabel">متابعات اليوم</div><div id="bankFollowupCount" class="bankKpiValue">0</div><div class="bankKpiHint">تحتاج إجراء</div></div>
-  </section>
-
-  <div class="bankSectionTitle"><span>إجراءات سريعة</span><small>الأكثر استخدامًا</small></div>
-  <section class="bankQuickGrid" aria-label="إجراءات سريعة">
-    <button class="bankQuick" onclick="openUniversalSearch()"><span class="bankQuickIcon">👥</span><span>العملاء</span></button>
-    <button class="bankQuick" onclick="openSectionFromMenu('paidSection')"><span class="bankQuickIcon">💳</span><span>الدفعات</span></button>
-    <button class="bankQuick" onclick="openSectionFromMenu('alertsSection')"><span class="bankQuickIcon">📅</span><span>المتابعات</span></button>
-    <button class="bankQuick" onclick="openSectionFromMenu('lateSection')"><span class="bankQuickIcon">📊</span><span>Late</span></button>
-    <button class="bankQuick" onclick="openSectionFromMenu('dueSection')"><span class="bankQuickIcon">⏳</span><span>Due</span></button>
-    <button class="bankQuick" onclick="openBranchesHub()"><span class="bankQuickIcon">🏢</span><span>الفروع</span></button>
-    <button class="bankQuick" onclick="openModal()"><span class="bankQuickIcon">➕</span><span>إضافة عميل</span></button>
-    <button class="bankQuick" onclick="openMainMenu()"><span class="bankQuickIcon">☰</span><span>المزيد</span></button>
-  </section>
-
-  <div class="bankSectionTitle"><span>الهيكل الإداري</span><small>حسب الصلاحية</small></div>
-  <section class="bankOrgGrid">
-    <div id="cfmpHomeCard" class="cfmpCard" onclick="openCfmpView()">
-      <div class="cfmpCode">CFMP</div>
-      <div class="cfmpTitle">مدير الدائرة</div>
-      <div id="cfmpName" class="cfmpName">غير محدد حاليًا</div>
-      <div class="cfmpSub">يشاهد جميع الفروع</div>
-    </div>
-    <button id="branchesHomeTile" class="branchesTile" onclick="openBranchesHub()">
-      <div class="branchesIcon">🏢</div>
-      <div class="branchesTitle">الفروع</div>
-      <div class="branchesSub">افتح قائمة الفروع</div>
-    </button>
-  </section>
-  <div class="bankFooterNote">Microfinance Department • Operations Dashboard</div>
+  <div id="cfmpHomeCard" class="cfmpCard" onclick="openCfmpView()">
+    <div class="cfmpCode">CFMP</div>
+    <div class="cfmpTitle">مدير الدائرة</div>
+    <div id="cfmpName" class="cfmpName">غير محدد حاليًا</div>
+    <div class="cfmpSub">يشاهد جميع الفروع</div>
+  </div>
+  <button id="branchesHomeTile" class="branchesTile" onclick="openBranchesHub()">
+    <div class="branchesIcon">&#127970;</div>
+    <div class="branchesTitle">&#1575;&#1604;&#1601;&#1585;&#1608;&#1593;</div>
+    <div class="branchesSub">&#1575;&#1601;&#1578;&#1581; &#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1601;&#1585;&#1608;&#1593;</div>
+  </button>
+  <div class="homeBlankNote">&#1575;&#1604;&#1588;&#1575;&#1588;&#1577; &#1575;&#1604;&#1585;&#1574;&#1610;&#1587;&#1610;&#1577; &#1605;&#1582;&#1589;&#1589;&#1577; &#1604;&#1604;&#1573;&#1590;&#1575;&#1601;&#1575;&#1578; &#1575;&#1604;&#1602;&#1575;&#1583;&#1605;&#1577;.</div>
 </div>
 <div id="legacyOperationalArea" style="display:none">
 
@@ -649,7 +404,7 @@ body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .
 <div id="mainMenuOverlay" class="mainMenuOverlay" onclick="if(event.target===this)closeMainMenu()">
   <div class="mainMenuDrawer">
     <button class="menuClose" onclick="closeMainMenu()">&#10005;</button>
-    <div class="menuLogo">دائرة التمويل الصغير</div>
+    <div class="menuLogo">MD-COLLECTION</div>
     <div class="menuSub">&#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1582;&#1610;&#1575;&#1585;&#1575;&#1578;</div>
 
     <button class="menuItem" onclick="openSectionFromMenu('summarySection')">&#128202; &#1575;&#1604;&#1605;&#1604;&#1582;&#1589; &#1575;&#1604;&#1593;&#1575;&#1605;</button>
@@ -670,97 +425,14 @@ body.lightTheme .loginModeBtn{background:#eef2f6;color:#172033}body.lightTheme .
     <button class="menuItem" onclick="closeMainMenu();openSmsCenter()">&#9993;&#65039; SMS Center</button>
     <button class="menuItem" onclick="closeMainMenu();openSupervisorMessages()">&#128221; &#1605;&#1585;&#1575;&#1587;&#1604;&#1575;&#1578; &#1575;&#1604;&#1605;&#1608;&#1592;&#1601;&#1610;&#1606;</button>
     <button class="menuItem" onclick="closeMainMenu();openChat()">&#128172; &#1575;&#1604;&#1588;&#1575;&#1578;</button>
-    <button class="menuItem" onclick="closeMainMenu();openMFTools()">🧩 مركز الأدوات والعمليات</button>
     <button class="menuItem" onclick="closeMainMenu();openCloud()">&#9729;&#65039; &#1585;&#1576;&#1591; &#1575;&#1604;&#1587;&#1581;&#1575;&#1576;&#1577;</button>
     <button id="shareAppMenuItem" class="menuItem" style="display:none" onclick="closeMainMenu();shareApp()">&#128279; &#1605;&#1588;&#1575;&#1585;&#1603;&#1577; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</button>
     <button id="installAppMenuItem" class="menuItem" style="display:none" onclick="closeMainMenu();showInstallHelp()">&#128242; &#1573;&#1590;&#1575;&#1601;&#1577; &#1604;&#1604;&#1588;&#1575;&#1588;&#1577; &#1575;&#1604;&#1585;&#1574;&#1610;&#1587;&#1610;&#1577;</button>
   </div>
 </div>
 
-
-<div id="mfRecoveryModal" class="modal"><div class="modal-box">
-<h3>🔐 استعادة كلمة المرور</h3><div class="note">أدخل البريد أو رقم الهاتف. الطلب سيظهر داخليًا للمسؤول بعد ربطه بقاعدة البيانات، بدون Email/SMS تلقائي.</div>
-<input id="mfRecoveryId" placeholder="البريد الإلكتروني أو رقم الهاتف">
-<button class="primary" style="width:100%;margin-top:8px" onclick="mfRecoveryRequest()">إرسال الطلب</button>
-<div id="mfRecoveryMsg" class="note"></div>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfRecoveryModal').style.display='none'">إغلاق</button>
-</div></div>
-
-<div id="mfToolsModal" class="modal"><div class="modal-box">
-<div class="hubHeader"><h3>🧩 مركز الأدوات والعمليات</h3><button class="secondary smallClose" onclick="$('mfToolsModal').style.display='none'">✕</button></div>
-<div class="toolStatus"><b>🔄 التحديث التلقائي</b><div class="note">الدفعات + R-O: الواجهة جاهزة، والتشغيل التلقائي وسجل آخر تحديث سيتم من Supabase.</div></div>
-<div class="toolGrid">
-<button class="toolCard" onclick="openMFCalc()"><b>🧮 الحاسبة</b><small>حسابات سريعة</small></button>
-<button class="toolCard" onclick="openMFLoan()"><b>💰 حاسبة القرض</b><small>نسبة فائدة متغيرة حسب إدخال المستخدم</small></button>
-<button class="toolCard" onclick="openMFDaily()"><b>📋 خطة LO اليومية</b><small>متابعة، ترويج، طلب قرض، GPS ووصف ميداني</small></button>
-<button class="toolCard" onclick="mfBackendNotice('المحتوى الصباحي')"><b>🌅 المحتوى الصباحي</b><small>اختياري عند نشر المسؤول فقط</small></button>
-<button class="toolCard" onclick="mfBackendNotice('Team Spirit')"><b>🤝 روح الفريق</b><small>قسم منفصل، اختياري عند النشر</small></button>
-<button class="toolCard" onclick="mfBackendNotice('Backup Status')"><b>🛡️ Backup Status</b><small>آخر نسخة وحالة الاستعادة بعد الربط الفعلي</small></button>
-</div></div></div>
-
-<div id="mfCalcModal" class="modal"><div class="modal-box"><h3>🧮 الحاسبة</h3>
-<input id="mfCalcExpr" placeholder="مثال: 1250 + 340 - 50" inputmode="decimal">
-<button class="primary" style="width:100%" onclick="mfCalculate()">احسب</button><div id="mfCalcOut" class="calcResult">النتيجة: —</div>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfCalcModal').style.display='none'">إغلاق</button></div></div>
-
-<div id="mfLoanModal" class="modal"><div class="modal-box"><h3>💰 حاسبة القرض</h3>
-<label>مبلغ القرض</label><input id="mfLoanAmount" type="number" min="0" step=".01">
-<label>المدة بالشهور</label><input id="mfLoanMonths" type="number" min="1" step="1">
-<label>نسبة الفائدة الشهرية %</label><input id="mfLoanRate" type="number" min="0" step=".01" placeholder="مثال: 2">
-<button class="primary" style="width:100%;margin-top:8px" onclick="mfLoanCalculate()">احسب</button><div id="mfLoanOut" class="calcResult">أدخل البيانات.</div>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfLoanModal').style.display='none'">إغلاق</button></div></div>
-
-<div id="mfDailyModal" class="modal"><div class="modal-box"><h3>📋 LO Daily Work Plan</h3>
-<label>نوع النشاط</label><select id="mfActivityType"><option value="followup">متابعة Late / Due</option><option value="promotion">ترويج</option><option value="application">تعبئة طلب قرض</option></select>
-<label>العميل / الشخص</label><input id="mfActivityPerson" placeholder="ربط متابعة Late/Due سيتم من البيانات الفعلية">
-<label>النتيجة / الملاحظة</label><textarea id="mfActivityNote"></textarea>
-<button class="secondary" style="width:100%" onclick="mfCaptureGps()">📍 تحديد موقعي الحالي</button>
-<input id="mfGps" class="gpsReadout" readonly placeholder="GPS غير محدد">
-<label>وصف الموقع الميداني *</label><textarea id="mfLocationDesc" placeholder="مثال: مقابل صيدلية الحياة، بجانب مخبز السلام، عمارة 12، المدخل الشرقي"></textarea>
-<button class="primary" style="width:100%" onclick="mfValidateDaily()">حفظ النشاط</button><div id="mfDailyMsg" class="note"></div>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="$('mfDailyModal').style.display='none'">إغلاق</button></div></div>
-
 <div id="sectionViewer" class="modal">
   <div class="modal-box sectionViewerBox">
-    <script>
-function applyMDTheme(theme){
-  const isLight = theme === "light";
-
-  document.body.classList.toggle("lightTheme", isLight);
-
-  const icon = document.getElementById("themeToggleIcon");
-  const text = document.getElementById("themeToggleText");
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-
-  if(icon){
-    icon.textContent = isLight ? "🌙" : "☀️";
-  }
-
-  if(text){
-    text.textContent = isLight ? "Dark" : "Light";
-  }
-
-  if(metaTheme){
-    metaTheme.setAttribute("content", isLight ? "#f4f6f9" : "#07111f");
-  }
-
-  localStorage.setItem("mdCollectionTheme", theme);
-}
-
-function toggleMDTheme(){
-  const currentTheme =
-    localStorage.getItem("mdCollectionTheme") || "dark";
-
-  applyMDTheme(currentTheme === "dark" ? "light" : "dark");
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-  const savedTheme =
-    localStorage.getItem("mdCollectionTheme") || "dark";
-
-  applyMDTheme(savedTheme);
-});
-</script>
     <div id="sectionViewerBody"></div>
     <button class="secondary" style="width:100%;margin-top:12px" onclick="closeSectionViewer()">&#1573;&#1594;&#1604;&#1575;&#1602;</button>
   </div>
@@ -2596,92 +2268,64 @@ applyRoleHomeSecurity=function(){
   }
 };
 
-
-
-/* GITHUB 05 — Banking dashboard live counters */
-function refreshBankDashboard(){
-  try{
-    const scopeClients=Array.isArray(clients)?clients:[];
-    const late=scopeClients.filter(c=>c && c.inLate).length;
-    const due=scopeClients.filter(c=>c && (Number(c.dueAmount)>0 || c.inDue)).length;
-    const followups=scopeClients.filter(c=>c && c.followup===today() && !c.followedToday).length;
-    const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value)};
-    setText('bankClientsCount',scopeClients.length);
-    setText('bankLateCount',late);
-    setText('bankDueCount',due);
-    setText('bankFollowupCount',followups);
-  }catch(e){console.warn('Bank dashboard refresh skipped',e)}
-}
-const renderBeforeBankV705=render;
-render=function(){
-  const result=renderBeforeBankV705.apply(this,arguments);
-  refreshBankDashboard();
-  return result;
-};
-document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshBankDashboard,250));
+/* ===== NEXA-MF PHASE 5 FINAL FUNCTIONAL UI ===== */
+(function(){
+  const P5={};
+  const escKey='nexa_mf_escalations_v1';
+  const esc=()=>{try{return JSON.parse(localStorage.getItem(escKey)||'[]')}catch(e){return[]}};
+  const roleName=r=>({lo:'Loan Officer (LO)',als:'ALS',bm:'BM',cfmp:'Department Manager',founder:'Founder'}[String(r||'').toLowerCase()]||String(r||'').toUpperCase());
+  const fmtDate=d=>{let x=d?new Date(d):new Date();if(isNaN(x))x=new Date();return String(x.getDate()).padStart(2,'0')+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+x.getFullYear()};
+  const escHtml=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function profile(){return window.CURRENT_PROFILE||{} }
+  function myClients(){
+    const p=profile(),r=String(p.role||'').toLowerCase(),all=Array.isArray(window.clients)?window.clients:[];
+    if(r==='lo')return all.filter(c=>{let a=String(c.employee||c.cea||'').toLowerCase(),b=String(p.full_name||p.email||'').toLowerCase();return !b||a.includes(b)||b.includes(a)});
+    return all;
+  }
+  function ensureModal(){
+    if(document.getElementById('p5Modal'))return;
+    const d=document.createElement('div');d.id='p5Modal';d.className='p5-modal';d.innerHTML='<div class="p5-page"><div class="p5-page-head"><div id="p5Title" class="p5-page-title"></div><button class="p5-close" onclick="p5Close()">✕</button></div><div id="p5Body"></div></div>';document.body.appendChild(d);
+  }
+  function open(title,html){ensureModal();document.getElementById('p5Title').textContent=title;document.getElementById('p5Body').innerHTML=html;document.getElementById('p5Modal').classList.add('open')}
+  window.p5Close=()=>{const m=document.getElementById('p5Modal');if(m)m.classList.remove('open')};
+  function bindHeader(){
+    const p=profile(),u=document.querySelector('header .user');if(!u)return;
+    const nm=p.full_name||window.CURRENT_AUTH_USER?.user_metadata?.full_name||window.CURRENT_AUTH_USER?.email||'';
+    u.innerHTML='<div class="header-user-name">'+escHtml(nm)+'</div><div class="header-user-role">'+escHtml(roleName(p.role))+'</div>';
+  }
+  function renderHome(){
+    const h=document.getElementById('newHome');if(!h)return;const p=profile();
+    const nm=p.full_name||window.CURRENT_AUTH_USER?.user_metadata?.full_name||window.CURRENT_AUTH_USER?.email||'';
+    h.innerHTML='<div class="p5-profile"><div><div class="p5-profile-name">'+escHtml(nm)+'</div><div class="p5-profile-role">'+escHtml(roleName(p.role))+'</div></div><div class="p5-branch">'+escHtml(p.branch_code?('فرع '+p.branch_code):'الفرع')+'</div></div>'+ 
+      '<div class="p5-search"><div class="p5-search-row"><input id="p5Search" placeholder="ابحث عن العميل" onkeydown="if(event.key===\'Enter\')p5Search()"><button onclick="p5Search()">⌕</button><button onclick="p5Voice()">🎙</button></div><div class="p5-helper">بالاسم، رقم العميل، رقم الهاتف، أو أي معلومة أخرى</div></div>'+ 
+      '<div class="p5-home-actions"><button class="p5-tile p5-chat" onclick="p5AI()"><strong>ChatGPT</strong><span>المساعد الذكي</span></button><button class="p5-tile p5-allocation" onclick="p5Allocation()"><strong>تخصيص العملاء</strong><span>Allocation</span></button></div><div class="p5-motto">معًا نستطيع النجاح</div>';
+  }
+  window.p5Search=()=>{let q=(document.getElementById('p5Search')?.value||'').trim();if(!q)return;if(typeof window.openUniversalSearch==='function'){window.openUniversalSearch();setTimeout(()=>{let i=document.querySelector('#universalSearchInput,#globalSearchInput');if(i){i.value=q;i.dispatchEvent(new Event('input',{bubbles:true}))}},50)}else if(typeof window.runGlobalSearch==='function')window.runGlobalSearch(q)};
+  window.p5Voice=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return alert('البحث الصوتي غير مدعوم على هذا المتصفح.');let r=new SR();r.lang='ar-JO';r.onresult=e=>{document.getElementById('p5Search').value=e.results[0][0].transcript;p5Search()};r.start()};
+  window.p5AI=()=>open('ChatGPT — المساعد الذكي','<div class="p5-panel"><b>المساعد الذكي ضمن NEXA-MF</b><p>واجهة المساعد جاهزة للربط في مرحلة التكامل، مع إبقاء موقعها المعتمد في الصفحة الرئيسية.</p></div>');
+  window.p5Allocation=(tab='late')=>{let arr=myClients().filter(c=>tab==='late'?c.inLate:c.inDue);let total=arr.reduce((a,c)=>a+Number(tab==='late'?c.arrears:c.dueAmount||0),0);open('تخصيص العملاء','<div class="p5-tabs"><button class="'+(tab==='late'?'active':'')+'" onclick="p5Allocation(\'late\')">المتأخرات</button><button class="'+(tab==='due'?'active':'')+'" onclick="p5Allocation(\'due\')">الاستحقاقات</button></div><div class="p5-kpis"><div class="p5-kpi"><small>عدد العملاء</small><b>'+arr.length+'</b></div><div class="p5-kpi"><small>إجمالي المبلغ</small><b>'+total.toLocaleString('en-US')+'</b></div><div class="p5-kpi"><small>وعود الدفع</small><b>'+arr.filter(c=>c.promiseDate).length+'</b></div><div class="p5-kpi"><small>متابعات اليوم</small><b>'+arr.filter(c=>c.followup===((typeof today==='function')?today():'' )).length+'</b></div></div>'+clientTable(arr,tab) )};
+  function clientTable(arr,kind){return '<div class="p5-panel p5-table-wrap"><table class="p5-table"><thead><tr><th>#</th><th>اسم العميل</th><th>رقم العميل</th><th>الموظف</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>'+ (arr.length?arr.map((c,n)=>'<tr><td>'+(n+1)+'</td><td>'+escHtml(c.name||'-')+'</td><td>'+escHtml(c.clientNo||'-')+'</td><td>'+escHtml(c.employee||c.cea||'-')+'</td><td>'+Number(kind==='late'?c.arrears:c.dueAmount||0).toLocaleString('en-US')+'</td><td>'+escHtml(c.status||'-')+'</td><td><button class="p5-btn" onclick="p5Client('+((window.clients||[]).indexOf(c))+')">عرض</button></td></tr>').join(''):'<tr><td colspan="7" class="p5-empty">لا توجد بيانات حالياً</td></tr>')+'</tbody></table></div>'}
+  window.p5Client=i=>{let c=(window.clients||[])[i];if(!c)return;let p=profile(),canEsc=String(p.role||'').toLowerCase()==='lo';open('صفحة العميل','<div class="p5-panel"><h3>بيانات العميل — '+escHtml(c.name||'')+'</h3><div class="p5-tabs"><button onclick="location.href=\'tel:'+escHtml(c.phone||'')+'\'">اتصال</button><button onclick="p5Sms('+i+',\'blunet\')">BluNet SMS</button><button onclick="p5Sms('+i+',\'sms\')">SMS</button><button onclick="p5Whats('+i+')">WhatsApp</button><button onclick="p5Note('+i+')">متابعة +</button><button onclick="p5Promise('+i+')">وعد</button><button onclick="p5Note('+i+')">زيارة</button><button onclick="registerPayment('+i+',\''+(c.inDue?'due':'late')+'\')">دفعة</button><button>المزيد</button></div><p>الهاتف: '+escHtml(c.phone||'-')+'</p><p>مكان العمل: '+escHtml(c.workplace||c.company||'-')+'</p><p>الحالة الوظيفية: '+escHtml(c.employmentStatus||c.employment_status||'-')+'</p></div><div class="p5-panel"><h3>بيانات الكفيل</h3><div class="p5-tabs"><button>اتصال</button><button>BluNet SMS</button><button>SMS</button><button>WhatsApp</button><button>إرسال إنذار</button><button>متابعة +</button><button>وعد</button><button>زيارة</button><button>دفعة</button><button>المزيد</button></div><p>الاسم: '+escHtml(c.guarantorName||c.guarantor||'-')+'</p><p>الهاتف: '+escHtml(c.guarantorPhone||'-')+'</p></div><div class="p5-panel"><h3>المركبة والملفات</h3><p>هل يملك مركبة؟ '+escHtml(c.hasVehicle===true?'نعم':c.hasVehicle===false?'لا':'غير محدد')+'</p>'+(c.hasVehicle===true?'<p>حالة المركبة: '+escHtml(c.vehicleStatus||'-')+'</p><p>صورة المركبة ورخصة القيادة ضمن المرفقات.</p>':'')+'</div>'+(canEsc?'<div class="p5-panel"><h3>تصعيد المتابعة</h3><div class="p5-tabs"><button onclick="p5Escalate('+i+',\'ALS\')">تحويل إلى ALS</button><button onclick="p5Escalate('+i+',\'BM\')">تحويل إلى BM</button><button onclick="p5Escalate('+i+',\'ALS+BM\')">تحويل إلى الاثنين معًا</button></div><small>تبقى ملكية العميل لدى Loan Officer ولا يتم نقل العميل.</small></div>':'') )};
+  window.p5Sms=(i,type)=>{let c=(window.clients||[])[i];if(!c)return;let ph=String(c.phone||'').replace(/\s/g,'');if(type==='sms')location.href='sms:'+ph;else alert('BluNet SMS جاهز كإجراء واجهة وسيتم ربط بوابة BluNet في مرحلة التكامل.')};
+  window.p5Whats=i=>{let c=(window.clients||[])[i];if(!c)return;let ph=String(c.phone||'').replace(/\D/g,'');if(ph.startsWith('0'))ph='962'+ph.slice(1);window.open('https://wa.me/'+ph,'_blank')};
+  window.p5Note=i=>{let c=(window.clients||[])[i];if(!c)return;let n=prompt('أدخل الملاحظة / المتابعة:');if(!n)return;c.history=c.history||[];c.history.push({date:new Date().toLocaleString('ar-JO'),text:n});if(typeof save==='function')save();alert('تم الحفظ')};
+  window.p5Promise=i=>{let c=(window.clients||[])[i];if(!c)return;let d=prompt('تاريخ الوعد DD-MM-YYYY:');if(!d)return;c.promiseDate=d;c.promiseStatus='Pending';if(typeof save==='function')save();alert('تم تسجيل الوعد — Pending')};
+  window.p5Escalate=(i,target)=>{let c=(window.clients||[])[i],p=profile();if(!c)return;let reason=prompt('سبب التصعيد:');if(reason===null)return;let note=prompt('ملاحظة التصعيد:')||'';let a=esc();a.push({id:Date.now(),clientNo:c.clientNo,name:c.name,loanNo:c.loanNo||c.loan_number||'',installment:c.installment||'',from:p.full_name||p.email||'',to:target,reason,note,date:new Date().toISOString(),status:'قيد المتابعة',result:''});localStorage.setItem(escKey,JSON.stringify(a));alert('تم تصعيد المتابعة إلى '+target+' مع بقاء ملكية العميل لدى LO.');p5Escalations()};
+  window.p5Escalations=(tab='all')=>{let p=profile(),a=esc();let nm=String(p.full_name||p.email||'');let rows=a.filter(x=>tab==='in'?String(x.to).includes(roleName(p.role).replace('Loan Officer (LO)','LO')):tab==='out'?x.from===nm:true);open('الحالات المُصعّدة','<div class="p5-tabs"><button class="'+(tab==='in'?'active':'')+'" onclick="p5Escalations(\'in\')">الواردة إلي</button><button class="'+(tab==='out'?'active':'')+'" onclick="p5Escalations(\'out\')">الصادرة مني</button><button class="'+(tab==='all'?'active':'')+'" onclick="p5Escalations(\'all\')">جميع الحالات</button></div><div class="p5-kpis"><div class="p5-kpi"><small>الواردة</small><b>'+a.filter(x=>String(x.to).includes(roleName(p.role))).length+'</b></div><div class="p5-kpi"><small>قيد المتابعة</small><b>'+a.filter(x=>x.status==='قيد المتابعة').length+'</b></div><div class="p5-kpi"><small>تم الحل</small><b>'+a.filter(x=>x.status==='تم الحل').length+'</b></div><div class="p5-kpi"><small>الإجمالي</small><b>'+a.length+'</b></div></div><div class="p5-panel p5-table-wrap"><table class="p5-table"><thead><tr><th>#</th><th>اسم العميل</th><th>رقم القرض</th><th>قيمة القسط (دينار)</th><th>سبب التصعيد</th><th>تم التصعيد إلى</th><th>تاريخ التصعيد</th><th>الحالة</th><th>آخر تحديث</th><th>الإجراء</th></tr></thead><tbody>'+(rows.length?rows.map((x,n)=>'<tr><td>'+(n+1)+'</td><td>'+escHtml(x.name||'-')+'</td><td>'+escHtml(x.loanNo||'-')+'</td><td>'+escHtml(x.installment||'-')+'</td><td>'+escHtml(x.reason||'-')+'</td><td>'+escHtml(x.to)+'</td><td>'+fmtDate(x.date)+'</td><td>'+escHtml(x.status)+'</td><td>'+fmtDate(x.date)+'</td><td><button class="p5-btn alt" onclick="p5ResolveEsc('+x.id+')">تحديث</button></td></tr>').join(''):'<tr><td colspan="10" class="p5-empty">لا توجد حالات</td></tr>')+'</tbody></table></div>')};
+  window.p5ResolveEsc=id=>{let a=esc(),x=a.find(v=>v.id===id);if(!x)return;let r=prompt('النتيجة / آخر تحديث:',x.result||'');if(r===null)return;x.result=r;x.status=confirm('هل تم حل الحالة؟')?'تم الحل':'قيد المتابعة';x.date=new Date().toISOString();localStorage.setItem(escKey,JSON.stringify(a));p5Escalations()};
+  window.p5Hierarchy=()=>{let p=profile(),r=String(p.role||'').toLowerCase(),emps=Array.isArray(window.employees)?window.employees:[];let title=r==='cfmp'||r==='founder'?'الفروع والفرق':r==='bm'?'فرق الفرع':r==='als'?'فريق ALS':'عملائي';let cards=emps.filter(e=>e.id!=='sup').map(e=>'<div class="p5-role-card"><b>'+escHtml(e.name||e.cea||'Loan Officer')+'</b><small>'+escHtml(e.team||'')+'</small><button class="p5-btn" onclick="p5Close();openEmployeePage(\''+escHtml(String(e.cea||e.name||'').replace(/'/g,"\\'"))+'\')">فتح Late / Due</button></div>').join('');open(title,'<div class="p5-role-grid">'+(cards||'<div class="p5-empty">لا توجد بيانات فريق حالياً</div>')+'</div>')};
+  function rebuildMenu(){
+    const drawer=document.querySelector('.mainMenuDrawer');if(!drawer)return;const r=String(profile().role||'').toLowerCase();
+    const items=[['الرئيسية','p5GoHome()'],['تخصيص العملاء','p5Allocation()'],[r==='lo'?'عملائي':r==='als'?'فريقي':r==='bm'?'فرق الفرع':'الفروع والفرق','p5Hierarchy()'],['متابعاتي','p5Escalations()'],['الحالات المُصعّدة','p5Escalations()'],['الزيارات الميدانية','p5Simple(\'الزيارات الميدانية\')'],['التقارير','p5Simple(\'التقارير\')'],['الرسائل','p5Simple(\'الرسائل\')'],['المحادثات الداخلية','openChat()'],['الإعدادات','p5Simple(\'الإعدادات\')'],['تسجيل الخروج','secureLogout()']];
+    drawer.innerHTML='<button class="menuClose" onclick="closeMainMenu()">✕</button><div class="menuLogo"></div><div class="menuSub">Microfinance Department</div>'+items.map((x,i)=>'<button class="menuItem '+(i===0?'p5-active':'')+'" onclick="closeMainMenu();'+x[1]+'">'+x[0]+'</button>').join('');
+  }
+  window.p5GoHome=()=>{p5Close();renderHome()};window.p5Simple=t=>open(t,'<div class="p5-panel"><div class="p5-empty">المكان محجوز ضمن هيكل المرحلة الخامسة المعتمد، والربط التشغيلي يتم في المراحل التالية.</div></div>');
+  function apply(){document.title='NEXA-MF';bindHeader();renderHome();rebuildMenu();}
+  const oldLoad=window.loadSecureProfile;if(typeof oldLoad==='function')window.loadSecureProfile=async function(){let ok=await oldLoad.apply(this,arguments);if(ok)setTimeout(apply,0);return ok};
+  const obs=new MutationObserver(()=>{if(!document.body.classList.contains('secureLocked')&&profile().role){obs.disconnect();apply()}});document.addEventListener('DOMContentLoaded',()=>{ensureModal();obs.observe(document.body,{attributes:true,attributeFilter:['class']});if(!document.body.classList.contains('secureLocked'))apply()});
+})();
 
 secureInit();
 </script>
-  <script>
-function applyMDTheme(theme){
-  const isLight = theme === "light";
-
-  document.body.classList.toggle("lightTheme", isLight);
-
-  const icon = document.getElementById("themeToggleIcon");
-  const text = document.getElementById("themeToggleText");
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-
-  if(icon){
-    icon.textContent = isLight ? "🌙" : "☀️";
-  }
-
-  if(text){
-    text.textContent = isLight ? "Dark" : "Light";
-  }
-
-  if(metaTheme){
-    metaTheme.setAttribute("content", isLight ? "#f4f6f9" : "#07111f");
-  }
-
-  localStorage.setItem("mdCollectionTheme", theme);
-}
-
-function toggleMDTheme(){
-  const currentTheme =
-    localStorage.getItem("mdCollectionTheme") || "dark";
-
-  applyMDTheme(currentTheme === "dark" ? "light" : "dark");
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-  const savedTheme =
-    localStorage.getItem("mdCollectionTheme") || "dark";
-
-  applyMDTheme(savedTheme);
-});
-</script>
-
-<script>
-let mfLoginMode="email", mfFreshGps=null;
-function setMFLoginMode(mode){
- mfLoginMode=mode==="phone"?"phone":"email";
- const i=document.getElementById("loginEmail"),e=document.getElementById("loginModeEmail"),p=document.getElementById("loginModePhone");
- if(e)e.classList.toggle("active",mfLoginMode==="email");if(p)p.classList.toggle("active",mfLoginMode==="phone");
- if(i){i.inputMode=mfLoginMode==="phone"?"tel":"email";i.placeholder=mfLoginMode==="phone"?"رقم الهاتف":"البريد الإلكتروني";i.value=""}
-}
-function openMFRecovery(){document.getElementById("mfRecoveryModal").style.display="flex"}
-function mfRecoveryRequest(){const v=(document.getElementById("mfRecoveryId").value||"").trim(),o=document.getElementById("mfRecoveryMsg");o.textContent=v?"✓ واجهة الطلب جاهزة. الحفظ الداخلي سيتم في Supabase.":"أدخل البريد أو رقم الهاتف."}
-function openMFTools(){document.getElementById("mfToolsModal").style.display="flex"}
-function openMFCalc(){document.getElementById("mfCalcModal").style.display="flex"}
-function openMFLoan(){document.getElementById("mfLoanModal").style.display="flex"}
-function openMFDaily(){mfFreshGps=null;document.getElementById("mfGps").value="";document.getElementById("mfDailyModal").style.display="flex"}
-function mfBackendNotice(x){alert(x+" — واجهته معتمدة، والحفظ/الصلاحيات/الأتمتة الفعلية ستُربط في Supabase.")}
-function mfCalculate(){const s=(document.getElementById("mfCalcExpr").value||"").trim(),o=document.getElementById("mfCalcOut");if(!/^[0-9+\-*/().\s]+$/.test(s)){o.textContent="النتيجة: صيغة غير صالحة";return}try{const v=Function('"use strict";return ('+s+')')();o.textContent="النتيجة: "+(Number.isFinite(v)?v:"غير صالحة")}catch(e){o.textContent="النتيجة: صيغة غير صالحة"}}
-function mfLoanCalculate(){const a=+document.getElementById("mfLoanAmount").value,m=+document.getElementById("mfLoanMonths").value,r=+document.getElementById("mfLoanRate").value,o=document.getElementById("mfLoanOut");if(a<=0||m<=0||r<0){o.textContent="تحقق من البيانات.";return}const mi=a*r/100,ti=mi*m,tr=a+ti,ins=tr/m,f=n=>n.toLocaleString("ar-JO",{minimumFractionDigits:2,maximumFractionDigits:2});o.innerHTML="أصل القرض: <b>"+f(a)+"</b><br>إجمالي الفائدة: <b>"+f(ti)+"</b><br>إجمالي السداد: <b>"+f(tr)+"</b><br>القسط الشهري: <b>"+f(ins)+"</b>"}
-function mfCaptureGps(){const o=document.getElementById("mfDailyMsg");if(!navigator.geolocation){o.textContent="الموقع غير مدعوم.";return}o.textContent="جارٍ تحديد الموقع...";navigator.geolocation.getCurrentPosition(p=>{mfFreshGps={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,at:new Date().toISOString()};document.getElementById("mfGps").value=mfFreshGps.lat.toFixed(6)+", "+mfFreshGps.lng.toFixed(6)+" | ±"+Math.round(mfFreshGps.accuracy)+"m";o.textContent="✓ تم التقاط موقع جديد لهذا النشاط.";},()=>{mfFreshGps=null;o.textContent="تعذر تحديد الموقع؛ لا يمكن إكمال النشاط.";},{enableHighAccuracy:true,maximumAge:0,timeout:15000})}
-function mfValidateDaily(){const d=(document.getElementById("mfLocationDesc").value||"").trim(),o=document.getElementById("mfDailyMsg");if(!mfFreshGps){o.textContent="يجب تحديد الموقع الحالي أولًا.";return}if(!d){o.textContent="وصف الموقع الميداني إلزامي.";return}o.textContent="✓ التحقق مكتمل. الحفظ الفعلي وربط الموظف والعميل سيتم في Supabase."}
-</script>
-
 </body>
 </html>
