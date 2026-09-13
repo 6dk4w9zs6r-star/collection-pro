@@ -4051,5 +4051,52 @@ window.MF_NEXA_EXECUTION_PATCH_VERSION=V;
 })();
 </script>
 
+
+<script id="mfNexaMenuCleanupPatch">
+(function(){
+  function cleanMenu(){
+    const drawer=document.querySelector('.mainMenuDrawer');
+    if(!drawer)return;
+    const buttons=[...drawer.querySelectorAll('button.menuItem')];
+    buttons.forEach(btn=>{
+      const oc=String(btn.getAttribute('onclick')||'');
+      const txt=(btn.textContent||'').trim();
+      // Hide only exact legacy duplicates already replaced by approved Phase 5 navigation.
+      if(oc.includes('openBranchesHub()') || oc.includes('openUniversalSearch()')){
+        btn.style.display='none';
+        btn.classList.add('mfHiddenLegacyDuplicate');
+        return;
+      }
+      // Keep behavior unchanged; normalize only the visible menu label.
+      const map=[
+        ['openSmsCenter()','✉️ مركز الرسائل SMS'],
+        ['mfOpenToday()','📅 مهامي اليوم'],
+        ['mfOpenAllocation()','▦ التوزيع — المتأخر والمستحق'],
+        ['mfOpenPromises()','🤝 وعود الدفع'],
+        ['mfOpenEscalated()','⬆ الحالات المصعّدة'],
+        ['mfOpenDashboard()','📊 لوحة المشرف والترتيب'],
+        ['mfOpenCommunications()','📣 الإعلانات وروح الفريق'],
+        ['mfOpenCalculator()','🧮 الحاسبات'],
+        ['mfOpenSettings()','⚙️ الإعدادات'],
+        ['mfOpenAbout()','ℹ️ عن التطبيق / الاعتمادات'],
+        ['mfOpenAudit()','🧾 سجل التدقيق'],
+        ['mfOpenLoanRequest()','📝 طلب قرض + الموقع'],
+        ['mfOpenPromotion()','📣 ترويج + الموقع'],
+        ['mfOpenWriteOffHub()','🗂️ الشطب R-O'],
+        ['mfOpenNotificationCenter()','🔔 الإشعارات'],
+        ['mfOpenNotificationSettings()','🔔 إعدادات الإشعارات'],
+        ['mfOpenTrainingCenter()','🎓 الفيديوهات التعليمية']
+      ];
+      for(const [needle,label] of map){ if(oc.includes(needle)){btn.textContent=label;break;} }
+    });
+  }
+  const oldOpen=window.openMainMenu;
+  if(typeof oldOpen==='function'){
+    window.openMainMenu=function(){ const r=oldOpen.apply(this,arguments); setTimeout(cleanMenu,0); return r; };
+  }
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(cleanMenu,0));
+  setTimeout(cleanMenu,500);
+})();
+</script>
 </body>
 </html>
