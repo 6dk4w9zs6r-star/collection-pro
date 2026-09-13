@@ -1,0 +1,12 @@
+{
+  "name": "NEXA-MF — MicroFinance Next-Generation Operations & Intelligence",
+  "short_name": "NEXA-MF",
+  "description": "MicroFinance Next-Generation Operations & Intelligence",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "lang": "ar",
+  "dir": "rtl"
+}
