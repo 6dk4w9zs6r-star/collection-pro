@@ -18,13 +18,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prevent payment sync replay
-        run: python3 scripts/fix_payment_sync_replay_20260915.py
+      - name: Enforce Deferral fail-closed persistence
+        run: python3 scripts/fix_deferral_fail_closed_20260915.py
       - name: Validate and commit
         run: |
           git config user.name "nexa-mf-fix-bot"
           git config user.email "nexa-mf-fix-bot@users.noreply.github.com"
           git add -A
           git diff --cached --check
-          git commit -m "Prevent historical payment sync replay"
+          git commit -m "Require backend persistence for deferrals"
           git push origin HEAD:main
