@@ -112,3 +112,27 @@ Do not mark either issue **Closed** until the UI retest passes.
 ## 2026-09-14 — Full Audit: Legal / Location / Message scope regression
 - Test: under Rawan KHALED's authenticated LO context, inserts for TEST RAWAN passed for Legal Case, Location and Message; the same operations against TEST MAHMOUD were blocked by RLS. Entire test transaction was rolled back.
 - Status: Passed.
+
+## 2026-09-14 — Full Audit: Chat sender identity and private-room scope
+- Issue: `chat_messages.sender_name` was supplied by the client, so a user could submit another employee's display name. Private-room SELECT also trusted a room-id string containing the viewer UUID, which was weaker than participant identity columns.
+- Root Cause: sender identity was only checked through `sender_id`; display name was not canonicalized, and private-room authorization included a string-matching fallback.
+- Fix: added `normalize_chat_sender()` to require the authenticated sender and overwrite `sender_name` from the active profile; removed the private `room_id LIKE %uuid%` authorization fallback; Team rooms remain exact-team scoped and Founder retains the administrative exception.
+- Regression test: Rawan inserted a rollback-only General Chat message with `sender_name='IMPERSONATED NAME'`; stored/returned sender name was normalized to `Rawan KHALED`.
+- Supabase migration: `harden_chat_sender_and_private_room_scope`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: Call participant identity hardening
+- Issue: call records rely on `caller_id`/`callee_id`; participant UPDATE permissions could otherwise be abused to mutate call identity fields after creation.
+- Root Cause: RLS limited update rows to participants but did not make caller/callee/room/type immutable.
+- Fix: added authenticated caller normalization/validation and a BEFORE UPDATE guard that makes `caller_id`, `callee_id`, `room_id`, and `call_type` immutable. The live schema has no client-supplied caller-name field, so identity is represented by the authenticated caller UUID.
+- Regression test: Rawan created a rollback-only call invitation and the caller UUID remained her authenticated UID; spoofed caller identity is rejected.
+- Supabase migrations: `harden_call_caller_identity`, `fix_call_identity_trigger_schema`, `protect_call_participant_identity`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: Payment reversal state restoration
+- Issue: `payments.status` supports `reversed`, but the database only posted successful payments; changing a posted successful payment to reversed did not restore client balances, paid amount, installment count, or Late/Due-derived state.
+- Root Cause: `apply_successful_payment()` handled only successful posting and there was no symmetric reversal trigger.
+- Fix: added `reverse_successful_payment()` for successful→reversed transitions. It restores outstanding/overdue/due balances, subtracts the payment from paid amount, restores installment units, recalculates last successful payment date, refreshes payment balance-after, and lets existing client Late/Due synchronization run from the client update.
+- Regression test: rollback-only reversal of TEST RAWAN's 50 partial payment restored outstanding 100→150, overdue 100→150, due 100→150, paid 50→0, installment units 2→3, and payment `balance_after` to 150. Transaction was rolled back, leaving regression data unchanged.
+- Supabase migration: `restore_client_state_on_payment_reversal`.
+- Status: Passed.
