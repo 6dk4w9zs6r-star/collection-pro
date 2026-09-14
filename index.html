@@ -3005,14 +3005,31 @@ function mfOpenPaymentForm(i,source="manual"){
 async function mfFileData(input,maxBytes=4*1024*1024){const f=input?.files?.[0];if(!f)return null;if(f.size>maxBytes)throw new Error("حجم المرفق أكبر من 4 MB");return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type,size:f.size,data:r.result});r.onerror=()=>rej(r.error);r.readAsDataURL(f)})}
 async function mfApplyPayment(c,amount,date,type,status="successful",note="",receipt=null,source="manual"){
   const before=Math.max(num(c.arrears),num(c.dueAmount),num(c.netToPay)),applied=status==="successful",after=applied?Math.max(0,before-amount):before,no=(Number(c.paymentCount)||0)+(applied?1:0),id=mfId();
-  if(applied){if(num(c.arrears)>0)c.arrears=after;if(num(c.dueAmount)>0)c.dueAmount=after;if(num(c.netToPay)>0)c.netToPay=after;c.paymentCount=no;c.totalPaid=num(c.totalPaid)+amount;c.lastPaymentDate=date;c.status=no===1?"دفعة 1":"دفعتان من أصل دفعتين";mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate).forEach(p=>{p.status="kept";p.updatedAt=mfNow();p.keptByPayment=id})}
-  const payment={id,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",branch:c.branchCode||c.branch||"",amount,date,type,status,note,receipt,source,paymentNo:no,balanceBefore:before,balanceAfter:after,balance:after,actor:mfActor(),createdAt:mfNow()};meta.payments.push(payment);meta.paidCustomers=meta.paidCustomers||{};if(applied)meta.paidCustomers[c.clientNo]={clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",paymentCount:no,totalPaid:c.totalPaid,balance:after,lastPaymentDate:date,source};
+  if(amount<=0)throw new Error("أدخل مبلغًا صحيحًا");
+  if(applied&&type!=="deferral_fee"&&amount>before)throw new Error(`المبلغ ${amount} أكبر من الرصيد المستحق ${before}`);
+  let savedPayment=null;
+  if(source!=="system-sync"){
+    const db={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:type,status,notes:note,balance_before:before,balance_after:after,payment_no:no,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};
+    savedPayment=await mfTryInsert("payments",db);
+    if(!savedPayment)throw new Error("تعذر حفظ الدفعة في قاعدة البيانات");
+  }
+  if(applied){
+    if(num(c.arrears)>0)c.arrears=after;
+    if(num(c.dueAmount)>0)c.dueAmount=after;
+    if(num(c.netToPay)>0)c.netToPay=after;
+    c.paymentCount=no;c.totalPaid=num(c.totalPaid)+amount;c.lastPaymentDate=date;c.status=no===1?"دفعة 1":"دفعتان من أصل دفعتين";
+    mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate).forEach(p=>{p.status="kept";p.updatedAt=mfNow();p.keptByPayment=id});
+  }
+  const payment={id,dbId:savedPayment?.id||null,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",branch:c.branchCode||c.branch||"",amount,date,type,status,note,receipt,source,paymentNo:no,balanceBefore:before,balanceAfter:after,balance:after,actor:mfActor(),createdAt:mfNow()};
+  meta.payments.push(payment);meta.paidCustomers=meta.paidCustomers||{};
+  if(applied)meta.paidCustomers[c.clientNo]={clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",paymentCount:no,totalPaid:c.totalPaid,balance:after,lastPaymentDate:date,source};
   const key=c.cea||c.employee,exitLate=applied&&no>=2,exitDue=applied&&after<=0;
   if(exitLate){lateData.currentIds=mfArray(lateData.currentIds).filter(x=>x!==c.clientNo);lateData.paidIds=mfArray(lateData.paidIds);if(!lateData.paidIds.includes(c.clientNo))lateData.paidIds.push(c.clientNo);c.inLate=false}
   if(exitDue){dueData.currentIds=mfArray(dueData.currentIds).filter(x=>x!==c.clientNo);dueData.paidIds=mfArray(dueData.paidIds);if(!dueData.paidIds.includes(c.clientNo))dueData.paidIds.push(c.clientNo);c.inDue=false}
   [lateData,dueData].forEach(d=>{if(d.byEmployee?.[key]){if((d===lateData&&exitLate)||(d===dueData&&exitDue)){d.byEmployee[key].currentIds=mfArray(d.byEmployee[key].currentIds).filter(x=>x!==c.clientNo);d.byEmployee[key].paidIds=mfArray(d.byEmployee[key].paidIds);if(!d.byEmployee[key].paidIds.includes(c.clientNo))d.byEmployee[key].paidIds.push(c.clientNo)}}});
-  c.history=mfArray(c.history);c.history.push({date:new Date().toLocaleString("ar-JO"),text:`دفعة ${amount} د.أ (${type}) — ${applied?`الرصيد ${before} ← ${after}`:"Pending دون ترحيل على الرصيد"}`});mfCommit(applied?"payment_posted":"payment_pending",c,`المبلغ ${amount}؛ الرصيد قبل ${before} وبعد ${after}`);
-  if(source!=="system-sync"){const db={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:type,status,notes:note,balance_before:before,balance_after:after,payment_no:no,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};const savedPayment=await mfTryInsert("payments",db);if(!savedPayment)throw new Error("تعذر حفظ الدفعة في قاعدة البيانات");const updatedClient=await mfTryUpdate("clients",{overdue_amount:after,paid_amount:num(c.totalPaid),last_payment_date:date},"id",c.id);if(!updatedClient)throw new Error("تم حفظ الدفعة لكن تعذر تحديث رصيد العميل") }return payment;
+  c.history=mfArray(c.history);c.history.push({date:new Date().toLocaleString("ar-JO"),text:`دفعة ${amount} د.أ (${type}) — ${applied?`الرصيد ${before} ← ${after}`:"Pending دون ترحيل على الرصيد"}`});
+  mfCommit(applied?"payment_posted":"payment_pending",c,`المبلغ ${amount}؛ الرصيد قبل ${before} وبعد ${after}`);
+  return payment;
 }
 async function mfUpdatePaymentStatus(id,status){const p=mfArray(meta.payments).find(x=>x.id===id);if(!p||p.status!=="pending"||status!=="successful")return;const c=mfRecordClient(p);if(!c||!mfCan("payment",c))return mfToast("غير مصرح لك باعتماد هذه الدفعة","bad");p.status="cancelled";await mfApplyPayment(c,num(p.amount),p.date,p.type,"successful",p.note,p.receipt,p.source+"-approved");p.status="superseded";p.updatedAt=mfNow();mfCommit("payment_approved",c,id);mfRenderClient();mfToast("تم اعتماد الدفعة وترحيل الرصيد")}
 async function mfSavePayment(){
