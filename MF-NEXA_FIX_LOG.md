@@ -136,3 +136,19 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Regression test: rollback-only reversal of TEST RAWAN's 50 partial payment restored outstanding 100→150, overdue 100→150, due 100→150, paid 50→0, installment units 2→3, and payment `balance_after` to 150. Transaction was rolled back, leaving regression data unchanged.
 - Supabase migration: `restore_client_state_on_payment_reversal`.
 - Status: Passed.
+
+## 2026-09-14 — Full Audit: operational audit-log coverage
+- Issue: Activities, Announcements, Attachments, Locations, Messages, Chat Messages and Call Invitations had no database audit trigger, leaving important operational changes outside the central audit trail.
+- Root Cause: audit triggers had been added for core collection/legal/payment tables but not for several newer modules.
+- Fix: attached `audit_admin_module_change()` to INSERT/UPDATE/DELETE on all seven uncovered operational tables.
+- Regression test: rollback-only Chat insert under Rawan produced exactly one matching `audit_log` row; no test data was persisted.
+- Supabase migration: `complete_operational_audit_trigger_coverage`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: role-scope regression matrix
+- Founder Mashal: sees both regression clients and all three current Late/Due rows.
+- BM Kawther (B1): sees both B1 regression clients and all three current Late/Due rows.
+- LO Rawan: sees only TEST RAWAN and her permitted payment/Late/Due records.
+- CFMP / ALS / Lawyer: no real active accounts currently exist, so only rollback-only profile-role simulations were used to validate core RLS without persisting fabricated identities. Simulated CFMP saw both clients; simulated Lawyer B1 saw both B1 clients; simulated ALS with Rawan as direct report saw only TEST RAWAN.
+- Data safety: all simulated role/profile edits were inside transactions and rolled back.
+- Status: Retest Required for real-account E2E; core database scope logic Passed.
