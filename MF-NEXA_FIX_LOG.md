@@ -208,3 +208,11 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Supabase migration: `enforce_canonical_payment_balance_and_overpay_guard`.
 - Frontend source fix: `mfApplyPayment` rejects overpayment before local mutation and persists to Supabase before mutating local client/payment/Late-Due state, preventing UI state drift when backend persistence fails.
 - Status: Retest Required until the deployed source commit is verified.
+
+
+## 2026-09-15 — Full Audit: payment sync replay prevention
+- Issue: the periodic payment sync could load historical backend payment rows and call `mfApplyPayment(..., source=system-sync)` against clients whose balances were already current from Supabase, causing a historical payment to be deducted a second time in local UI state. Existing backend-loaded payment history used `dbId`, while the sync dedupe only checked `remoteId`.
+- Root Cause: realtime/scheduled synchronization treated persisted payment events as unapplied financial operations instead of treating Supabase client balances as authoritative posted state. The client mapper also mapped `netToPay` and `dueAmount` from `overdue_amount` instead of their canonical `outstanding_balance` and `due_amount` columns.
+- Fix: payment sync no longer replays backend rows through the payment posting path. It deduplicates by DB id, adds only missing history rows, then refreshes scoped clients from Supabase. Client bootstrap now maps overdue, outstanding and due balances from their respective DB columns.
+- Files: `index.html`, `MF-NEXA_FIX_LOG.md`.
+- Status: Retest Required until deployed source is verified.

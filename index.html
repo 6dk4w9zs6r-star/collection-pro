@@ -2052,8 +2052,8 @@ async function roleAwareBootstrap(){
       branchCode:c.branch_code||"",
       team:c.team_name||"",
       arrears:num(c.overdue_amount),
-      netToPay:num(c.overdue_amount),
-      dueAmount:num(c.overdue_amount),
+      netToPay:num(c.outstanding_balance),
+      dueAmount:num(c.due_amount),
       lateDays:days,
       dueLateDays:days,
       inLate,
@@ -3228,7 +3228,32 @@ async function mfImportPaymentsFile(){
   try{const buf=await file.arrayBuffer(),wb=XLSX.read(buf),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});let matched=0,unmatched=[],invalid=0;for(const row of rows){const noKey=mfHeaderKey(row,["clientno","customerno","رقمالعميل","customerid"]),amountKey=mfHeaderKey(row,["amount","payment","paidamount","المبلغ","قيمةالدفعة"]),dateKey=mfHeaderKey(row,["date","paymentdate","التاريخ"]),no=String(row[noKey]||"").trim(),amount=num(row[amountKey]),c=(clients||[]).find(x=>String(x.clientNo||"").trim()===no);if(!c){unmatched.push(no||"سطر بلا رقم");continue}if(amount<=0){invalid++;continue}let date=today();if(row[dateKey]){const d=row[dateKey];date=typeof d==="number"?XLSX.SSF.format("yyyy-mm-dd",d):mfDateOnly(d)}await mfApplyPayment(c,amount,date,"import","successful","دفعة مستوردة من "+file.name,null,"file-import");matched++}const rec={id:mfId(),fileName:file.name,rows:rows.length,matched,unmatched:unmatched.slice(0,100),invalid,actor:mfActor(),createdAt:mfNow()};mfState().paymentImports.push(rec);mfCommit("payments_import",null,`${file.name}: ${matched}/${rows.length}`);status.innerHTML=`تم: ${matched} • غير مطابق: ${unmatched.length} • غير صالح: ${invalid}${unmatched.length?`<br>أرقام غير مطابقة: ${safe(unmatched.slice(0,20).join(', '))}`:""}`;mfPreviewReport();mfToast("اكتمل استيراد الدفعات") }catch(e){status.textContent="فشل الاستيراد: "+e.message;mfToast("تعذر استيراد الملف","bad")}
 }
 async function mfSyncPayments(showToast=false){
-  try{const s=mfState(),c=await getSecureClient();if(!c)return false;let q=c.from("payments").select("*").order("created_at",{ascending:true}).limit(1000);if(s.settings.lastPaymentSync)q=q.gt("created_at",s.settings.lastPaymentSync);const {data,error}=await q;if(error)return false;let added=0;for(const row of mfArray(data)){const rid="remote:"+row.id;if(mfArray(meta.payments).some(p=>p.remoteId===rid))continue;const client=(clients||[]).find(x=>String(x.id||"")===String(row.client_id||"")||String(x.clientNo||"")===String(row.client_no||""));if(!client)continue;await mfApplyPayment(client,num(row.amount),mfDateOnly(row.payment_date||row.created_at)||today(),row.payment_type||"remote",row.status||"successful",row.notes||"",null,"system-sync");const p=meta.payments[meta.payments.length-1];if(p)p.remoteId=rid;added++}s.settings.lastPaymentSync=mfNow();save(false);if(showToast)mfToast(added?`تمت مزامنة ${added} دفعة جديدة`:"الدفعات محدثة");return true}catch(_){return false}
+  try{
+    const s=mfState(),c=await getSecureClient();if(!c)return false;
+    // Payment rows are already posted by DB triggers. Never replay them against the
+    // locally loaded client balance; refresh authoritative client state instead.
+    let q=c.from("payments").select("*").order("created_at",{ascending:true}).limit(1000);
+    if(s.settings.lastPaymentSync)q=q.gt("created_at",s.settings.lastPaymentSync);
+    const {data,error}=await q;if(error)return false;
+    const rows=mfArray(data);
+    let added=0;
+    meta.payments=mfArray(meta.payments);
+    for(const row of rows){
+      const exists=meta.payments.some(p=>String(p.dbId||p.remoteId||p.id)===String(row.id)||p.remoteId==="remote:"+row.id);
+      if(exists)continue;
+      const cl=(clients||[]).find(x=>String(x.id||"")===String(row.client_id||"")||String(x.clientNo||"")===String(row.client_number||""));
+      if(!cl)continue;
+      meta.payments.push({id:String(row.id),dbId:row.id,remoteId:"remote:"+row.id,clientId:mfClientKey(cl),clientNo:row.client_number,name:cl.name||"",employee:cl.employee||"",branch:row.branch_code||"",amount:num(row.amount),date:row.payment_date,type:row.payment_type,status:row.status,note:row.notes||"",receipt:null,source:row.source||"backend",paymentNo:Number(row.payment_no||row.installment_units||0),balanceBefore:num(row.balance_before),balanceAfter:num(row.balance_after),balance:num(row.balance_after),createdAt:row.created_at});
+      added++;
+    }
+    if(rows.length){
+      await roleAwareBootstrap();
+      if(typeof window.mfLoadBackendState==="function")await window.mfLoadBackendState();
+    }
+    s.settings.lastPaymentSync=mfNow();save(false);
+    if(showToast)mfToast(added?`تمت مزامنة ${added} دفعة جديدة`:"الدفعات محدثة");
+    return true;
+  }catch(e){console.warn("payment sync",e?.message||e);return false}
 }
 function mfSchedulePaymentSync(){clearInterval(mfPaymentSyncTimer);mfPaymentSyncTimer=setInterval(()=>mfSyncPayments(false),10*60*1000);setTimeout(()=>mfSyncPayments(false),2500)}
 
