@@ -4467,8 +4467,8 @@ window.mfSaveDeferral=async function(){
   if(!c||fee<0)return mfToast('أكمل بيانات التأجيل','bad');
   try{
     const oldDate=c.dueDate||today(),newDate=addMonthsDate(oldDate,count);
-    const db=await getSecureClient();let row=null;
-    if(db){const r=await db.from('deferrals').insert({client_id:c.id,old_due_date:oldDate,new_due_date:newDate,reason,deferral_count:1,installment_count:count,deferral_fee:fee,status:'pending',requested_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id}).select().single();if(r.error)throw r.error;row=r.data}
+    const db=await getSecureClient();if(!db)throw new Error('قاعدة البيانات غير متاحة');
+    const r=await db.from('deferrals').insert({client_id:c.id,old_due_date:oldDate,new_due_date:newDate,reason,deferral_count:1,installment_count:count,deferral_fee:fee,status:'pending',requested_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id}).select().single();if(r.error)throw r.error;const row=r.data;
     const entry={id:String(row?.id||mfId()),dbId:row?.id,kind:'Deferral',clientId:mfClientKey(c),clientNo:c.clientNo,oldDate,newDate,reason,status:'pending',installmentCount:count,deferralFee:fee,requestedBy:mfActor(),createdAt:row?.created_at||mfNow()};
     mfState().deferrals.push(entry);mfCommit('deferral_requested',c,`${count} دفعة • رسوم التأجيل ${fee}`);mfFormClose();mfSetClientTab('legal');mfToast('تم حفظ طلب التأجيل');
   }catch(e){mfToast('تعذر حفظ التأجيل: '+(e?.message||e),'bad')}

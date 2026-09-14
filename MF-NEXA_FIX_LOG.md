@@ -216,3 +216,11 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Fix: payment sync no longer replays backend rows through the payment posting path. It deduplicates by DB id, adds only missing history rows, then refreshes scoped clients from Supabase. Client bootstrap now maps overdue, outstanding and due balances from their respective DB columns.
 - Files: `index.html`, `MF-NEXA_FIX_LOG.md`.
 - Status: Retest Required until deployed source is verified.
+
+
+## 2026-09-15 — Full Audit: Deferral fail-closed persistence
+- Issue: the final Deferral UI override could create a local pending deferral when the secure Supabase client was unavailable, displaying success for a record that was never persisted.
+- Root Cause: the handler treated a missing DB client as an offline/local fallback and generated a local id.
+- Fix: Deferral now requires the secure Supabase client and a successful `deferrals` insert before mutating local state or showing success.
+- Files: `index.html`.
+- Status: Retest Required until deployed source is verified.
