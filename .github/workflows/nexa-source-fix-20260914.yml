@@ -1,0 +1,158 @@
+name: NEXA-MF direct source fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/nexa-source-fix-20260914.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch index source directly
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          marker = 'NEXA_SOURCE_FIX_20260914_V2'
+          if marker not in s:
+              anchor = 'function mfOpenAllocation(mode){'
+              if anchor not in s:
+                  raise SystemExit('Allocation anchor not found')
+              helpers = '''\n// NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.\nfunction mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}\nfunction mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}\nfunction mfIsLate(c){return !!c&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}\nfunction mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60}\n\n'''
+              s = s.replace(anchor, helpers + anchor, 1)
+
+          old_rows = 'function mfAllocationRows(){return (clients||[]).filter(c=>(mfAllocation.mode==="late"?c.inLate:c.inDue)&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}'
+          new_rows = 'function mfAllocationRows(){return (clients||[]).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue)&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}'
+          if old_rows in s:
+              s = s.replace(old_rows, new_rows, 1)
+          elif new_rows not in s:
+              raise SystemExit('mfAllocationRows source did not match expected code')
+
+          old_all = 'const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),all=(clients||[]).filter(c=>mfAllocation.mode==="late"?c.inLate:c.inDue);let rows=mfAllocationRows();'
+          new_all = 'const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),all=(clients||[]).filter(c=>mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue);let rows=mfAllocationRows();'
+          if old_all in s:
+              s = s.replace(old_all, new_all, 1)
+          elif new_all not in s:
+              raise SystemExit('mfRenderAllocation source did not match expected code')
+
+          # Canonical Late reports use the same Late classification without mutating stored client data.
+          s = s.replace('if(type==="late")return scope.filter(c=>c.inLate).map(', 'if(type==="late")return scope.filter(c=>mfIsLate(c)).map(', 1)
+
+          # Patch the final Smart Search audit implementation in-place (not a runtime injection).
+          m = re.search(r'(<script id="mfNexaSmartSearchAuditFix_20260914">)([\s\S]*?)(</script>)', s)
+          if not m:
+              raise SystemExit('Smart Search audit block not found')
+          b = m.group(2)
+
+          b = b.replace('Array.isArray(window.clients)', 'Array.isArray(clients)')
+          b = b.replace('window.clients.some', 'clients.some')
+          b = b.replace('(window.clients||[])', '(clients||[])')
+          b = b.replace('window.clients?.[window.mfActiveClientIndex]', 'clients?.[mfActiveClientIndex]')
+          b = b.replace('window.mfActiveClientIndex', 'mfActiveClientIndex')
+          b = b.replace('(!window.mfInScope||mfInScope(active))', "(typeof mfInScope!=='function'||mfInScope(active))")
+          b = b.replace('late=scope.filter(c=>c.inLate)', 'late=scope.filter(c=>mfIsLate(c))')
+          b = b.replace('late:active.inLate', 'late:mfIsLate(active)')
+
+          op = """function operational(prompt){\n  const q=nrm(prompt);if(!q)return false;\n  const keys=['late','due','عميل','العميل','كفيل','الكفيل','قسط','دفعة','دفع','تحصيل','متأخر','تأخير','وعد','promise','متابعة','follow','زيارة','visit','تصعيد','escalat','legal','محامي','شطب','write off','r-o','allocation','محفظة','portfolio','موظف','فريق','فرع','اداء','أداء','ترتيب','رسالة','واتس','whatsapp','sms','blunet','تقرير','report'];\n  return keys.some(k=>q.includes(nrm(k)))||clientMatch(prompt);\n}"""
+          op_new = op + """\nfunction portfolioIntent(prompt){\n  const q=nrm(prompt);\n  const keys=['late','due','allocation','محفظة','portfolio','متأخر','تأخير','استحقاق','أولوية','اولوية','ترتيب','اداء','أداء','تقرير','report'];\n  return keys.some(k=>q.includes(nrm(k)));\n}"""
+          if op in b and 'function portfolioIntent(prompt)' not in b:
+              b = b.replace(op, op_new, 1)
+
+          # General-QA calls carry an explicit instruction and reject accidental portfolio-summary leakage.
+          old_general = """async function generalBackend(prompt,out){\n  try{\n    const c=await getSecureClient();if(!c?.functions?.invoke)return false;\n    const {data,error}=await c.functions.invoke('mf-nexa-ai',{body:{prompt:String(prompt),mode:'general_qa',source:'smart_search',client:null,summary:null}});\n    const answer=data?.answer||data?.message;if(!error&&answer){out.textContent=String(answer);return true}\n  }catch(_){ }\n  return false;\n}"""
+          new_general = """async function generalBackend(prompt,out){\n  try{\n    const c=await getSecureClient();if(!c?.functions?.invoke)return false;\n    const ask=async(extra='')=>c.functions.invoke('mf-nexa-ai',{body:{prompt:(extra||'')+String(prompt),mode:'general_qa',source:'smart_search',client:null,summary:null,force_general:true}});\n    let {data,error}=await ask('أجب عن السؤال التالي كسؤال معرفة عامة فقط، ولا تعرض أي ملخص للعملاء أو المحفظة: ');\n    let answer=data?.answer||data?.message;\n    const leaked=x=>/ملخص\\s*(?:نطاق|المحفظة)|العملاء\\s*[:：]\\s*\\d+|(?:Late|Due)\\s*[:：]\\s*\\d+/i.test(String(x||''));\n    if(!error&&answer&&!leaked(answer)){out.textContent=String(answer);return true}\n    ({data,error}=await ask('هذا سؤال عام وليس طلب بيانات تشغيلية. أجب فقط عن المعرفة العامة: '));\n    answer=data?.answer||data?.message;if(!error&&answer&&!leaked(answer)){out.textContent=String(answer);return true}\n  }catch(_){ }\n  return false;\n}"""
+          if old_general in b:
+              b = b.replace(old_general, new_general, 1)
+          elif 'force_general:true' not in b:
+              raise SystemExit('generalBackend source did not match expected code')
+
+          summary_pat = re.compile(r"else answer=`ملخص المحفظة ضمن صلاحيتك:\\\n• العملاء: \\?\$\{scope\.length\}\\?\n• Late: \\?\$\{late\.length\}\\?\n• Due: \\?\$\{due\.length\}\\?\n• أولوية عالية: \\?\$\{high\.length\}`;")
+          fallback = """else if(portfolioIntent(prompt))answer=`ملخص المحفظة ضمن صلاحيتك:\\
+• العملاء: ${scope.length}\\
+• Late: ${late.length}\\
+• Due: ${due.length}\\
+• أولوية عالية: ${high.length}`;\n    else {\n      out.textContent='جاري معالجة السؤال العام…';\n      const ok=await generalBackend(prompt,out);\n      if(!ok)out.textContent='تعذر الحصول على إجابة عامة الآن. لم يتم تحويل سؤالك إلى بيانات العملاء.';\n      try{mfAudit?.('ai_general_question',null,prompt.slice(0,250))}catch(_){}\n      return;\n    }"""
+          b2, nsub = summary_pat.subn(fallback, b, count=1)
+          if nsub == 0 and 'else if(portfolioIntent(prompt))answer=' not in b:
+              # Exact literal fallback for current source.
+              old = """else answer=`ملخص المحفظة ضمن صلاحيتك:\\
+• العملاء: ${scope.length}\\
+• Late: ${late.length}\\
+• Due: ${due.length}\\
+• أولوية عالية: ${high.length}`;"""
+              if old not in b:
+                  raise SystemExit('Smart Search summary fallback not found')
+              b2 = b.replace(old, fallback, 1)
+          b = b2
+
+          # Client matches must still respect user scope.
+          b = b.replace("const matches=(clients||[]).filter(c=>[c.name", "const matches=(clients||[]).filter(c=>(typeof mfInScope!=='function'||mfInScope(c))&&[c.name", 1)
+
+          s = s[:m.start(2)] + b + s[m.end(2):]
+          p.write_text(s, encoding='utf-8')
+
+          # Sanity checks on direct source.
+          checks = [
+              'function mfIsLate30to60(c)',
+              'mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue',
+              'function portfolioIntent(prompt)',
+              "force_general:true",
+              "scope=(clients||[]).filter",
+              "late=scope.filter(c=>mfIsLate(c))",
+          ]
+          missing=[x for x in checks if x not in s]
+          if missing: raise SystemExit('Missing source checks: '+repr(missing))
+
+      - name: Restore simple service worker and remove runtime injection
+        shell: bash
+        run: |
+          cat > sw.js <<'EOF'
+          const CACHE='mf-nexa-v5.3.2-20260914';
+          const APP=['./','./index.html','./manifest.webmanifest'];
+          self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
+          self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+          self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))))});
+          self.addEventListener('push',e=>{let d={};try{d=e.data?.json()||{body:e.data?.text()||''}}catch(_){d={body:e.data?.text()||''}};e.waitUntil(self.registration.showNotification(d.title||'NEXA-MF',{body:d.body||'',data:{url:d.url||'./index.html'},tag:d.tag||'mf-nexa',renotify:true}))});
+          self.addEventListener('notificationclick',e=>{e.notification.close();const url=e.notification.data?.url||'./index.html';e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const c of list){if('focus'in c){c.navigate(url);return c.focus()}}return clients.openWindow?clients.openWindow(url):null}))});
+          EOF
+          rm -f mf-nexa-runtime-fix-20260914.js
+
+      - name: Update Fix Log
+        shell: bash
+        run: |
+          cat >> MF-NEXA_FIX_LOG.md <<'EOF'
+
+          ## 2026-09-14 — Direct source correction (Allocation Late + Smart Search)
+          - Issue: TEST RAWAN has 40 late days but was absent from Allocation → Late 30–60.
+          - Root cause: Allocation filtered on stored `inLate` instead of the actual late-day range displayed by the client profile.
+          - Fix: `index.html` now uses canonical late-day helpers; Allocation Late 30–60 is driven by 30–60 days directly, without changing balances, ownership, payment history, or stored test data.
+          - Issue: Smart Search could read `window.clients` instead of the lexical application client array and could fall through to a portfolio summary for a general question.
+          - Root cause: wrong state binding plus an unsafe operational fallback; general backend responses were not guarded against portfolio-summary leakage.
+          - Fix: Smart Search now reads `clients` directly, filters all client searches with `mfInScope`, uses canonical Late classification, routes unrecognized requests back to General QA, and rejects/retries operational-summary leakage on General QA.
+          - Removed: service-worker runtime injection and `mf-nexa-runtime-fix-20260914.js` workaround.
+          - Files: `index.html`, `sw.js`, `MF-NEXA_FIX_LOG.md`.
+          - Test: Allocation → Late 30–60 must show TEST RAWAN under Rawan KHALED; general Smart Search must not return portfolio counts; operational Smart Search must use real permission-scoped counts.
+          - Status: Retest Required.
+          EOF
+
+      - name: Commit direct source fix
+        shell: bash
+        run: |
+          git config user.name 'nexa-mf-fix-bot'
+          git config user.email 'nexa-mf-fix-bot@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Fix Allocation Late and Smart Search at source'
+          git push origin HEAD:main
