@@ -152,3 +152,35 @@ Do not mark either issue **Closed** until the UI retest passes.
 - CFMP / ALS / Lawyer: no real active accounts currently exist, so only rollback-only profile-role simulations were used to validate core RLS without persisting fabricated identities. Simulated CFMP saw both clients; simulated Lawyer B1 saw both B1 clients; simulated ALS with Rawan as direct report saw only TEST RAWAN.
 - Data safety: all simulated role/profile edits were inside transactions and rolled back.
 - Status: Retest Required for real-account E2E; core database scope logic Passed.
+
+## 2026-09-15 — Full Audit: Deferral / Escalation / Write-Off / Disbursement workflow permissions
+- Initial retest issue: the first audit query used obsolete test column names (`fee`, `level`); live schema uses `deferral_fee` and `escalation_level`. This was a test-harness mismatch, not an application failure.
+- Corrected regression test under Rawan LO: own-client Deferral and Escalation inserts passed; equivalent TEST MAHMOUD inserts were blocked by RLS. Own-client Write-Off and Disbursement inserts passed in their earlier scoped tests; out-of-scope inserts were blocked.
+- Approval segregation: Rawan LO could not approve her own Deferral or Write-Off. BM Kawther B1 could approve the branch Deferral, Write-Off and Disbursement in rollback-only tests.
+- Data safety: all workflow test rows were rolled back.
+- Status: Passed.
+
+## 2026-09-15 — Full Audit: Notifications and preferences scope
+- Test under Rawan LO: exactly her own notification row was visible; own `notification_preferences` upsert passed; attempting to modify Mahmoud's preferences was blocked by RLS; direct end-user INSERT into `notifications` was blocked.
+- Realtime publication includes `notifications`, `chat_messages`, and `call_invitations`.
+- Data safety: preference test transaction was rolled back.
+- Status: Passed.
+
+## 2026-09-15 — Full Audit: Announcement visibility/read regression
+- Test: BM Kawther created rollback-only B1 branch announcements in published and unpublished states. Rawan LO could see the published active-window announcement, could not see the unpublished one, and could record her own read confirmation.
+- Scope note: BM cannot publish audience=`all`; Founder/CFMP own that global scope by design. BM is limited to branch/team audiences in the BM branch.
+- Status: Passed.
+
+## 2026-09-15 — Full Audit: secure attachment storage backend
+- Verification: private Supabase Storage bucket `mf-nexa-attachments` exists with a 10 MB limit and explicit allowed MIME types for common image/PDF/text/DOCX attachments.
+- Storage RLS: upload requires authenticated ownership and a UID-scoped path; reads require ownership or access through the related scoped Message/Chat/Payment/Announcement/Attachment record; delete is owner-only.
+- Bucket is not public. Backend storage persistence is therefore present; production UI binary-upload E2E remains part of final UI regression.
+- Status: Passed for backend/RLS; Retest Required for production UI E2E.
+
+## 2026-09-15 — Full Audit: historical payment employee attribution
+- Issue: the existing successful TEST RAWAN payment was correctly linked to client 2 and branch B1 but `payments.employee_id` was null, causing employee-attributed payment dashboard/report output to lose the LO identity.
+- Root Cause: the payment predates the later client→employee backfill; it was posted while the client employee link was still null. Current posting logic already fills employee attribution for future payments.
+- Fix: migration backfilled only missing `payments.employee_id` from the canonical linked `clients.employee_id` (and retained/coalesced branch). The posted-payment immutability guard was disabled only for this controlled migration update and immediately re-enabled; amount, status, client, balances, payment date and payment history were not altered.
+- Regression test: under Rawan's authenticated scope, `payment_dashboard` now reports employee `13b5863f-77e0-4ab4-a08d-577b073e1e7b` (Rawan), total payments 1, successful amount 50.00.
+- Supabase migration: `backfill_payment_employee_attribution_admin`.
+- Status: Passed.
