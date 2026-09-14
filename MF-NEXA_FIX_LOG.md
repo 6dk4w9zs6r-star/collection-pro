@@ -50,3 +50,28 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Data changed: none. TEST RAWAN remains unchanged.
 - Files: `index.html`, `MF-NEXA_FIX_LOG.md`.
 - Status: Retest Required.
+
+## 2026-09-14 — Full Audit: profile privilege escalation hardening
+- Issue: `profiles_update_own` allowed authenticated users to update their own profile row without preventing changes to privileged fields such as `role`, `branch_code`, `supervisor_email`, `is_active`, or login email.
+- Root Cause: row-level ownership policy restricted which row could be changed, but did not protect privileged columns on that row.
+- Fix: added `protect_profile_privileged_fields()` and a `BEFORE UPDATE` trigger. Non-Founder users may not change privileged profile fields; Founder administration remains permitted.
+- Test: attempted to change Rawan KHALED from `lo` to `founder` under her auth UID; trigger blocked the operation and the stored role remained `lo`.
+- Permissions tested: LO escalation blocked; Founder bypass retained by `is_founder()`.
+- Supabase migration: `harden_profile_and_null_scope_permissions`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: legal/client scope permission leak
+- Issue: `can_legal_access_client(client_id)` returned true for any existing client, allowing authenticated users to pass legal/location/message/attachment policies for clients outside their assigned scope.
+- Root Cause: helper function checked only that the client row existed; it did not evaluate collection scope or Lawyer branch scope.
+- Fix: `can_legal_access_client` now requires either `can_access_client(assigned_user_id, branch_code)` or `can_lawyer_view_client(branch_code)`.
+- Test: Rawan LO can access TEST RAWAN and is denied TEST MAHMOUD; Mahmoud LO gets the inverse result; BM B1 can access both branch clients.
+- Affected policy consumers: Legal Cases, Locations, Attachments, Messages.
+- Supabase migration: `fix_legal_client_scope_permission_leak`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: unscoped null-record and insert hardening
+- Issue: clientless Messages/Attachments and clientless Audit records could be broadly readable; Activities and Disbursements inserts did not fully enforce client/branch scope.
+- Root Cause: permissive `client_id IS NULL` SELECT branches and ownership-only INSERT checks.
+- Fix: clientless Messages/Attachments are limited to their creator or Founder; Audit null-client rows are limited to actor or Founder/CFMP; Activities inserts now validate client and branch scope; Disbursement inserts now validate accessible client or requester's branch/management scope.
+- Supabase migration: `harden_profile_and_null_scope_permissions`.
+- Status: Passed.
