@@ -529,6 +529,26 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 @media(max-width:720px){#nexaHeaderIdentity .nexaHeaderDept b{font-size:12px}#nexaHeaderIdentity .nexaHeaderDept span{font-size:11px}.mfAccountCardFinal{width:calc(100% - 16px);margin-top:8px}.mfAccountBranch{max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mfRoleSwitcher{flex-wrap:wrap}.mfPartyActions{grid-template-columns:repeat(2,minmax(0,1fr))!important}.themeToggle{left:8px!important;bottom:10px!important}}
 
 </style>
+
+<style id="darkLightOnlyFix_20260914">
+/* ONLY FIX: restore Dark/Light control to header without altering any other UI/functionality */
+.themeToggleBtn{
+  position:absolute!important;
+  right:14px!important;
+  top:14px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:30!important;
+}
+@media(max-width:620px){
+  .themeToggleBtn{
+    right:14px!important;
+    top:14px!important;
+    left:auto!important;
+    bottom:auto!important;
+  }
+}
+</style>
 </head>
 <!-- MD-COLLECTION V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
