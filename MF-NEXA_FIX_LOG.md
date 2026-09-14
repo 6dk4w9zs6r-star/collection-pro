@@ -75,3 +75,12 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Fix: clientless Messages/Attachments are limited to their creator or Founder; Audit null-client rows are limited to actor or Founder/CFMP; Activities inserts now validate client and branch scope; Disbursement inserts now validate accessible client or requester's branch/management scope.
 - Supabase migration: `harden_profile_and_null_scope_permissions`.
 - Status: Passed.
+
+## 2026-09-14 — Full Audit: client/employee and Late-Due consistency backfill
+- Issue: existing clients had valid `assigned_user_id` links but `employee_id` was null, and TEST MAHMOUD qualified for current Late 30–60 but had no corresponding current-month `late_due` row.
+- Root Cause: operational client data predated or bypassed later employee/late_due synchronization logic.
+- Fix: backfilled `clients.employee_id` from `employees.auth_user_id`, then upserted current-month Late/Due derived rows from current client state without changing balances, payments, ownership, overdue days, or assignments.
+- Test: both TEST MAHMOUD and TEST RAWAN now have correctly linked employee IDs; current Late rows exist for both; TEST RAWAN Due remains open and linked to Rawan.
+- Consistency audit after backfill: 0 duplicate client numbers, 0 missing client assignments, 0 missing employee IDs, 0 bad branch links, 0 orphan Late/Due rows, 0 orphan payments, 0 negative payments, 0 successful-unposted payments, 0 missing current Late 30–60 rows.
+- Supabase migration: `backfill_client_employee_and_late_due_consistency`.
+- Status: Passed.
