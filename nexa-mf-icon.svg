@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">NEXA-MF</title>
+  <desc id="desc">NEXA-MF application icon</desc>
+  <rect width="512" height="512" rx="112" fill="#07111f"/>
+  <path d="M112 354V158h55l92 119V158h61v196h-54l-93-120v120z" fill="#ffffff"/>
+  <path d="M350 158h50v196h-50z" fill="#ffffff" opacity=".82"/>
+  <circle cx="375" cy="128" r="25" fill="#ffffff"/>
+</svg>
