@@ -84,3 +84,12 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Consistency audit after backfill: 0 duplicate client numbers, 0 missing client assignments, 0 missing employee IDs, 0 bad branch links, 0 orphan Late/Due rows, 0 orphan payments, 0 negative payments, 0 successful-unposted payments, 0 missing current Late 30–60 rows.
 - Supabase migration: `backfill_client_employee_and_late_due_consistency`.
 - Status: Passed.
+
+## 2026-09-14 — Full Audit: Follow-up / Promise / Field Visit audit-trigger failure
+- Issue: valid in-scope inserts into `follow_ups`, `promises_to_pay`, and `field_visits` failed during DB audit logging, while out-of-scope inserts were correctly blocked by RLS.
+- Root Cause: shared trigger function `log_collection_activity()` accessed table-specific `NEW` fields directly (`updated_by`, `resolved_by`, etc.). On tables that do not contain those columns PostgreSQL raised `record "new" has no field ...`, aborting valid writes.
+- Fix: rewrote the trigger to serialize `NEW`/`OLD` to JSONB first and read optional actor/client/id fields safely by key, so the same trigger works across all four collection tables without referencing nonexistent record fields.
+- Regression test: under Rawan KHALED's authenticated LO context, own-client inserts now pass for Follow Up, Promise to Pay, Activity and Field Visit; equivalent inserts against TEST MAHMOUD are rejected by RLS. Test transaction was rolled back, so no test rows were persisted.
+- Permissions tested: LO own scope allowed; LO out-of-scope blocked.
+- Supabase migration: `fix_collection_audit_trigger_generic_row_access`.
+- Status: Passed.
