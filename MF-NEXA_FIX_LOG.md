@@ -41,3 +41,12 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Removed: service-worker injection and runtime hotfix file.
 - Files: `index.html`, `sw.js`, `MF-NEXA_FIX_LOG.md`.
 - Status: Retest Required.
+
+
+## 2026-09-14 — Late eligibility active-state correction
+- Issue: TEST RAWAN had 40 overdue days but was still excluded from the loaded Late set because `paid_amount > 0` was incorrectly treated as fully inactive.
+- Root cause: client bootstrap computed `active = paid_amount <= 0`; a partial payment therefore removed a still-overdue client from Late/Due.
+- Fix: Late/Due eligibility now follows overdue days directly; partial payment no longer removes a client that still has overdue days. Branch Late/Due counters use the same rule.
+- Data changed: none. TEST RAWAN remains unchanged.
+- Files: `index.html`, `MF-NEXA_FIX_LOG.md`.
+- Status: Retest Required.

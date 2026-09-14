@@ -2036,10 +2036,8 @@ async function roleAwareBootstrap(){
   rows=Array.isArray(rows)?rows:[];
   const mapped=rows.map(c=>{
     const days=num(c.days_overdue);
-    const paid=num(c.paid_amount);
-    const active=paid<=0;
-    const inDue=active && days>0;
-    const inLate=active && days>=30 && days<=60;
+    const inDue=days>0;
+    const inLate=days>=30 && days<=60;
     return {
       id:c.id,
       clientNo:String(c.client_number||c.id||""),
@@ -2567,9 +2565,8 @@ window.openBranchPage=async function(branchRef){
   const people=peopleRes.error?[]:(peopleRes.data||[]);
   const clientRes=await sb.from("clients").select("id,assigned_user_id,assigned_employee,days_overdue,paid_amount,overdue_amount,branch_code").eq("branch_code",code);
   const rows=clientRes.error?[]:(clientRes.data||[]);
-  const active=rows.filter(c=>num(c.paid_amount)<=0);
-  const late=active.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
-  const due=active.filter(c=>num(c.days_overdue)>0).length;
+  const late=rows.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+  const due=rows.filter(c=>num(c.days_overdue)>0).length;
   const bm=people.find(p=>String(p.role||"").toLowerCase()==="bm");
   $("branchManagementSummary").innerHTML=`<div class="branchMini"><span>BM</span><b>${safe(bm?bm.full_name:"غير محدد")}</b></div>
     <div class="branchMini"><span>Late</span><b>${late}</b></div><div class="branchMini"><span>Due</span><b>${due}</b></div>`;
@@ -2577,8 +2574,8 @@ window.openBranchPage=async function(branchRef){
   const supervisor=(CURRENT_PROFILE&&["founder","als"].includes(CURRENT_PROFILE.role))?CURRENT_PROFILE:null;
   const cards=los.map(lo=>{
     const mine=rows.filter(c=>String(c.assigned_user_id||"")===String(lo.id));
-    const ml=mine.filter(c=>num(c.paid_amount)<=0&&num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
-    const md=mine.filter(c=>num(c.paid_amount)<=0&&num(c.days_overdue)>0).length;
+    const ml=mine.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+    const md=mine.filter(c=>num(c.days_overdue)>0).length;
     return `<div class="nestedLo"><b>${safe(lo.full_name||lo.email||"LO")}</b><small>LO | Late: <span class="red">${ml}</span> | Due: <span class="yellow">${md}</span></small></div>`;
   }).join("");
   $("alsGrid").innerHTML=`<div class="alsCard"><div class="alsName">${safe(supervisor?supervisor.full_name:"فريق الفرع")}</div>
@@ -2847,6 +2844,7 @@ function mfRunHomeSearch(){
   out.innerHTML=rows.slice(0,100).map(({c,i})=>{const p=mfPriority(c),outside=!mfInScope(c);return `<div class="mfSearchCard" onclick="mfOpenClient(${i})"><div class="mfListRowTop"><div><div class="mfSearchName">${safe(c.name||"بدون اسم")}</div><div class="mfSearchMeta">رقم العميل: ${safe(c.clientNo||"-")} • ${safe(c.phone||"-")}<br>الموظف: ${safe(c.employee||"-")} • الفرع: ${safe(c.branchCode||c.branch||"-")}</div></div><div><span class="mfBadge ${p.cls}">${p.label} ${p.score}</span>${outside?'<span class="mfBadge">عرض واتصال فقط</span>':''}</div></div></div>`}).join("")||'<div class="mfEmpty">لا توجد نتائج مطابقة</div>';
 }
 
+// NEXA_LATE_ACTIVE_FIX_20260914
 // NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
 function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
