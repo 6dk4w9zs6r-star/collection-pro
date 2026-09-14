@@ -2847,13 +2847,19 @@ function mfRunHomeSearch(){
   out.innerHTML=rows.slice(0,100).map(({c,i})=>{const p=mfPriority(c),outside=!mfInScope(c);return `<div class="mfSearchCard" onclick="mfOpenClient(${i})"><div class="mfListRowTop"><div><div class="mfSearchName">${safe(c.name||"بدون اسم")}</div><div class="mfSearchMeta">رقم العميل: ${safe(c.clientNo||"-")} • ${safe(c.phone||"-")}<br>الموظف: ${safe(c.employee||"-")} • الفرع: ${safe(c.branchCode||c.branch||"-")}</div></div><div><span class="mfBadge ${p.cls}">${p.label} ${p.score}</span>${outside?'<span class="mfBadge">عرض واتصال فقط</span>':''}</div></div></div>`}).join("")||'<div class="mfEmpty">لا توجد نتائج مطابقة</div>';
 }
 
+// NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
+function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
+function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
+function mfIsLate(c){return !!c&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
+function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60}
+
 function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
 }
-function mfAllocationRows(){return (clients||[]).filter(c=>(mfAllocation.mode==="late"?c.inLate:c.inDue)&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}
+function mfAllocationRows(){return (clients||[]).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue)&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}
 function mfAllocSet(level,value){mfAllocation[level]=value;if(level==="branch"){mfAllocation.team="";mfAllocation.employee=""}if(level==="team")mfAllocation.employee="";mfRenderAllocation()}
 function mfRenderAllocation(){
-  const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),all=(clients||[]).filter(c=>mfAllocation.mode==="late"?c.inLate:c.inDue);let rows=mfAllocationRows();
+  const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),all=(clients||[]).filter(c=>mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue);let rows=mfAllocationRows();
   let html=`<div class="mfTabs"><button class="mfTab ${mfAllocation.mode==='late'?'active':''}" onclick="mfAllocation.mode='late';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Late 30–60</button><button class="mfTab ${mfAllocation.mode==='due'?'active':''}" onclick="mfAllocation.mode='due';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Due</button></div><div class="mfBreadcrumbs"><button class="mfCrumb" onclick="mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">${mfAllocation.mode==='late'?'Late':'Due'} (${all.length})</button>${mfAllocation.branch?`<button class="mfCrumb" onclick="mfAllocSet('branch','')">${safe(mfAllocation.branch)}</button>`:''}${mfAllocation.team?`<button class="mfCrumb" onclick="mfAllocSet('team','')">${safe(mfAllocation.team)}</button>`:''}${mfAllocation.employee?`<button class="mfCrumb">${safe(mfAllocation.employee)}</button>`:''}</div>`;
   const high=["founder","cfmp"].includes(r),manager=high||r==="bm";
   if(high&&!mfAllocation.branch){
@@ -3188,7 +3194,7 @@ function mfExportRows(filename,rows){
   try{if(window.XLSX){const ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"NEXA-MF");XLSX.writeFile(wb,filename+".xlsx")}else{const keys=Object.keys(rows[0]),csv="\uFEFF"+[keys.join(",")].concat(rows.map(r=>keys.map(k=>'"'+String(r[k]??"").replaceAll('"','""')+'"').join(","))).join("\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=filename+".csv";a.click();URL.revokeObjectURL(a.href)}mfAudit("report_export",null,filename);mfToast("تم تجهيز الملف") }catch(e){mfToast("تعذر التصدير: "+e.message,"bad")}
 }
 function mfReportRows(type){
-  const scope=(clients||[]).filter(mfInScope);if(type==="late")return scope.filter(c=>c.inLate).map(c=>({ClientNo:c.clientNo,Name:c.name,Phone:c.phone,Employee:c.employee,Branch:c.branchCode||c.branch,Amount:num(c.arrears),LateDays:num(c.lateDays),Priority:mfPriority(c).score}));
+  const scope=(clients||[]).filter(mfInScope);if(type==="late")return scope.filter(c=>mfIsLate(c)).map(c=>({ClientNo:c.clientNo,Name:c.name,Phone:c.phone,Employee:c.employee,Branch:c.branchCode||c.branch,Amount:num(c.arrears),LateDays:num(c.lateDays),Priority:mfPriority(c).score}));
   if(type==="due")return scope.filter(c=>c.inDue).map(c=>({ClientNo:c.clientNo,Name:c.name,Phone:c.phone,Employee:c.employee,Branch:c.branchCode||c.branch,Amount:num(c.dueAmount),DueDate:c.dueDate,Priority:mfPriority(c).score}));
   if(type==="payments")return mfArray(meta.payments).filter(p=>!mfRecordClient(p)||mfInScope(mfRecordClient(p))).map(p=>({ClientNo:p.clientNo,Name:p.name,Amount:p.amount,Date:p.date,Type:p.type,Status:p.status,BalanceBefore:p.balanceBefore,BalanceAfter:p.balance,Employee:p.employee,Source:p.source}));
   if(type==="followups")return mfMergedFollowups().filter(f=>!mfRecordClient(f)||mfInScope(mfRecordClient(f))).map(f=>({ClientNo:f.clientNo||mfRecordClient(f)?.clientNo,Client:mfRecordClient(f)?.name,Type:f.type,DueAt:f.dueAt,Status:f.status,Note:f.note,Actor:f.actorName}));
@@ -4182,19 +4188,28 @@ window.MF_NEXA_FINAL_PHASE5_PATCH=FINAL_VERSION;
 'use strict';
 function nrm(v){try{return typeof norm==='function'?norm(String(v||'')):String(v||'').toLowerCase().trim()}catch(_){return String(v||'').toLowerCase().trim()}}
 function clientMatch(prompt){
-  const q=nrm(prompt);if(!q||q.length<2||!Array.isArray(window.clients))return false;
-  return window.clients.some(c=>[c?.name,c?.clientNo,c?.phone,c?.guarantor,c?.guarantorPhone,c?.reference1Name,c?.reference_1_name,c?.reference1Phone,c?.reference_1_phone,c?.reference2Name,c?.reference_2_name,c?.reference2Phone,c?.reference_2_phone,c?.employee].some(v=>{const x=nrm(v);return x&&(x===q||(q.length>=4&&x.includes(q)))}));
+  const q=nrm(prompt);if(!q||q.length<2||!Array.isArray(clients))return false;
+  return clients.some(c=>[c?.name,c?.clientNo,c?.phone,c?.guarantor,c?.guarantorPhone,c?.reference1Name,c?.reference_1_name,c?.reference1Phone,c?.reference_1_phone,c?.reference2Name,c?.reference_2_name,c?.reference2Phone,c?.reference_2_phone,c?.employee].some(v=>{const x=nrm(v);return x&&(x===q||(q.length>=4&&x.includes(q)))}));
 }
 function operational(prompt){
   const q=nrm(prompt);if(!q)return false;
   const keys=['late','due','عميل','العميل','كفيل','الكفيل','قسط','دفعة','دفع','تحصيل','متأخر','تأخير','وعد','promise','متابعة','follow','زيارة','visit','تصعيد','escalat','legal','محامي','شطب','write off','r-o','allocation','محفظة','portfolio','موظف','فريق','فرع','اداء','أداء','ترتيب','رسالة','واتس','whatsapp','sms','blunet','تقرير','report'];
   return keys.some(k=>q.includes(nrm(k)))||clientMatch(prompt);
 }
+function portfolioIntent(prompt){
+  const q=nrm(prompt);
+  return ['late','due','allocation','محفظة','portfolio','متأخر','تأخير','استحقاق','أولوية','اولوية','ترتيب','اداء','أداء','تقرير','report'].some(k=>q.includes(nrm(k)));
+}
 async function generalBackend(prompt,out){
   try{
     const c=await getSecureClient();if(!c?.functions?.invoke)return false;
-    const {data,error}=await c.functions.invoke('mf-nexa-ai',{body:{prompt:String(prompt),mode:'general_qa',source:'smart_search',client:null,summary:null}});
-    const answer=data?.answer||data?.message;if(!error&&answer){out.textContent=String(answer);return true}
+    const ask=async(prefix='')=>c.functions.invoke('mf-nexa-ai',{body:{prompt:(prefix||'')+String(prompt),mode:'general_qa',source:'smart_search',client:null,summary:null,force_general:true}});
+    let {data,error}=await ask('أجب عن السؤال التالي كسؤال معرفة عامة فقط، ولا تعرض أي ملخص للعملاء أو المحفظة: ');
+    let answer=data?.answer||data?.message;
+    const leaked=x=>/ملخص\s*(?:نطاق|المحفظة)|العملاء\s*[:：]\s*\d+|(?:Late|Due)\s*[:：]\s*\d+/i.test(String(x||''));
+    if(!error&&answer&&!leaked(answer)){out.textContent=String(answer);return true}
+    ({data,error}=await ask('هذا سؤال عام وليس طلب بيانات تشغيلية. أجب فقط عن المعرفة العامة: '));
+    answer=data?.answer||data?.message;if(!error&&answer&&!leaked(answer)){out.textContent=String(answer);return true}
   }catch(_){ }
   return false;
 }
@@ -4208,14 +4223,21 @@ window.mfAskAi=async function(){
     try{mfAudit?.('ai_general_question',null,prompt.slice(0,250))}catch(_){}return;
   }
   try{
-    const q=nrm(prompt),scope=(window.clients||[]).filter(c=>typeof mfInScope==='function'?mfInScope(c):true),late=scope.filter(c=>c.inLate),due=scope.filter(c=>c.inDue),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score);let answer='';
-    if(q.includes('رسالة')||q.includes('واتس')||q.includes('sms')){const c=window.clients?.[window.mfActiveClientIndex]||high[0]?.c;answer=c?`رسالة مقترحة للعميل ${c.name}:\n\n${mfTemplateText(q.includes('قانون')?'legal':q.includes('قوي')||q.includes('انذار')?'firm':'normal',c.name)}`:'افتح ملف عميل أولًا أو اختر عميلًا عالي الأولوية.'}
-    else if(q.includes('عميل')&&window.mfActiveClientIndex>=0){const c=window.clients[window.mfActiveClientIndex],p=mfPriority(c);answer=`ملخص ${c.name}\nرقم العميل: ${c.clientNo}\nالموظف: ${c.employee||'-'}\nLate: ${c.inLate?'نعم':'لا'} — Due: ${c.inDue?'نعم':'لا'}\nالمبلغ: ${money(Math.max(num(c.arrears),num(c.dueAmount)))}\nPriority Score: ${p.score} (${p.label})`}
+    const q=nrm(prompt),scope=(clients||[]).filter(c=>typeof mfInScope==='function'?mfInScope(c):true),late=scope.filter(c=>mfIsLate(c)),due=scope.filter(c=>c.inDue),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score);let answer='';
+    if(q.includes('رسالة')||q.includes('واتس')||q.includes('sms')){const c=clients?.[mfActiveClientIndex]||high[0]?.c;answer=c?`رسالة مقترحة للعميل ${c.name}:\n\n${mfTemplateText(q.includes('قانون')?'legal':q.includes('قوي')||q.includes('انذار')?'firm':'normal',c.name)}`:'افتح ملف عميل أولًا أو اختر عميلًا عالي الأولوية.'}
+    else if(q.includes('عميل')&&mfActiveClientIndex>=0){const c=window.clients[mfActiveClientIndex],p=mfPriority(c);answer=`ملخص ${c.name}\nرقم العميل: ${c.clientNo}\nالموظف: ${c.employee||'-'}\nLate: ${c.inLate?'نعم':'لا'} — Due: ${c.inDue?'نعم':'لا'}\nالمبلغ: ${money(Math.max(num(c.arrears),num(c.dueAmount)))}\nPriority Score: ${p.score} (${p.label})`}
     else if(q.includes('اداء')||q.includes('أداء')||q.includes('ترتيب'))answer=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score).slice(0,10).map((x,i)=>`${i+1}. ${x.e.name} — ${x.m.score} نقطة — تحصيل ${money(x.m.collected)}`).join('\n')||'لا توجد بيانات أداء متاحة.';
-    else if(clientMatch(prompt)){const matches=(window.clients||[]).filter(c=>[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.employee].some(v=>nrm(v).includes(q))).slice(0,8);answer=matches.length?matches.map((c,i)=>`${i+1}. ${c.name} — ${c.clientNo||'-'} — ${c.phone||'-'} — ${c.employee||'-'}`).join('\n'):'لا توجد نتائج عملاء مطابقة ضمن صلاحيتك.'}
-    else answer=`ملخص المحفظة ضمن صلاحيتك:\n• العملاء: ${scope.length}\n• Late: ${late.length}\n• Due: ${due.length}\n• أولوية عالية: ${high.length}`;
-    out.textContent=answer;try{mfAudit?.('ai_operational_search',window.clients?.[window.mfActiveClientIndex]||null,prompt.slice(0,250))}catch(_){}
-    try{const c=await getSecureClient();if(c?.functions?.invoke){const active=window.clients?.[window.mfActiveClientIndex],payload={prompt,mode:'operational',summary:{clients:scope.length,late:late.length,due:due.length},client:active&&(!window.mfInScope||mfInScope(active))?{clientNo:active.clientNo,name:active.name,employee:active.employee,late:active.inLate,due:active.inDue}:null};const {data,error}=await c.functions.invoke('mf-nexa-ai',{body:payload});const a=data?.answer||data?.message;if(!error&&a)out.textContent=String(a)}}catch(_){ }
+    else if(clientMatch(prompt)){const matches=(clients||[]).filter(c=>(typeof mfInScope!=='function'||mfInScope(c))&&[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.employee].some(v=>nrm(v).includes(q))).slice(0,8);answer=matches.length?matches.map((c,i)=>`${i+1}. ${c.name} — ${c.clientNo||'-'} — ${c.phone||'-'} — ${c.employee||'-'}`).join('\n'):'لا توجد نتائج عملاء مطابقة ضمن صلاحيتك.'}
+    else if(portfolioIntent(prompt))answer=`ملخص المحفظة ضمن صلاحيتك:• العملاء: ${scope.length}• Late: ${late.length}• Due: ${due.length}• أولوية عالية: ${high.length}`;
+    else {
+      out.textContent='جاري معالجة السؤال العام…';
+      const ok=await generalBackend(prompt,out);
+      if(!ok)out.textContent='تعذر الحصول على إجابة عامة الآن. لم يتم تحويل سؤالك إلى بيانات العملاء.';
+      try{mfAudit?.('ai_general_question',null,prompt.slice(0,250))}catch(_){}
+      return;
+    }
+    out.textContent=answer;try{mfAudit?.('ai_operational_search',clients?.[mfActiveClientIndex]||null,prompt.slice(0,250))}catch(_){}
+    try{const c=await getSecureClient();if(c?.functions?.invoke){const active=clients?.[mfActiveClientIndex],payload={prompt,mode:'operational',summary:{clients:scope.length,late:late.length,due:due.length},client:active&&(typeof mfInScope!=='function'||mfInScope(active))?{clientNo:active.clientNo,name:active.name,employee:active.employee,late:mfIsLate(active),due:active.inDue}:null};const {data,error}=await c.functions.invoke('mf-nexa-ai',{body:payload});const a=data?.answer||data?.message;if(!error&&a)out.textContent=String(a)}}catch(_){ }
   }catch(e){out.textContent='تعذر تنفيذ البحث التشغيلي: '+(e?.message||e)}
 };
 const openAiBeforeAudit=window.mfOpenAi;

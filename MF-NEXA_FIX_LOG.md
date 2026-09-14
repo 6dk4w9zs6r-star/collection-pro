@@ -29,3 +29,15 @@
   5. Results remain limited by the signed-in user's existing permissions/scope.
 
 Do not mark either issue **Closed** until the UI retest passes.
+
+
+## 2026-09-14 — Direct source correction (Allocation Late + Smart Search)
+- Issue: TEST RAWAN has 40 late days but was absent from Allocation → Late 30–60.
+- Root cause: Allocation filtered on stored `inLate` instead of actual late-day range.
+- Fix: Allocation Late 30–60 now uses 30–60 days directly without changing test data, balances, ownership, or payment history.
+- Issue: Smart Search used `window.clients` and could return portfolio output for a general question.
+- Root cause: wrong state binding plus unsafe fallback and unguarded General-QA leakage.
+- Fix: direct `clients` binding, `mfInScope` enforcement, canonical Late logic, General-QA fallback, leakage reject/retry.
+- Removed: service-worker injection and runtime hotfix file.
+- Files: `index.html`, `sw.js`, `MF-NEXA_FIX_LOG.md`.
+- Status: Retest Required.
