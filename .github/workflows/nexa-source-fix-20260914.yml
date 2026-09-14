@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply direct source migration
-        run: python3 scripts/apply_nexa_source_fix_20260914.py
+        run: python3 scripts/apply_nexa_source_fix_20260914_v2.py
       - name: Validate and commit
         run: |
           git config user.name "nexa-mf-fix-bot"
