@@ -93,3 +93,22 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Permissions tested: LO own scope allowed; LO out-of-scope blocked.
 - Supabase migration: `fix_collection_audit_trigger_generic_row_access`.
 - Status: Passed.
+
+## 2026-09-14 — Full Audit: Team Chat room scope leakage
+- Issue: Team Chat RLS allowed any active user in the same branch to read or send to a team room because branch equality was accepted as team membership.
+- Root Cause: `chat_messages` team policies used `(p.team = team_key OR p.branch_code = branch_code)`.
+- Fix: team-room read/write now requires exact active-profile team membership, with Founder retained as the global administrative exception. General and Private room behavior remains separate.
+- Requirement checked: each Team Room is restricted to its team and users must not read a room outside their authorization.
+- Supabase migration: `harden_team_chat_room_scope`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: Announcements publish/read workflow
+- Issue: backend schema had announcement content/audience but no Publish/Unpublish state, active date window, or read-confirmation records; existing SELECT policy could expose records without a publication lifecycle.
+- Root Cause: announcement support table was only a partial implementation of the MASTER workflow.
+- Fix: added publication state/timestamps, start/end window, optional media duration cap (30 seconds), `announcement_reads`, own-read tracking RLS, management update/delete policies, and recipient SELECT rules that require published + active-window content unless the requester is the creator or Founder.
+- Supabase migration: `complete_announcements_publish_read_workflow`.
+- Status: Passed.
+
+## 2026-09-14 — Full Audit: Legal / Location / Message scope regression
+- Test: under Rawan KHALED's authenticated LO context, inserts for TEST RAWAN passed for Legal Case, Location and Message; the same operations against TEST MAHMOUD were blocked by RLS. Entire test transaction was rolled back.
+- Status: Passed.
