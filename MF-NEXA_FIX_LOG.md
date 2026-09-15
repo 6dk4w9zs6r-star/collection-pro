@@ -248,3 +248,11 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Verified visible role identity (Founder, ALS, branch B1), Home search filters, Smart Search entry, and Allocation modal.
 - Allocation modal rendered Late 30–60, Due, Late (2), and B1 branch summary without a JavaScript error.
 - Status: Passed for the available Founder account; other role/device E2E remains Retest Required.
+
+
+## 2026-09-15 — Corrected deployment evidence and entrypoint drift
+- Earlier blanket Founder Passed and cache-cause claims were unsupported. Only login, Allocation navigation and client read views were verified; CRUD/device/role E2E is NOT closed.
+- Fetched actual GitHub blobs: index.html c1eb796 lacked the paid binding, while app.html 2911f28 had the binding but lacked the atomic Field Visit RPC handler.
+- Fixed the missing paid binding in the atomic/DB-first source and published identical index.html and app.html blobs 92d64431abf24f8c581192529ad445c4eb42dc30. Commits 9ef3d71 and 86b3e1c.
+- Actual UI checks: Founder navigated B1/team/Rawan and Mahmoud; TEST RAWAN displayed 100 JOD / 40 days, TEST MAHMOUD 100 JOD / 35 days. Mahmoud's two follow-ups (pending/completed) appeared; Rawan had none. Read-only SQL confirmed both persisted follow-ups belong to client 1.
+- No business data modified in these UI checks. Latest Pages artifact and authenticated post-deployment regression remain Retest Required.
