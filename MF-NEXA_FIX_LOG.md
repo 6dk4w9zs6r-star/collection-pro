@@ -234,3 +234,16 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Existing accounts used: Rawan, Mahmoud, BM Kawther, Founder Mashal. No accounts, teams or portfolios fabricated; regression transactions rolled back.
 - Status: backend and isolated handler tests Passed; production UI E2E and deployment verification Retest Required. Browser opening timed out in this session, so no UI result is claimed.
 - Reproducible checks: scripts/test-collection-persistence.cjs and scripts/test-collection-rls.sql.
+
+## 2026-09-15 — Login bootstrap crash
+- Issue: login succeeded at Auth but post-login client bootstrap crashed with `paid is not defined`, leaving the login gate visible.
+- Root cause: the client mapper referenced `paid` without deriving it from authoritative `clients.paid_amount`.
+- Fix: define `paid = num(c.paid_amount)` inside the mapper before calculating payment count and total paid.
+- Status: source fixed; deployment and authenticated UI retest required.
+
+
+
+## 2026-09-15 — Login bootstrap crash
+- Fixed `paid is not defined` in client bootstrap by deriving `paid` from `clients.paid_amount`.
+- Deployment chain: `5faf284f79818c3cc0415cbec36a5d27db2de6c7` followed by `8d9a151520eb204f35aec8a11ded498a90c9eac5`.
+- Follow-up/Promise DB-first handlers and atomic Field Visit are present in the deployed source; backend and rollback regression suites remain passing.
