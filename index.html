@@ -2036,9 +2036,8 @@ async function roleAwareBootstrap(){
   rows=Array.isArray(rows)?rows:[];
   const mapped=rows.map(c=>{
     const days=num(c.days_overdue);
-    const paid=num(c.paid_amount);
-    const inDue=days>0;
-    const inLate=days>=30 && days<=60;
+    const inDue=num(c.due_amount)>0;
+    const inLate=days>=30 && days<=60 && num(c.overdue_amount)>0;
     return {
       id:c.id,
       clientNo:String(c.client_number||c.id||""),
@@ -2849,8 +2848,8 @@ function mfRunHomeSearch(){
 // NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
 function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
-function mfIsLate(c){return !!c&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
-function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60}
+function mfIsLate(c){return !!c&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
+function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0}
 
 function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
@@ -4378,74 +4377,22 @@ const byId=id=>document.getElementById(id);
 
 /* Field Visit must persist to both Locations and Field Visits. */
 window.mfSaveVisit=async function(){
-  const i=Number(byId('mfVisitIndex')?.value),c=window.clients?.[i],target=byId('mfVisitTarget')?.value||'client';
-  if(!c||!window.mfGpsCapture)return mfToast('يجب التقاط GPS جديد وقت الزيارة','bad');
-  if(typeof mfCan==='function'&&!mfCan('visit',c))return mfToast('غير مصرح لك بتسجيل زيارة','bad');
-  const description=byId('mfVisitDescription')?.value.trim();
+  const i=Number($f('mfVisitIndex')?.value),c=clients?.[i],target=$f('mfVisitTarget')?.value||'client',gps=window.mfGpsCapture,description=$f('mfVisitDescription')?.value.trim(),amount=num($f('mfVisitAmount')?.value);
+  if(!c||!gps)return mfToast('يجب التقاط GPS جديد وقت الزيارة','bad');
+  if(!mfCan('visit',c))return mfToast('غير مصرح لك بتسجيل زيارة','bad');
   if(!description)return mfToast('وصف الموقع الميداني إلزامي','bad');
+  if(!Number.isFinite(amount)||amount<0)return mfToast('مبلغ التحصيل غير صالح','bad');
+  if(window.mfVisitSaving)return;window.mfVisitSaving=true;
   try{
-    const attachment=await mfFileData(byId('mfVisitAttachment')),
-          a=mfActor(),
-          locType=byId('mfVisitLocationType')?.value||'other',
-          result=byId('mfVisitResult')?.value||'تمت الزيارة',
-          locationStatus=byId('mfVisitStatus')?.value||'صحيح',
-          amount=num(byId('mfVisitAmount')?.value),
-          label=target==='guarantor'?'الكفيل':'العميل',
-          nowIso=new Date().toISOString(),
-          visitType=`${target}_${locType}`,
-          clientKey=mfClientKey(c);
-
-    const db=await getSecureClient();
-    if(!db)throw new Error('قاعدة البيانات غير متاحة');
-
-    const locationPayload={
-      client_id:c.id,
-      latitude:window.mfGpsCapture.lat,
-      longitude:window.mfGpsCapture.lng,
-      location_type:visitType,
-      status:locationStatus,
-      description:`${label}: ${description}`,
-      created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null
-    };
-    const {data:locationRow,error:locationError}=await db.from('locations').insert(locationPayload).select().maybeSingle();
-    if(locationError)throw locationError;
-
-    const visitPayload={
-      client_id:c.id,
-      employee_id:c.employeeId||c.employee_id||null,
-      visit_type:visitType,
-      scheduled_at:nowIso,
-      started_at:window.mfGpsCapture.capturedAt||nowIso,
-      completed_at:nowIso,
-      status:'completed',
-      outcome:result,
-      amount_collected:amount>0?amount:0,
-      latitude:window.mfGpsCapture.lat,
-      longitude:window.mfGpsCapture.lng,
-      address_text:description,
-      notes:`${label} • ${locationStatus}${attachment?.storagePath?' • مرفق محفوظ':''}`,
-      created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null
-    };
-    const {data:visitRow,error:visitError}=await db.from('field_visits').insert(visitPayload).select().maybeSingle();
-    if(visitError)throw visitError;
-
-    const base={
-      id:String(locationRow?.id||mfId()),dbId:locationRow?.id,visitDbId:visitRow?.id,
-      clientId:clientKey,clientNo:c.clientNo,targetType:target,targetLabel:label,type:visitType,
-      status:locationStatus,visitResult:result,description,
-      lat:window.mfGpsCapture.lat,lng:window.mfGpsCapture.lng,accuracy:window.mfGpsCapture.accuracy,
-      capturedAt:window.mfGpsCapture.capturedAt,attachment,actorId:a.id,actorName:a.name,actorRole:a.role,createdAt:nowIso
-    };
-    mfState().locations.push(base);
-    mfState().visits.push({...base,id:String(visitRow?.id||mfId()),dbId:visitRow?.id});
-
-    if(amount>0)await window.mfApplyPayment(c,amount,today(),'field','successful',`تحصيل خلال زيارة ميدانية — ${label}`,attachment,'field');
-    else mfCommit('field_visit',c,`${label} • ${result} • ${description}`);
-
-    mfFormClose();mfSetClientTab('locations');mfToast('تم اعتماد الزيارة وحفظها في السجل الميداني');
-  }catch(e){mfToast(e?.message||'تعذر حفظ الزيارة','bad')}
+    const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+    const attachment=await mfFileData($f('mfVisitAttachment')),locType=$f('mfVisitLocationType')?.value||'other',result=$f('mfVisitResult')?.value||'تمت الزيارة',locationStatus=$f('mfVisitStatus')?.value||'صحيح';
+    if(attachment&&!attachment.storagePath)throw Error('لم يتم حفظ المرفق في التخزين الدائم');
+    const {data,error}=await db.rpc('record_field_visit_atomic',{p_client_id:c.id,p_target:target,p_location_type:locType,p_latitude:gps.lat,p_longitude:gps.lng,p_accuracy:gps.accuracy??null,p_location_status:locationStatus,p_visit_result:result,p_description:description,p_amount:amount,p_attachment_url:attachment?.storagePath||null});
+    if(error)throw error;if(!data?.location_id||!data?.visit_id||(amount>0&&!data.payment_id))throw Error('لم تؤكد قاعدة البيانات اكتمال الزيارة');
+    window.mfGpsCapture=null;const actor=mfActor(),base={id:String(data.location_id),dbId:data.location_id,visitDbId:data.visit_id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,type:target==='guarantor'?'guarantor':locType,status:locationStatus,visitResult:result,description,lat:gps.lat,lng:gps.lng,accuracy:gps.accuracy,capturedAt:gps.capturedAt,attachment,actorId:actor.id,actorName:actor.name,createdAt:mfNow()};
+    st().locations.push(base);st().visits.push({...base,id:String(data.visit_id),dbId:data.visit_id});mfCommit('field_visit',c,result+' • '+description);mfFormClose();await roleAwareBootstrap();await window.mfLoadBackendState();mfSetClientTab('locations');mfToast('تم اعتماد الزيارة وحفظها في السجل الميداني');
+  }catch(e){mfToast(e?.message||'تعذر حفظ الزيارة','bad')}finally{window.mfVisitSaving=false}
 };
-
 /* Keep the approved branding and Allocation wording stable after every bootstrap/render. */
 function enforceApprovedLabels(){
   try{document.title='NEXA-MF'}catch(_){}
