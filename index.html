@@ -3480,7 +3480,7 @@ window.mfSaveTargetFollowup=function(){
 
 function mfContactActionsFinal(i,target){
   const label=target==='guarantor'?'الكفيل':'العميل';
-  return `<div class="mfActionsGrid mfPartyActions">${mfAction('📞','اتصال',`mfOpenContactTarget('call',${i},'${target}')`)}${mfAction('✦','BluNet SMS',`mfOpenContactTarget('blunet',${i},'${target}')`)}${mfAction('✉','SMS',`mfOpenContactTarget('sms',${i},'${target}')`)}${mfAction('◉','WhatsApp',`mfOpenContactTarget('whatsapp',${i},'${target}')`)}${mfAction('📅','متابعة',`mfOpenTargetFollowup(${i},'${target}')`,mfCan('followup',clients[i]))}${mfAction('📍','الموقع',`mfCapturePartyLocation(${i},'${target}')`,mfCan('visit',clients[i]))}${mfAction('↗','إرسال الموقع',`mfSharePartyLocation(${i},'${target}')`,true)}</div><small class="mfPartyHint">إجراءات ${label}</small>`;
+  return `<div class="mfActionsGrid mfPartyActions">${mfAction('📞','اتصال',`mfOpenContactTarget('call',${i},'${target}')`)}${mfAction('✦','BluNet SMS',`mfOpenContactTarget('blunet',${i},'${target}')`)}${mfAction('✉','SMS',`mfOpenContactTarget('sms',${i},'${target}')`)}${mfAction('◉','WhatsApp',`mfOpenContactTarget('whatsapp',${i},'${target}')`)}${mfAction('📅','متابعة',`mfOpenTargetFollowup(${i},'${target}')`,mfCan('followup',clients[i]))}${mfAction('📍','الموقع',`mfCapturePartyLocation(${i},'${target}')`,mfCan('visit',clients[i]))}${mfAction('↗','فتح الموقع',`mfOpenPartyLocation(${i},'${target}')`,true)}</div><small class="mfPartyHint">إجراءات ${label}</small>`;
 }
 
 const mfRenderClientOverviewBeforeCompletion=window.mfRenderClientOverview;
@@ -3517,7 +3517,16 @@ window.mfSharePartyLocation=async function(i,party){
   const url=`https://www.google.com/maps?q=${x.lat},${x.lng}`,label=party==='guarantor'?'موقع الكفيل':'موقع العميل';
   try{if(navigator.share)await navigator.share({title:label,text:`${label} — ${c.name}`,url});else{await navigator.clipboard.writeText(url);mfToast('تم نسخ رابط الموقع')}}catch(_){}
 };
-
+window.mfOpenPartyLocation=function(i,party){
+  const c=clients?.[i];
+  if(!c)return;
+  const rows=mfCompletionState().partyLocations
+    .filter(x=>x.clientId===mfClientKey(c)&&x.party===party&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng)))
+    .sort((a,b)=>String(b.createdAt||b.capturedAt||'').localeCompare(String(a.createdAt||a.capturedAt||'')));
+  const x=rows[0];
+  if(!x)return mfToast('لا يوجد موقع محفوظ لهذا الطرف','bad');
+  window.open(`https://www.google.com/maps?q=${encodeURIComponent(x.lat+','+x.lng)}`,'_blank');
+};
 window.mfOpenLoanRequest=function(){
   mfForm('طلب قرض',`<div class="mfPanel"><small>نشاط مستقل عن ملف العميل. الموقع يؤخذ مباشرة من الجهاز ولا يمكن تعديله يدويًا.</small></div><div class="mfForm"><div class="mfField"><label>اسم مقدم الطلب</label><input id="mfLoanLeadName"></div><div class="mfField"><label>الهاتف</label><input id="mfLoanLeadPhone" inputmode="tel"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfLoanLeadNote"></textarea></div><div class="mfField"><label>Latitude</label><input id="mfStandaloneLat" readonly></div><div class="mfField"><label>Longitude</label><input id="mfStandaloneLng" readonly></div></div><button class="mfSecondary" onclick="mfCaptureStandaloneGps()">📍 التقاط الموقع الآن</button><button class="mfSubmit" onclick="mfSaveStandaloneActivity('loan')">حفظ طلب القرض</button>`);window.mfStandaloneGps=null;
 };
