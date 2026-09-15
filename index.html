@@ -2036,6 +2036,7 @@ async function roleAwareBootstrap(){
   rows=Array.isArray(rows)?rows:[];
   const mapped=rows.map(c=>{
     const days=num(c.days_overdue);
+    const paid=num(c.paid_amount);
     const inDue=num(c.due_amount)>0;
     const inLate=days>=30 && days<=60 && num(c.overdue_amount)>0;
     return {
