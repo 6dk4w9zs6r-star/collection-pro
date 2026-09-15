@@ -224,3 +224,13 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Fix: Deferral now requires the secure Supabase client and a successful `deferrals` insert before mutating local state or showing success.
 - Files: `index.html`.
 - Status: Retest Required until deployed source is verified.
+
+## 2026-09-15 — Follow-up and Promise durable persistence
+- Root cause: final UI handlers overrode earlier DB-first code. Follow-ups mutated local state before insert; promises treated a missing DB client as success; status updates did not verify affected rows; rescheduling was local-only. Follow-up "not_completed" was incorrectly rewritten as "pending".
+- Fix: final handlers require confirmed returned DB rows before local changes. Create operations reject repeated clicks while pending. Updates and rescheduling require a persisted DB id and exactly one returned row. Kept promises collect the actual fulfillment date required by the schema.
+- Promise/client changes are atomic through SECURITY INVOKER RPC record_promise_atomic; existing RLS applies. PUBLIC/anon cannot execute it. Migration: record_promise_atomic_invoker.
+- Follow-ups now reload from scoped Supabase records, removing local-only records from the operational list. Promises reload their fulfillment dates.
+- Validation: all 15 inline scripts parse; 27 behavior tests passed for missing DB, network rejection, RLS error, empty response, success ordering and repeated clicks. 27 rollback SQL assertions passed for own-scope CRUD, out-of-scope denial, retarget denial, BM/Founder access and valid/invalid atomic promises. Promise DELETE remains denied by its existing policy.
+- Existing accounts used: Rawan, Mahmoud, BM Kawther, Founder Mashal. No accounts, teams or portfolios fabricated; regression transactions rolled back.
+- Status: backend and isolated handler tests Passed; production UI E2E and deployment verification Retest Required. Browser opening timed out in this session, so no UI result is claimed.
+- Reproducible checks: scripts/test-collection-persistence.cjs and scripts/test-collection-rls.sql.

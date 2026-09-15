@@ -3043,8 +3043,36 @@ async function mfSaveFollowup(){
   const i=Number($("mfFollowIndex")?.value),c=clients?.[i],due=$("mfFollowDue")?.value,type=$("mfFollowType")?.value,status=$("mfFollowStatus")?.value,note=$("mfFollowNote")?.value.trim(),reminder=$("mfFollowReminder")?.value;if(!c||!due)return mfToast("حدد موعد المتابعة","bad");const a=mfActor(),entry={id:mfId(),clientId:mfClientKey(c),clientNo:c.clientNo,type,dueAt:new Date(due).toISOString(),status,note,reminder,actorId:a.id,actorName:a.name,actorRole:a.role,createdAt:a.at,completedAt:status==="completed"?a.at:null};mfState().followups.push(entry);c.followup=mfDateOnly(entry.dueAt);c.followedToday=status==="completed";c.notes=note||c.notes;
   const db={client_id:c.id,follow_up_type:type,result:note,notes:note,next_follow_up_at:entry.dueAt,status:status==="not_completed"?"pending":status,completed_at:entry.completedAt};const inserted=await mfTryInsert("follow_ups",db);if(inserted?.id)entry.dbId=inserted.id;mfCommit("followup_created",c,`${type} • ${status} • ${due}`);mfFormClose();mfToast("تم حفظ المتابعة والتذكير")
 }
-async function mfUpdateFollowup(id,status){const f=mfState().followups.find(x=>x.id===id);if(!f)return;f.status=status;f.updatedAt=mfNow();if(status==="completed")f.completedAt=mfNow();const c=(clients||[]).find(x=>mfClientKey(x)===f.clientId);mfCommit("followup_status",c,`${f.type} → ${status}`);if(f.dbId)await mfTryUpdate("follow_ups",{status:status==="not_completed"?"pending":status,completed_at:f.completedAt||null,updated_at:mfNow()},"id",f.dbId);mfRenderClient();mfToast("تم تحديث نتيجة المتابعة")}
-function mfRescheduleFollowup(id){const f=mfState().followups.find(x=>x.id===id);if(!f)return;const v=prompt("الموعد الجديد YYYY-MM-DD:",mfDateOnly(f.dueAt));if(!v)return;try{const d=normalizeEnteredDate(v);f.dueAt=d+"T09:00:00+03:00";f.status="pending";f.updatedAt=mfNow();const c=(clients||[]).find(x=>mfClientKey(x)===f.clientId);mfCommit("followup_rescheduled",c,d);mfRenderClient()}catch(e){mfToast(e.message,"bad")}}
+async function mfPersistCollectionUpdate(table,record,payload){
+  const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+  if(!record.dbId)throw Error('السجل غير مؤكد في قاعدة البيانات. أعد تحميل البيانات');
+  const {data,error}=await db.from(table).update(payload).eq('id',record.dbId).select().single();
+  if(error)throw error;if(!data?.id)throw Error('السجل غير متاح أو خارج الصلاحية');
+  return data;
+}
+async function mfUpdateFollowup(id,status){
+  const f=mfState().followups.find(x=>String(x.id)===String(id));if(!f)return;
+  const c=(clients||[]).find(x=>mfClientKey(x)===f.clientId);
+  if(!c||!mfCan('followup',c))return mfToast('غير مصرح لك بهذه المتابعة','bad');
+  if(!['pending','completed','not_completed','cancelled'].includes(status))return mfToast('حالة غير صالحة','bad');
+  try{
+    const row=await mfPersistCollectionUpdate('follow_ups',f,{status,completed_at:status==='completed'?mfNow():null,updated_at:mfNow()});
+    f.status=row.status;f.completedAt=row.completed_at;f.updatedAt=row.updated_at;
+    mfCommit('followup_status',c,f.type+' → '+row.status);mfRenderClient();mfRenderToday();mfToast('تم تحديث نتيجة المتابعة');
+  }catch(e){mfToast('تعذر تحديث المتابعة: '+(e?.message||e),'bad')}
+}
+async function mfRescheduleFollowup(id){
+  const f=mfState().followups.find(x=>String(x.id)===String(id));if(!f)return;
+  const c=(clients||[]).find(x=>mfClientKey(x)===f.clientId);
+  if(!c||!mfCan('followup',c))return mfToast('غير مصرح لك بهذه المتابعة','bad');
+  const v=prompt('الموعد الجديد YYYY-MM-DD:',mfDateOnly(f.dueAt));if(!v)return;
+  try{
+    const d=normalizeEnteredDate(v),row=await mfPersistCollectionUpdate('follow_ups',f,{next_follow_up_at:new Date(d+'T09:00:00+03:00').toISOString(),status:'pending',completed_at:null,updated_at:mfNow()});
+    f.dueAt=row.next_follow_up_at;f.status=row.status;f.completedAt=row.completed_at;f.updatedAt=row.updated_at;
+    c.followup=mfDateOnly(row.next_follow_up_at);c.followedToday=false;
+    mfCommit('followup_rescheduled',c,d);mfRenderClient();mfRenderToday();mfToast('تم حفظ الموعد الجديد');
+  }catch(e){mfToast('تعذر إعادة الجدولة: '+(e?.message||e),'bad')}
+}
 
 function mfOpenPromiseForm(i){const c=clients?.[i];if(!c)return;mfForm("Promise to Pay",`<input id="mfPromiseIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>Promise Date</label><input id="mfPromiseDate" type="date" value="${c.promiseDate||today()}"></div><div class="mfField"><label>المبلغ</label><input id="mfPromiseAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfPromiseNote"></textarea></div></div><button class="mfSubmit" onclick="mfSavePromise()">حفظ الوعد Pending</button>`)}
 async function mfSavePromise(){const i=Number($("mfPromiseIndex")?.value),c=clients?.[i],date=$("mfPromiseDate")?.value,amount=num($("mfPromiseAmount")?.value),note=$("mfPromiseNote")?.value.trim();if(!c||!date||amount<=0)return mfToast("أدخل تاريخًا ومبلغًا صحيحين","bad");const a=mfActor(),entry={id:mfId(),clientId:mfClientKey(c),clientNo:c.clientNo,promiseDate:date,amount,note,status:"pending",employeeId:a.id,employeeName:a.name,actorRole:a.role,createdAt:a.at};mfState().promises.push(entry);c.promiseDate=date;c.status="وعد بالدفع";mfCommit("promise_created",c,`${date} • ${amount}`);await mfTryUpdate("clients",{promise_date:date,follow_up_status:"وعد بالدفع"},"id",c.id);mfFormClose();mfToast("تم حفظ وعد الدفع")}
@@ -3852,7 +3880,23 @@ window.mfSavePromise=async function(){
   try{const row=await insert('promises_to_pay',{client_id:c.id,promise_date:date,promised_amount:amount,status:'pending',notes:note||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id});const a=mfActor(),entry={id:String(row?.id||mfId()),dbId:row?.id,clientId:mfClientKey(c),clientNo:c.clientNo,promiseDate:date,amount,note,status:'pending',employeeId:a.id,employeeName:a.name,actorRole:a.role,createdAt:row?.created_at||a.at};s().promises.push(entry);c.promiseDate=date;c.status='وعد بالدفع';await mfTryUpdate('clients',{promise_date:date,follow_up_status:'وعد بالدفع'},'id',c.id);mfCommit('promise_created',c,`${date} • ${amount}`);mfFormClose();mfToast('تم حفظ وعد الدفع في قاعدة البيانات')}
   catch(e){mfToast('تعذر حفظ وعد الدفع: '+(e?.message||e),'bad')}
 };
-window.mfUpdatePromise=async function(id,status){const p=s().promises.find(x=>String(x.id)===String(id));if(!p)return;try{if(p.dbId||/^[0-9a-f-]{36}$/i.test(String(p.id)))await update('promises_to_pay',{status,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,updated_at:new Date().toISOString()},'id',p.dbId||p.id);p.status=status;p.updatedAt=mfNow();const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);mfCommit('promise_status',c,`${p.promiseDate} → ${status}`);mfRenderClient();mfToast('تم تحديث حالة الوعد')}catch(e){mfToast('تعذر تحديث الوعد: '+(e?.message||e),'bad')}};
+window.mfUpdatePromise=async function(id,status){
+  const p=s().promises.find(x=>String(x.id)===String(id));if(!p)return;
+  const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);
+  if(!c||!mfCan('promise',c))return mfToast('غير مصرح لك بتحديث هذا الوعد','bad');
+  if(!['pending','kept','broken'].includes(status))return mfToast('حالة غير صالحة','bad');
+  try{
+    const payload={status,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,updated_at:mfNow()};
+    if(status==='kept'){
+      const date=prompt('تاريخ الوفاء الفعلي بالوعد YYYY-MM-DD:',p.paymentDate||today());if(!date)return;
+      payload.payment_date=normalizeEnteredDate(date);
+    }
+    const row=await mfPersistCollectionUpdate('promises_to_pay',p,payload);
+    p.status=row.status;p.updatedAt=row.updated_at;p.paymentDate=row.payment_date;
+    mfCommit('promise_status',c,p.promiseDate+' → '+row.status);mfRenderClient();mfRenderToday();mfToast('تم تحديث حالة الوعد');
+  }catch(e){mfToast('تعذر تحديث الوعد: '+(e?.message||e),'bad')}
+};
+
 
 window.mfSaveDeferral=async function(){const c=clients?.[Number($('mfDefIndex')?.value)],oldDate=$('mfDefOld')?.value,newDate=$('mfDefNew')?.value,reason=$('mfDefReason')?.value.trim();if(!c||!oldDate||!newDate||!reason)return mfToast('أكمل بيانات التأجيل','bad');try{const prev=s().deferrals.filter(x=>x.clientId===mfClientKey(c)).length,row=await insert('deferrals',{client_id:c.id,old_due_date:oldDate,new_due_date:newDate,reason,deferral_count:prev+1,status:'pending',requested_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id});s().deferrals.push({id:String(row?.id||mfId()),dbId:row?.id,kind:'Deferral',clientId:mfClientKey(c),clientNo:c.clientNo,oldDate,newDate,reason,times:prev+1,status:'pending',requestedBy:mfActor(),createdAt:row?.created_at||mfNow()});mfCommit('deferral_requested',c,`${oldDate} → ${newDate}`);mfFormClose();mfSetClientTab('legal');mfToast('تم إرسال طلب التأجيل للموافقة')}catch(e){mfToast('تعذر حفظ التأجيل: '+(e?.message||e),'bad')}};
 window.mfSaveDisbursement=async function(){const c=clients?.[Number($('mfDisIndex')?.value)],amount=num($('mfDisAmount')?.value),date=$('mfDisDate')?.value,reason=$('mfDisReason')?.value.trim();if(!c||amount<=0||!date)return mfToast('أدخل مبلغًا وتاريخًا صحيحين','bad');try{const row=await insert('disbursements',{client_id:c.id,applicant_name:c.name||null,amount,disbursement_date:date,status:'pending',branch_code:c.branchCode||c.branch||CURRENT_PROFILE?.branch_code||null,requested_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,notes:reason||null});s().disbursements.push({id:String(row?.id||mfId()),dbId:row?.id,kind:'Disbursement',clientId:mfClientKey(c),clientNo:c.clientNo,amount,date,reason,status:'pending',requestedBy:mfActor(),branch:c.branchCode||c.branch||'',createdAt:row?.created_at||mfNow()});mfCommit('disbursement_requested',c,`${amount} • ${date}`);mfFormClose();mfSetClientTab('legal');mfToast('تم حفظ طلب الصرف')}catch(e){mfToast('تعذر حفظ طلب الصرف: '+(e?.message||e),'bad')}};
@@ -3860,10 +3904,11 @@ window.mfApproveOperation=async function(kind,id,status){const list=s()[kind],en
 
 async function loadTable(c,table,cols='*',limit=1000){const {data,error}=await c.from(table).select(cols).limit(limit);if(error){console.warn('load '+table,error.message);return []}return data||[]}
 window.mfLoadBackendState=async function(){
-  try{const c=await client();if(!c)return;const [prom,legal,wo,defs,dis,esc,loc,chat,anns]=await Promise.all([
-    loadTable(c,'promises_to_pay'),loadTable(c,'legal_cases'),loadTable(c,'write_offs'),loadTable(c,'deferrals'),loadTable(c,'disbursements'),loadTable(c,'escalated_cases'),loadTable(c,'locations'),loadTable(c,'chat_messages'),loadTable(c,'announcements')]);
+  try{const c=await client();if(!c)return;const [prom,legal,wo,defs,dis,esc,loc,chat,anns,follow]=await Promise.all([
+    loadTable(c,'promises_to_pay'),loadTable(c,'legal_cases'),loadTable(c,'write_offs'),loadTable(c,'deferrals'),loadTable(c,'disbursements'),loadTable(c,'escalated_cases'),loadTable(c,'locations'),loadTable(c,'chat_messages'),loadTable(c,'announcements'),loadTable(c,'follow_ups')]);
     const st=s();
-    st.promises=prom.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),promiseDate:x.promise_date,amount:num(x.promised_amount),note:x.notes||'',status:x.status,createdAt:x.created_at,updatedAt:x.updated_at}));
+    st.followups=follow.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.follow_up_type,dueAt:x.next_follow_up_at,status:x.status,note:x.notes||x.result||'',actorId:x.created_by,createdAt:x.created_at,updatedAt:x.updated_at,completedAt:x.completed_at}));
+    st.promises=prom.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),promiseDate:x.promise_date,paymentDate:x.payment_date,amount:num(x.promised_amount),note:x.notes||'',status:x.status,createdAt:x.created_at,updatedAt:x.updated_at}));
     st.legal=legal.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),stage:x.stage,status:x.status,lawyer:x.lawyer_name||'',nextDate:x.next_action_at,reason:x.reason||'',notes:x.notes||'',createdAt:x.created_at}));
     st.writeOffs=wo.map(x=>({id:String(x.id),dbId:x.id,kind:'R-O / Write-Off',clientId:keyFromId(x.client_id),amount:num(x.amount),reason:x.reason||'',status:x.status,createdAt:x.created_at,before:{balance:x.balance_before},after:{balance:x.balance_after}}));
     st.deferrals=defs.map(x=>({id:String(x.id),dbId:x.id,kind:'Deferral',clientId:keyFromId(x.client_id),oldDate:x.old_due_date,newDate:x.new_due_date,reason:x.reason||'',times:x.deferral_count,status:x.status,createdAt:x.created_at}));
@@ -4171,13 +4216,44 @@ window.mfImportPaymentsFile=async function(){
 /* Follow-up: target client or guarantor is mandatory and audited. */
 window.mfOpenFollowupForm=function(i){const c=clients?.[i];if(!c||!mfCan('followup',c))return mfToast('غير مصرح لك بهذه المتابعة','bad');mfForm('إضافة متابعة',`<input id="mfFollowIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>المتابعة تخص</label><select id="mfFollowTarget"><option value="client">العميل</option><option value="guarantor">الكفيل</option></select></div><div class="mfField"><label>النوع</label><select id="mfFollowType"><option value="call">اتصال</option><option value="visit">زيارة</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option><option value="other">أخرى</option></select></div><div class="mfField"><label>التاريخ والوقت</label><input id="mfFollowDue" type="datetime-local" value="${today()}T09:00"></div><div class="mfField"><label>التذكير</label><select id="mfFollowReminder"><option value="day_before">قبل يوم ونفس اليوم</option><option value="same_day">نفس اليوم</option></select></div><div class="mfField"><label>الحالة</label><select id="mfFollowStatus"><option value="pending">معلقة</option><option value="completed">تمت</option><option value="not_completed">لم تتم</option></select></div><div class="mfField full"><label>النتيجة / الملاحظة</label><textarea id="mfFollowNote"></textarea></div></div><button class="mfSubmit" onclick="mfSaveFollowup()">حفظ المتابعة</button>`)};
 window.mfSaveFollowup=async function(){
-  const i=Number($f('mfFollowIndex')?.value),c=clients?.[i],due=$f('mfFollowDue')?.value,type=$f('mfFollowType')?.value,status=$f('mfFollowStatus')?.value,note=$f('mfFollowNote')?.value.trim(),reminder=$f('mfFollowReminder')?.value,target=$f('mfFollowTarget')?.value||'client';if(!c||!due)return mfToast('حدد موعد المتابعة','bad');const a=mfActor(),label=arTarget(target),entry={id:mfId(),clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,targetLabel:label,type,dueAt:new Date(due).toISOString(),status,note,reminder,actorId:a.id,actorName:a.name,actorRole:a.role,createdAt:a.at,completedAt:status==='completed'?a.at:null};st().followups.push(entry);c.followup=mfDateOnly(entry.dueAt);c.followedToday=status==='completed';
-  const db={client_id:c.id,follow_up_type:type,result:note,notes:`${label}: ${note||''}`,next_follow_up_at:entry.dueAt,status:status==='not_completed'?'pending':status,completed_at:entry.completedAt};const inserted=await mfTryInsert('follow_ups',db);if(inserted?.id)entry.dbId=inserted.id;mfCommit('followup_created',c,`${label} • ${type} • ${status} • ${due}`);mfFormClose();mfRenderClient();mfToast('تم حفظ المتابعة وتحديد الطرف المعني')
+  const i=Number($f('mfFollowIndex')?.value),c=clients?.[i],due=$f('mfFollowDue')?.value,type=$f('mfFollowType')?.value,status=$f('mfFollowStatus')?.value,note=$f('mfFollowNote')?.value.trim(),reminder=$f('mfFollowReminder')?.value,target=$f('mfFollowTarget')?.value||'client';
+  if(!c||!mfCan('followup',c))return mfToast('غير مصرح لك بهذه المتابعة','bad');
+  if(!due||!['pending','completed','not_completed'].includes(status))return mfToast('حدد موعدًا وحالة صحيحين','bad');
+  if(window.mfFollowSaving)return;
+  window.mfFollowSaving=true;
+  try{
+    const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+    const a=mfActor(),label=arTarget(target),dueAt=new Date(due).toISOString();
+    const {data:row,error}=await db.from('follow_ups').insert({client_id:c.id,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,follow_up_type:type,result:note,notes:label+': '+(note||''),next_follow_up_at:dueAt,status,completed_at:status==='completed'?a.at:null}).select().single();
+    if(error)throw error;if(!row?.id)throw Error('لم تؤكد قاعدة البيانات حفظ المتابعة');
+    st().followups.push({id:String(row.id),dbId:row.id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,targetLabel:label,type:row.follow_up_type,dueAt:row.next_follow_up_at,status:row.status,note:row.notes,reminder,actorId:row.created_by,actorName:a.name,actorRole:a.role,createdAt:row.created_at,completedAt:row.completed_at});
+    c.followup=mfDateOnly(row.next_follow_up_at);c.followedToday=row.status==='completed';
+    mfCommit('followup_created',c,label+' • '+type+' • '+row.status);mfFormClose();mfRenderClient();mfToast('تم حفظ المتابعة في قاعدة البيانات');
+  }catch(e){mfToast('تعذر حفظ المتابعة: '+(e?.message||e),'bad')}
+  finally{window.mfFollowSaving=false}
 };
+
 
 /* Promise: client/guarantor target is recorded in local state, DB note, timeline and audit. */
 window.mfOpenPromiseForm=function(i){const c=clients?.[i];if(!c||!mfCan('promise',c))return mfToast('تسجيل الوعد غير متاح خارج نطاق محفظتك','bad');mfForm('وعد بالدفع',`<input id="mfPromiseIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>الوعد يخص</label><select id="mfPromiseTarget"><option value="client">العميل</option><option value="guarantor">الكفيل</option></select></div><div class="mfField"><label>تاريخ الوعد</label><input id="mfPromiseDate" type="date" value="${c.promiseDate||today()}"></div><div class="mfField"><label>المبلغ</label><input id="mfPromiseAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfPromiseNote"></textarea></div></div><button class="mfSubmit" onclick="mfSavePromise()">حفظ الوعد — معلق</button>`)};
-window.mfSavePromise=async function(){const i=Number($f('mfPromiseIndex')?.value),c=clients?.[i],date=$f('mfPromiseDate')?.value,amount=num($f('mfPromiseAmount')?.value),raw=$f('mfPromiseNote')?.value.trim(),target=$f('mfPromiseTarget')?.value||'client',label=arTarget(target);if(!c||!mfCan('promise',c))return mfToast('غير مصرح لك بتسجيل وعد لهذا العميل','bad');if(!date||amount<=0)return mfToast('أدخل تاريخًا ومبلغًا صحيحين','bad');try{const note=`${label}: ${raw||''}`.trim(),db=await getSecureClient();let row=null;if(db){const res=await db.from('promises_to_pay').insert({client_id:c.id,promise_date:date,promised_amount:amount,status:'pending',notes:note||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id}).select().maybeSingle();if(res.error)throw res.error;row=res.data}const a=mfActor(),entry={id:String(row?.id||mfId()),dbId:row?.id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,targetLabel:label,promiseDate:date,amount,note,status:'pending',employeeId:a.id,employeeName:a.name,actorRole:a.role,createdAt:row?.created_at||a.at};st().promises.push(entry);c.promiseDate=date;c.status='وعد بالدفع';await mfTryUpdate('clients',{promise_date:date,follow_up_status:'وعد بالدفع'},'id',c.id);mfCommit('promise_created',c,`${label} • ${date} • ${amount}`);mfFormClose();mfRenderClient();mfToast('تم حفظ وعد الدفع وتحديد الطرف المعني')}catch(e){mfToast('تعذر حفظ وعد الدفع: '+(e?.message||e),'bad')}};
+window.mfSavePromise=async function(){
+  const i=Number($f('mfPromiseIndex')?.value),c=clients?.[i],date=$f('mfPromiseDate')?.value,amount=num($f('mfPromiseAmount')?.value),raw=$f('mfPromiseNote')?.value.trim(),target=$f('mfPromiseTarget')?.value||'client',label=arTarget(target);
+  if(!c||!mfCan('promise',c))return mfToast('غير مصرح لك بتسجيل وعد لهذا العميل','bad');
+  if(!date||!Number.isFinite(amount)||amount<=0)return mfToast('أدخل تاريخًا ومبلغًا صحيحين','bad');
+  if(window.mfPromiseSaving)return;
+  window.mfPromiseSaving=true;
+  try{
+    const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+    const note=label+': '+(raw||''),{data:row,error}=await db.rpc('record_promise_atomic',{p_client_id:c.id,p_promise_date:date,p_promised_amount:amount,p_notes:note}).single();
+    if(error)throw error;if(!row?.id)throw Error('لم تؤكد قاعدة البيانات حفظ الوعد');
+    const a=mfActor();
+    st().promises.push({id:String(row.id),dbId:row.id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,targetLabel:label,promiseDate:row.promise_date,amount:num(row.promised_amount),note:row.notes,status:row.status,employeeId:row.created_by,employeeName:a.name,actorRole:a.role,createdAt:row.created_at});
+    c.promiseDate=row.promise_date;c.status='وعد بالدفع';
+    mfCommit('promise_created',c,label+' • '+row.promise_date+' • '+amount);mfFormClose();mfRenderClient();mfToast('تم حفظ وعد الدفع في قاعدة البيانات');
+  }catch(e){mfToast('تعذر حفظ وعد الدفع: '+(e?.message||e),'bad')}
+  finally{window.mfPromiseSaving=false}
+};
+
 
 /* Visit/location: explicit client/guarantor separation, device GPS only, actor/time retained. */
 window.mfOpenVisitForm=function(i){const c=clients?.[i];if(!c||!mfCan('visit',c))return mfToast('غير مصرح لك بتسجيل زيارة','bad');window.mfGpsCapture=null;mfForm('زيارة / تحصيل ميداني',`<input id="mfVisitIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>الزيارة / الموقع يخص</label><select id="mfVisitTarget"><option value="client">العميل</option><option value="guarantor">الكفيل</option></select></div><div class="mfField"><label>نوع الموقع</label><select id="mfVisitLocationType"><option value="home">موقع المنزل</option><option value="work">موقع العمل</option><option value="other">موقع آخر</option></select></div><div class="mfField"><label>نتيجة الزيارة</label><select id="mfVisitResult"><option>تمت الزيارة</option><option>لم يتم العثور عليه</option><option>العنوان غير صحيح</option><option>تمت المقابلة</option><option>وعد بالدفع</option></select></div><div class="mfField"><label>حالة الموقع</label><select id="mfVisitStatus"><option>صحيح</option><option>غير مؤكد</option><option>مكان مجهول</option></select></div><div class="mfField"><label>مبلغ تحصيل ميداني (اختياري)</label><input id="mfVisitAmount" type="number" step="0.01" min="0"></div><div class="mfField full"><label>وصف الموقع الميداني — إلزامي</label><textarea id="mfVisitDescription"></textarea></div><div class="mfField"><label>خط العرض</label><input id="mfVisitLat" readonly placeholder="يُلتقط من الجهاز تلقائيًا"></div><div class="mfField"><label>خط الطول</label><input id="mfVisitLng" readonly placeholder="يُلتقط من الجهاز تلقائيًا"></div><div class="mfField full"><label>صورة / إثبات (اختياري)</label><input id="mfVisitAttachment" type="file" accept="image/*,.pdf"></div></div><button class="mfSecondary" onclick="mfCaptureGps()">📍 التقاط موقعي الحالي</button><button class="mfSubmit" onclick="mfSaveVisit()">اعتماد الزيارة</button>`)};
