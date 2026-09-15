@@ -243,7 +243,8 @@ Do not mark either issue **Closed** until the UI retest passes.
 
 
 
-## 2026-09-15 — Login bootstrap crash
-- Fixed `paid is not defined` in client bootstrap by deriving `paid` from `clients.paid_amount`.
-- Deployment chain: `5faf284f79818c3cc0415cbec36a5d27db2de6c7` followed by `8d9a151520eb204f35aec8a11ded498a90c9eac5`.
-- Follow-up/Promise DB-first handlers and atomic Field Visit are present in the deployed source; backend and rollback regression suites remain passing.
+## 2026-09-15 — Production UI retest (Founder)
+- Authenticated Founder Mashal Dawud successfully reached the NEXA-MF home dashboard.
+- Verified visible role identity (Founder, ALS, branch B1), Home search filters, Smart Search entry, and Allocation modal.
+- Allocation modal rendered Late 30–60, Due, Late (2), and B1 branch summary without a JavaScript error.
+- Status: Passed for the available Founder account; other role/device E2E remains Retest Required.
