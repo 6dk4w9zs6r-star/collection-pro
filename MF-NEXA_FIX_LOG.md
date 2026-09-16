@@ -288,6 +288,12 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Additive migration `durable_notes_and_publication_receipts` deployed. Rollback-only database tests passed for notes, cross-officer denial, author spoof rejection, branch management, publication windows, repeated receipts, unpublishing and inactive accounts. No test records or account changes retained.
 - 22 targeted local behavior checks passed; all existing targeted suites passed. Desktop/mobile browser fixtures now include notes, announcements, management controls and form fields, with database traffic blocked. Publication evidence is verified separately after push.
 
+# 2026-09-16 — Complete operational loading and failure propagation, release r6
+
+- Replaced truncated core operational/client/vehicle/deferral/audit reads with validated 500-row id cursor pagination. Failed pages propagate instead of silently becoming empty lists; account changes invalidate reads before state replacement.
+- Authentication bootstrap now awaits operational loading. Audit refresh preserves state on error, excludes cached local records from other actors, labels current-actor local entries and explains the 500-row preview limit.
+- 27 new mocked tests cover 1201-row reads for ten tables, integration state replacement, rejected pages, account changes, malformed order/ids, audit preservation and actual bootstrap wait/rejection. All previous suites and local desktop/mobile browser checks pass. No live data mutations or schema changes; authenticated production E2E remains open. Cursor reads are not a multi-request snapshot.
+
 # 2026-09-16 — Operational archive, consent and sessions, release r4
 
 - Replaced local-state backup export with an active-Founder server export of 32 explicit public tables from one stable statement snapshot. Private definer helper is outside the exposed schema, checks the active actor before reading, has no arbitrary table argument, excludes Auth/cache/config/file bytes and rejects exports above 20 MiB. Public invoker wrapper records export metadata in Audit.

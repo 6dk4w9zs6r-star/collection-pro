@@ -1,0 +1,28 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),path=require('path');
+const source=fs.readFileSync(path.join(__dirname,'../mf-loading-20260916.js'),'utf8'),html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').replace(/\r\n/g,'\n');
+const baseStart=html.indexOf('window.mfLoadBackendState=async function(){\n  try{const actor='),baseEnd=html.indexOf('\n};\n\nwindow.mfOpenAudit',baseStart);assert(baseStart>0&&baseEnd>baseStart);
+const baseSource=html.match(/async function loadTable\([^\n]+/)[0]+'\n'+html.slice(baseStart,baseEnd+3);
+const names=['promises_to_pay','legal_cases','write_offs','deferrals','disbursements','escalated_cases','locations','chat_messages','announcements','follow_ups'];
+function setup(){
+ const records=Object.fromEntries([...names,'clients','audit_log'].map(n=>[n,Array.from({length:1201},(_,i)=>({id:i+1,client_id:2,status:'pending'}))])),state={followups:[{id:'preserved'}],audit:[]},events=[];let failTable=null,changeAccount=false;
+ const s={console:{warn:()=>{}},CURRENT_PROFILE:{id:'actor'},CURRENT_AUTH_USER:{id:'actor'},mfState:()=>state,mfCan:()=>true,mfToast:(message,type)=>events.push({message,type}),mfRenderAudit:()=>events.push({rendered:true}),mfOpen:()=>events.push({opened:true}),document:{getElementById:()=>null},BigInt,Number,Error,Promise,Set,Map,clients:[{id:2}],s:()=>state,keyFromId:String,num:Number,save:()=>events.push({saved:true}),mfUpdateHome:()=>{},mfActiveClientIndex:-1,$:()=>null,mfRenderClient:()=>{}};
+ const calls=[];const db={from:table=>{let cursor=null;const q={select:()=>q,order:()=>q,limit:()=>q,eq:()=>q,gt:(k,value)=>{cursor=value;return q;},then:(resolve,reject)=>{calls.push({table,cursor});if(changeAccount)s.CURRENT_PROFILE={id:'other'};const rows=records[table]||[];const start=cursor===null?0:rows.findIndex(r=>r.id===cursor)+1;return Promise.resolve(failTable===table&&cursor!==null?{error:Error('page denied')}:{data:rows.slice(start,start+500)}).then(resolve,reject);}};return q;}};
+ s.getSecureClient=async()=>db;s.client=async()=>db;s.window=s;vm.createContext(s);vm.runInContext(source,s);vm.runInContext(baseSource,s);return {s,state,db,calls,records,events,fail:t=>failTable=t,change:()=>changeAccount=true};
+}
+(async()=>{
+ let count=0;
+ for(const table of names){const {s,db,calls}=setup();const rows=await s.mfReadOperationalRows(db,table);assert.equal(rows.length,1201);assert.deepEqual(calls.map(c=>c.cursor),[null,500,1000]);count++;}
+ {const {s,state}=setup();await s.mfLoadBackendState();assert.equal(state.followups.length,1201);assert.equal(state.promises.length,1201);assert.equal(state.legal.length,1201);assert.equal(state.deferrals.length,1201);assert.equal(state.locations.length,1201);count++;}
+ {const {s,state,fail,events}=setup();fail('legal_cases');await assert.rejects(s.mfLoadBackendState());assert.equal(state.followups[0].id,'preserved');assert(!events.some(e=>e.saved));count++;}
+ {const {s,state,change}=setup();change();await assert.rejects(s.mfLoadBackendState());assert.equal(state.followups[0].id,'preserved');count++;}
+ {const {s,db}=setup();s.CURRENT_PROFILE=null;s.CURRENT_AUTH_USER=null;await assert.rejects(s.mfReadOperationalRows(db,'clients'));count++;}
+ for(const invalid of [[{id:2},{id:1}],[{id:1},{id:1}],[{}],[{id:Number.MAX_SAFE_INTEGER+1}],null]){const {s}=setup();const q={select:()=>q,order:()=>q,limit:()=>q,then:(resolve,reject)=>Promise.resolve({data:invalid}).then(resolve,reject)};await assert.rejects(s.mfReadOperationalRows({from:()=>q},'clients'));count++;}
+ {const {s,db,records}=setup();records.clients=[{id:'2'},{id:'10'},{id:'10000000000000000'}];assert.equal((await s.mfReadOperationalRows(db,'clients')).length,3);count++;}
+ {const {s,db,records}=setup();records.clients=[{id:'00000000-0000-4000-8000-000000000001'},{id:'00000000-0000-4000-8000-000000000002'}];assert.equal((await s.mfReadOperationalRows(db,'clients')).length,2);count++;}
+ {const {s,state,events}=setup();state.audit=[{id:'local-own',actorId:'actor',details:'local'},{id:'local-other',actorId:'other'},{id:'db:old',actorId:'actor'}];await s.mfOpenAudit();assert.equal(state.audit.length,1202);assert(!state.audit.some(a=>a.id==='local-other'||a.id==='db:old'));assert(state.audit[0].details.includes('سجل محلي'));assert(events.some(e=>e.opened));count++;}
+ {const {s,state,events,fail}=setup();state.audit=[{id:'old'}];fail('audit_log');await s.mfOpenAudit();assert.equal(state.audit[0].id,'old');assert(!events.some(e=>e.opened));assert(events.some(e=>e.type==='bad'));count++;}
+ assert(html.includes('if(CURRENT_PROFILE)await mfStage5AfterAuth();return v'));assert(html.includes("mfReadOperationalRows(db,'deferrals')"));count+=2;
+ const bootstrap=html.split('\n').find(line=>line.includes('const mfOriginalRoleBootstrap='));assert(bootstrap);
+ for(const fails of [false,true]){let release,done=false;const pending=new Promise((resolve,reject)=>{release=()=>fails?reject(Error('load failed')):resolve();});const context={CURRENT_PROFILE:{id:'actor'},roleAwareBootstrap:async()=>42,mfStage5AfterAuth:()=>pending};context.window=context;vm.createContext(context);vm.runInContext(bootstrap,context);const result=context.roleAwareBootstrap();result.then(()=>{done=true;},()=>{done=true;});await new Promise(resolve=>setImmediate(resolve));assert.equal(done,false);release();if(fails)await assert.rejects(result,/load failed/);else assert.equal(await result,42);count++;}
+ console.log(JSON.stringify({loadingBehaviorChecks:count,rowsPerOperationalTable:1201,database:'mocked',tables:names.length}));
+})().catch(e=>{console.error(e);process.exitCode=1;});

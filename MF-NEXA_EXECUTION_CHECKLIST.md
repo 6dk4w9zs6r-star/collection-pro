@@ -2,6 +2,8 @@
 
 Sources: 2026-09-14 unified master (local extracted reference), all six pages of the 2026-09-16 Arabic update, current main branch and live Supabase inspection. No completion percentage is claimed.
 
+r6: core operational/client/vehicle/deferral/audit loading uses id cursor pages and propagates errors; bootstrap awaits operational loading. 27 mocked loading tests pass (1201 rows per each of ten operational tables), all prior suites pass, local desktop/mobile browser passes. This is not a transactional multi-request snapshot or authenticated production E2E. No new database migration.
+
 | Requirement | Verified evidence / next acceptance gate | Status |
 |---|---|---|
 | Preserve identity, layout, Light/Dark and established functions | Additive changes; desktop/mobile local browser checks through r4 pass | Real-device checks open |

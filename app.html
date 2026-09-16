@@ -2019,22 +2019,12 @@ async function roleAwareBootstrap(){
 
   // V6.34: clients table is the operational source for authenticated users.
   // RLS remains the security boundary; LO also gets an explicit owner filter as defense in depth.
-  let query=sb.from("clients").select("*").limit(5000);
-  if(CURRENT_PROFILE.role==="lo"){
-    query=query.eq("assigned_user_id",CURRENT_AUTH_USER.id);
-  }else if(CURRENT_PROFILE.role==="bm" && CURRENT_PROFILE.branch_code){
-    query=query.eq("branch_code",CURRENT_PROFILE.branch_code);
-  }
-
-  let rows=[],error=null;
-  try{for(let offset=0;;offset+=500){const page=await query.order('id',{ascending:true}).range(offset,offset+499);if(page.error)throw page.error;rows.push(...(page.data||[]));if((page.data||[]).length<500)break;}}catch(e){error=e;}
-  if(error){
-    console.error("V6.34 clients load",error);
-    alert("تعذر تحميل بيانات العملاء من قاعدة البيانات: "+(error.message||"خطأ غير معروف"));
-    return;
-  }
-
-  rows=Array.isArray(rows)?rows:[];
+  const loadingActor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;const rows=await mfReadOperationalRows(sb,'clients','*',q=>{
+    if(CURRENT_PROFILE.role==='lo')return q.eq('assigned_user_id',CURRENT_AUTH_USER.id);
+    if(CURRENT_PROFILE.role==='bm'&&CURRENT_PROFILE.branch_code)return q.eq('branch_code',CURRENT_PROFILE.branch_code);
+    return q;
+  });
+  if(loadingActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل العملاء');
   const mapped=rows.map(c=>{
     const days=num(c.days_overdue);
     const paid=num(c.paid_amount);
@@ -2936,7 +2926,7 @@ document.addEventListener("DOMContentLoaded",()=>{mfInstallStage5Dom();mfState()
 const mfOriginalRender=window.render;window.render=function(){const v=mfOriginalRender?.apply(this,arguments);try{mfUpdateHome();if($("mfAllocationModal")?.classList.contains("open"))mfRenderAllocation()}catch(e){console.warn("NEXA-MF render",e)}return v};
 const mfOriginalApplySnapshot=window.applySnapshot;window.applySnapshot=function(d){const v=mfOriginalApplySnapshot?.apply(this,arguments);try{mfState();mfUpdateHome()}catch(e){}return v};
 const mfOriginalLoadSecureProfile=window.loadSecureProfile;window.loadSecureProfile=async function(){const ok=await mfOriginalLoadSecureProfile?.apply(this,arguments);if(ok&&CURRENT_PROFILE){const effectiveRole=mfRole();currentRole=["founder","cfmp","bm","als"].includes(effectiveRole)?"supervisor":"viewer";applyRoleUI();setFounderControls();applyRoleHomeSecurity();applySecureMenuVisibility()}return ok};
-const mfOriginalRoleBootstrap=window.roleAwareBootstrap;window.roleAwareBootstrap=async function(){const v=await mfOriginalRoleBootstrap?.apply(this,arguments);mfStage5AfterAuth();return v};
+const mfOriginalRoleBootstrap=window.roleAwareBootstrap;window.roleAwareBootstrap=async function(){const v=await mfOriginalRoleBootstrap?.apply(this,arguments);if(CURRENT_PROFILE)await mfStage5AfterAuth();return v};
 </script>
 <script id="mfNexaPhase5Actions">
 function mfForm(title,html){const modal=$("mfFormModal"),head=modal?.querySelector(".mfModalTitle");if(head)head.textContent=title;$("mfFormBody").innerHTML=html;mfOpen("mfFormModal")}
@@ -3913,11 +3903,11 @@ window.mfSaveDeferral=async function(){const c=clients?.[Number($('mfDefIndex')?
 window.mfSaveDisbursement=async function(){const c=clients?.[Number($('mfDisIndex')?.value)],amount=num($('mfDisAmount')?.value),date=$('mfDisDate')?.value,reason=$('mfDisReason')?.value.trim();if(!c||amount<=0||!date)return mfToast('أدخل مبلغًا وتاريخًا صحيحين','bad');try{const row=await insert('disbursements',{client_id:c.id,applicant_name:c.name||null,amount,disbursement_date:date,status:'pending',branch_code:c.branchCode||c.branch||CURRENT_PROFILE?.branch_code||null,requested_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,notes:reason||null});s().disbursements.push({id:String(row?.id||mfId()),dbId:row?.id,kind:'Disbursement',clientId:mfClientKey(c),clientNo:c.clientNo,amount,date,reason,status:'pending',requestedBy:mfActor(),branch:c.branchCode||c.branch||'',createdAt:row?.created_at||mfNow()});mfCommit('disbursement_requested',c,`${amount} • ${date}`);mfFormClose();mfSetClientTab('legal');mfToast('تم حفظ طلب الصرف')}catch(e){mfToast('تعذر حفظ طلب الصرف: '+(e?.message||e),'bad')}};
 window.mfApproveOperation=async function(kind,id,status){const list=s()[kind],entry=mfArray(list).find(x=>String(x.id)===String(id)),c=entry?mfRecordClient(entry):null;if(!entry||!c||!mfCan('approveOperations',c))return mfToast('غير مصرح لك بالموافقة','bad');try{const table=kind==='deferrals'?'deferrals':'disbursements',payload={status,approved_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,decided_at:new Date().toISOString()};await update(table,payload,'id',entry.dbId||entry.id);entry.status=status;entry.decidedBy=mfActor();entry.updatedAt=mfNow();if(status==='approved'&&kind==='deferrals'){entry.before={dueDate:c.dueDate||entry.oldDate};c.dueDate=entry.newDate;entry.after={dueDate:c.dueDate}}mfCommit(kind+'_'+status,c,id);mfRenderClient();mfToast(status==='approved'?'تمت الموافقة وحفظ Before/After':'تم رفض الطلب')}catch(e){mfToast('تعذر تحديث العملية: '+(e?.message||e),'bad')}};
 
-async function loadTable(c,table,cols='*',limit=1000){const {data,error}=await c.from(table).select(cols).limit(limit);if(error){console.warn('load '+table,error.message);return []}return data||[]}
+async function loadTable(c,table,cols='*'){return mfReadOperationalRows(c,table,cols)}
 window.mfLoadBackendState=async function(){
-  try{const c=await client();if(!c)return;const [prom,legal,wo,defs,dis,esc,loc,chat,anns,follow]=await Promise.all([
+  try{const actor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,c=await client();if(!c||!actor)throw Error('الاتصال والحساب مطلوبان لتحميل السجلات');const [prom,legal,wo,defs,dis,esc,loc,chat,anns,follow]=await Promise.all([
     loadTable(c,'promises_to_pay'),loadTable(c,'legal_cases'),loadTable(c,'write_offs'),loadTable(c,'deferrals'),loadTable(c,'disbursements'),loadTable(c,'escalated_cases'),loadTable(c,'locations'),loadTable(c,'chat_messages'),loadTable(c,'announcements'),loadTable(c,'follow_ups')]);
-    const st=s();
+    if(actor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل العمليات');const st=s();
     st.followups=follow.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.follow_up_type,dueAt:x.next_follow_up_at,status:x.status,note:x.notes||x.result||'',actorId:x.created_by,createdAt:x.created_at,updatedAt:x.updated_at,completedAt:x.completed_at}));
     st.promises=prom.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),promiseDate:x.promise_date,paymentDate:x.payment_date,amount:num(x.promised_amount),note:x.notes||'',status:x.status,createdAt:x.created_at,updatedAt:x.updated_at}));
     st.legal=legal.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),stage:x.stage,status:x.status,lawyer:x.lawyer_name||'',nextDate:x.next_action_at,reason:x.reason||'',notes:x.notes||'',createdAt:x.created_at}));
@@ -3931,7 +3921,7 @@ window.mfLoadBackendState=async function(){
     st.announcements=anns.filter(x=>x.content_type==='announcement').map(x=>({id:String(x.id),title:x.title,text:x.body,audience:x.audience,branch:x.branch_code,team:x.team_key,authorId:x.created_by,authorName:'',mandatory:x.mandatory,createdAt:x.created_at}));
     st.morningContent=anns.filter(x=>x.content_type==='morning').map(x=>({id:String(x.id),title:x.title,text:x.body,audience:x.audience,branch:x.branch_code,team:x.team_key,authorId:x.created_by,authorName:'',mandatory:x.mandatory,readBy:[],createdAt:x.created_at}));
     save(false);if(typeof mfUpdateHome==='function')mfUpdateHome();if(mfActiveClientIndex>=0&&$('mfClientModal')?.classList.contains('open'))mfRenderClient();
-  }catch(e){console.warn('backend state',e?.message||e)}
+  }catch(e){console.warn('backend state',e?.message||e);throw e}
 };
 
 window.mfOpenAudit=async function(){if(!mfCan('audit'))return mfToast('Audit Log غير متاح لهذه الصلاحية','bad');try{const c=await client(),{data,error}=await c.from('audit_log').select('*').order('created_at',{ascending:false}).limit(1000);if(error)throw error;const local=s().audit,seen=new Set(local.map(x=>String(x.id)));for(const a of data||[]){if(seen.has('db:'+a.id))continue;local.push({id:'db:'+a.id,action:a.action,clientId:a.client_id?String(a.client_id):null,clientNo:a.metadata?.client_no||null,clientName:a.metadata?.client_name||null,details:a.metadata?.details||'',actorId:a.actor_user_id,actorName:a.metadata?.actor_name||a.actor_user_id||'',actorRole:a.metadata?.role||'',branch:a.metadata?.branch||'',createdAt:a.created_at})}mfRenderAudit();mfOpen('mfAuditModal')}catch(e){mfToast('تعذر تحميل Audit Log: '+(e?.message||e),'bad')}};
@@ -4125,8 +4115,8 @@ function installTrainingMenu(){const drawer=document.querySelector('.mainMenuDra
 
 /* 7) Load newly added backend fields without changing existing data mapping. */
 const loadBefore=window.mfLoadBackendState;
-window.mfLoadBackendState=async function(){await loadBefore();try{const db=await getSecureClient();if(!db)return;const {data,error}=await db.from('clients').select('id,owns_vehicle,vehicle_mortgaged,vehicle_type,vehicle_model,vehicle_color,vehicle_plate,vehicle_photo_url,driving_license_url,guarantor_owns_vehicle,guarantor_vehicle_mortgaged,guarantor_vehicle_type,guarantor_vehicle_model,guarantor_vehicle_color,guarantor_vehicle_plate,guarantor_vehicle_photo_url,guarantor_driving_license_url');if(error)throw error;for(const r of data||[]){const c=(clients||[]).find(x=>String(x.id)===String(r.id));if(c)Object.assign(c,r,{ownsVehicle:r.owns_vehicle,vehicleMortgaged:r.vehicle_mortgaged,vehicleType:r.vehicle_type,vehicleModel:r.vehicle_model,vehicleColor:r.vehicle_color,vehiclePlate:r.vehicle_plate,guarantorOwnsVehicle:r.guarantor_owns_vehicle,guarantorVehicleMortgaged:r.guarantor_vehicle_mortgaged,guarantorVehicleType:r.guarantor_vehicle_type,guarantorVehicleModel:r.guarantor_vehicle_model,guarantorVehicleColor:r.guarantor_vehicle_color,guarantorVehiclePlate:r.guarantor_vehicle_plate})}
-  const {data:defs,error:de}=await db.from('deferrals').select('*').order('created_at',{ascending:false}).limit(1000);if(!de){const st=mfState();st.deferrals=(defs||[]).map(x=>({id:String(x.id),dbId:x.id,kind:'Deferral',clientId:(clients||[]).find(c=>String(c.id)===String(x.client_id))?clientKey((clients||[]).find(c=>String(c.id)===String(x.client_id))):String(x.client_id),oldDate:x.old_due_date,newDate:x.new_due_date,reason:x.reason||'',status:x.status,installmentCount:x.installment_count||1,deferralFee:num(x.deferral_fee),decidedAt:x.decided_at,before:x.before_state,after:x.after_state,createdAt:x.created_at}))}save(false)}catch(e){console.warn('execution patch load',e?.message||e)}};
+window.mfLoadBackendState=async function(){await loadBefore();try{const db=await getSecureClient();if(!db)return;const metadataActor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;const [data,defs]=await Promise.all([mfReadOperationalRows(db,'clients','id,owns_vehicle,vehicle_mortgaged,vehicle_type,vehicle_model,vehicle_color,vehicle_plate,vehicle_photo_url,driving_license_url,guarantor_owns_vehicle,guarantor_vehicle_mortgaged,guarantor_vehicle_type,guarantor_vehicle_model,guarantor_vehicle_color,guarantor_vehicle_plate,guarantor_vehicle_photo_url,guarantor_driving_license_url'),mfReadOperationalRows(db,'deferrals')]);if(metadataActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل التفاصيل');for(const r of data||[]){const c=(clients||[]).find(x=>String(x.id)===String(r.id));if(c)Object.assign(c,r,{ownsVehicle:r.owns_vehicle,vehicleMortgaged:r.vehicle_mortgaged,vehicleType:r.vehicle_type,vehicleModel:r.vehicle_model,vehicleColor:r.vehicle_color,vehiclePlate:r.vehicle_plate,guarantorOwnsVehicle:r.guarantor_owns_vehicle,guarantorVehicleMortgaged:r.guarantor_vehicle_mortgaged,guarantorVehicleType:r.guarantor_vehicle_type,guarantorVehicleModel:r.guarantor_vehicle_model,guarantorVehicleColor:r.guarantor_vehicle_color,guarantorVehiclePlate:r.guarantor_vehicle_plate})}
+  {const st=mfState();st.deferrals=(defs||[]).map(x=>({id:String(x.id),dbId:x.id,kind:'Deferral',clientId:(clients||[]).find(c=>String(c.id)===String(x.client_id))?clientKey((clients||[]).find(c=>String(c.id)===String(x.client_id))):String(x.client_id),oldDate:x.old_due_date,newDate:x.new_due_date,reason:x.reason||'',status:x.status,installmentCount:x.installment_count||1,deferralFee:num(x.deferral_fee),decidedAt:x.decided_at,before:x.before_state,after:x.after_state,createdAt:x.created_at}))}save(false)}catch(e){console.warn('execution patch load',e?.message||e);throw e}};
 
 /* 8) Install additive menu entries after authentication/bootstrap. */
 const afterAuth=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){await afterAuth();installNotificationMenu();installTrainingMenu()};
@@ -4515,5 +4505,6 @@ window.mfSaveDeferral=async function(){
 <script src="./mf-collaboration-20260916.js"></script>
 <script src="./mf-recovery-20260916.js"></script>
 <script src="./mf-messaging-20260916.js"></script>
+<script src="./mf-loading-20260916.js"></script>
 </body>
 </html>
