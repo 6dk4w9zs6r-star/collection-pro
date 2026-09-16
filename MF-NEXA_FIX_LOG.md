@@ -288,6 +288,12 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Additive migration `durable_notes_and_publication_receipts` deployed. Rollback-only database tests passed for notes, cross-officer denial, author spoof rejection, branch management, publication windows, repeated receipts, unpublishing and inactive accounts. No test records or account changes retained.
 - 22 targeted local behavior checks passed; all existing targeted suites passed. Desktop/mobile browser fixtures now include notes, announcements, management controls and form fields, with database traffic blocked. Publication evidence is verified separately after push.
 
+# 2026-09-16 — Public application shell, release r7
+
+- Active entrypoints no longer bundle Late/Due client datasets. Thirty-three legacy HTML entrypoints now redirect to the current login-protected application. Existing database loading remains authoritative.
+- Original 35 HTML files with hashes and a verified complete Git bundle are retained outside the published repository; restore instructions prohibit republishing client datasets. No database rows or schema were changed.
+- Public repository history is unchanged and may retain old datasets. This release only addresses current files and subsequent app-shell cache activation, not past clones/caches/history. Account-local cache isolation remains a separate review item.
+
 # 2026-09-16 — Complete operational loading and failure propagation, release r6
 
 - Replaced truncated core operational/client/vehicle/deferral/audit reads with validated 500-row id cursor pagination. Failed pages propagate instead of silently becoming empty lists; account changes invalidate reads before state replacement.

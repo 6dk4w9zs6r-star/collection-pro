@@ -20,5 +20,5 @@ window.mfOpenAudit=async function(){
     mfRenderAudit();if(mfState().audit.length>500)document.getElementById('mfAuditBody')?.insertAdjacentHTML('beforeend','<div class="mfPanel"><small>تُعرض أول 500 نتيجة. البحث والتصدير يشملان كامل السجل المحمّل ضمن الصلاحية.</small></div>');mfOpen('mfAuditModal');
   }catch(e){mfToast('تعذر تحميل سجل التدقيق: '+e.message,'bad');}
 };
-window.MF_NEXA_RELEASE='2026-09-16-r6';
+window.MF_NEXA_RELEASE='2026-09-16-r7';
 })();

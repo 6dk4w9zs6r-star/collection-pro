@@ -2,6 +2,8 @@
 
 Sources: 2026-09-14 unified master (local extracted reference), all six pages of the 2026-09-16 Arabic update, current main branch and live Supabase inspection. No completion percentage is claimed.
 
+r7: 35 public HTML files checked; active entrypoints have empty embedded client datasets and 33 historical entrypoints are redirects. Original files and a verified full Git bundle are preserved locally outside the deployment repository. No database changes. Public Git history and third-party cached copies are NOT erased; historical exposure remediation and shared-browser session-state isolation remain open gates.
+
 r6: core operational/client/vehicle/deferral/audit loading uses id cursor pages and propagates errors; bootstrap awaits operational loading. 27 mocked loading tests pass (1201 rows per each of ten operational tables), all prior suites pass, local desktop/mobile browser passes. This is not a transactional multi-request snapshot or authenticated production E2E. No new database migration.
 
 | Requirement | Verified evidence / next acceptance gate | Status |
