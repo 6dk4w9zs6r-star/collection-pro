@@ -1,0 +1,12 @@
+const fs=require('fs'),path=require('path'),root=path.join(__dirname,'..');
+let html=fs.readFileSync(path.join(root,'index.html'),'utf8');const tag='<script src="./mf-messaging-20260916.js"></script>';
+if(!html.includes(tag))html=html.replace('</body>',tag+'\n</body>');
+const old='c.channel("mf-call-"+id,{config:{broadcast:{self:false}}})',next='c.channel("mf-call-"+id,{config:{private:true,broadcast:{self:false}}})';
+if(html.includes(old))html=html.replace(old,next);else if(!html.includes(next))throw Error('Call channel configuration not found');
+html=html.replace('subscribe(status=>{if(status==="SUBSCRIBED"&&!initiator)', 'subscribe(status=>{if(["CHANNEL_ERROR","TIMED_OUT"].includes(status)){mfEndCall();mfToast("تعذر فتح قناة الاتصال الخاصة","bad");return}if(status==="SUBSCRIBED"&&!initiator)');
+html=html.replace("window.mfRejectIncomingCall=async function(id){stopRing();try{await mustUpdate('call_invitations',{status:'rejected',answered_at:new Date().toISOString()},'id',id)}catch(_){}mfFormClose()};", "window.mfRejectIncomingCall=async function(id){stopRing();try{await mustUpdate('call_invitations',{status:'rejected'},'id',id);mfFormClose()}catch(e){mfToast('تعذر حفظ رفض المكالمة: '+e.message,'bad')}};");
+for(const file of ['index.html','app.html'])fs.writeFileSync(path.join(root,file),html);
+const collaboration=path.join(root,'mf-collaboration-20260916.js');let content=fs.readFileSync(collaboration,'utf8');content=content.replace('isPublished:r.is_published,startsAt:r.starts_at','isPublished:r.is_published,publishedAt:r.published_at,startsAt:r.starts_at');fs.writeFileSync(collaboration,content);
+let sw=fs.readFileSync(path.join(root,'sw.js'),'utf8').replace('mf-nexa-shell-20260916-r4','mf-nexa-shell-20260916-r5');if(!sw.includes("'./mf-messaging-20260916.js'"))sw=sw.replace("'./mf-recovery-20260916.js'","'./mf-recovery-20260916.js','./mf-messaging-20260916.js'");fs.writeFileSync(path.join(root,'sw.js'),sw);
+const test=path.join(root,'scripts/test-browser-update.cjs');fs.writeFileSync(test,fs.readFileSync(test,'utf8').replace('2026-09-16-r4','2026-09-16-r5'));
+console.log('Messaging runtime and private call channel installed.');

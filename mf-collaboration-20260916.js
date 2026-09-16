@@ -24,7 +24,7 @@ window.mfRefreshCommunications=async function(){
   const actor=uid(),db=await dbRequired();
   const [rows,reads]=await Promise.all([mfFetchAllPages(()=>db.from('announcements').select('*').order('id')),mfFetchAllPages(()=>db.from('announcement_reads').select('*').eq('user_id',actor).order('id'))]);
   if(actor!==uid())throw Error('تغير الحساب أثناء التحميل');const readIds=new Set(reads.map(r=>String(r.announcement_id)));
-  const mapped=rows.map(r=>({id:String(r.id),dbId:String(r.id),kind:r.content_type,title:r.title,text:r.body,audience:r.audience,branch:r.branch_code,team:r.team_key,authorId:r.created_by,authorName:r.created_by===actor?mfActor().name:'إدارة المحتوى',createdAt:r.created_at,isPublished:r.is_published,startsAt:r.starts_at,endsAt:r.ends_at,mandatory:r.mandatory,readBy:readIds.has(String(r.id))?[actor]:[],attachment:r.attachment_url?{name:r.attachment_name,type:r.attachment_type,storagePath:r.attachment_url}:null}));
+  const mapped=rows.map(r=>({id:String(r.id),dbId:String(r.id),kind:r.content_type,title:r.title,text:r.body,audience:r.audience,branch:r.branch_code,team:r.team_key,authorId:r.created_by,authorName:r.created_by===actor?mfActor().name:'إدارة المحتوى',createdAt:r.created_at,isPublished:r.is_published,publishedAt:r.published_at,startsAt:r.starts_at,endsAt:r.ends_at,mandatory:r.mandatory,readBy:readIds.has(String(r.id))?[actor]:[],attachment:r.attachment_url?{name:r.attachment_name,type:r.attachment_type,storagePath:r.attachment_url}:null}));
   const state=mfState();state.announcements=mapped.filter(a=>a.kind==='announcement');state.morningContent=mapped.filter(a=>a.kind==='morning');state.teamSpiritContent=mapped.filter(a=>a.kind==='team_spirit');
 };
 window.mfAnnouncementVisible=function(a){

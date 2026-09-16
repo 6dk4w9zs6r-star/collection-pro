@@ -10,7 +10,7 @@ const root=path.join(__dirname,'..');
    const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r4');
+   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r5');
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
     CURRENT_PROFILE={id:'browser-fixture',role:'founder',branch_code:'B1',full_name:'UI regression'};
@@ -40,6 +40,13 @@ const root=path.join(__dirname,'..');
    });
    assert.equal(recovery.password,'password');assert(recovery.confirm&&recovery.verify);assert(!recovery.dangerousRestore);
    await page.screenshot({path:path.join(output,`recovery-${viewport.width}.png`),fullPage:true});
+   const messaging=await page.evaluate(()=>{
+    mfFormClose();mfCurrentChatRoom='general';mfState().chat=[{id:'chat-fixture',dbId:'chat-fixture',roomId:'general',roomType:'general',senderId:'fixture-other',senderName:'موظف توضيحي',text:'رسالة توضيحية محلية',createdAt:new Date().toISOString()}];mfRenderChat();mfOpen('mfChatModal');document.getElementById('mfChatText').value='مسودة تبقى عند التحديث';
+    mfMergeChatMessage({id:'chat-fixture-2',room_id:'general',room_type:'general',sender_id:'fixture-other',sender_name:'موظف توضيحي',message_text:'تحديث محلي',created_at:new Date().toISOString()});mfRenderChat();
+    return {draft:document.getElementById('mfChatText').value,text:document.getElementById('mfChatBody').innerText,rooms:mfChatRooms().map(r=>r.id)};
+   });
+   assert.equal(messaging.draft,'مسودة تبقى عند التحديث');assert(messaging.text.includes('رسالة توضيحية محلية')&&messaging.text.includes('تحديث محلي'));assert(!messaging.rooms.includes('team:general-team'));
+   await page.screenshot({path:path.join(output,`chat-${viewport.width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);await context.close();
   }
   console.log(JSON.stringify({browserChecks:'PASS',viewports:['desktop 1366','mobile 390'],databaseRequests:'blocked',authenticatedProductionE2E:false}));

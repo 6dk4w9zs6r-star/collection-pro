@@ -16,7 +16,7 @@ Sources: 2026-09-14 unified master (local extracted reference), all six pages of
 | Daily payment report, branch then employee, explicit date | Date/branch/officer filters implemented and locally tested | Authenticated UI E2E open |
 | Official client/disbursement/payment sources and scheduled sync | No approved source URL/feed contract available; only two regression clients and one payment | External input needed |
 | Escalation, legal, lawyer, write-off, deferral, disbursement | Existing code and prior log; final regression required | Verify |
-| Private attachments, chat, announcements and team content | r3 scoped publication/receipts, notes and active-account Storage policy verified; chat/device media E2E remains | Partial |
+| Private attachments, chat, announcements and team content | r3 publication/receipts/notes; r5 chat replay/scope, preferences/read and call authorization verified by SQL/local tests | Real Realtime/Storage/media/team E2E open |
 | Dashboard, full report set, calculators and AI | AI edge function exists; real provider availability and scope require checks | Verify |
 | Notifications, PWA, push | Payment notification trigger exists; shell-cache tests pass; VAPID backend not verified | Partial |
 | Backup / Restore / Disaster Recovery | r4 Founder-only 32-table consistent operational archive, encrypted file validation; local financial restore removed | Full DB/Auth/Storage recovery blocked on access and drill |
@@ -49,3 +49,7 @@ Client notes, explicit announcement publication/windows, branch/team scope, dura
 Operational archive export is read from one database statement snapshot under an active-Founder check, then encrypted locally with a separate password (AES-GCM/PBKDF2). It contains 32 approved public tables and excludes Auth, file bytes, schema/functions/policies, cloud cache and external configuration. The bounded export rejects payloads over 20 MiB instead of silently truncating. File validation never applies financial state. Full recovery is still unavailable: no direct PostgreSQL/backup-management credentials or recovery tooling are configured in the available environment; access details were requested asynchronously.
 
 Consent is versioned, immutable, audited and idempotent. Explicit UI login/logout events use a server-stamped JWT session id and unique event identity, without storing tokens. Database rollback tests and local encryption/persistence tests passed. Provider Auth logs remain the source for events outside these UI paths; real account end-to-end testing remains open.
+
+## Release r5 verification update
+
+Chat stable references, authoritative identity, room/attachment guards, paginated reload, Realtime deduplication and draft preservation are implemented. Notification settings and reads are DB-first; disabled-account policies cover these tables. Call state transitions and private-topic authorization are enforced in the database and requested by the UI. 23 local behaviors, rollback SQL and local browser checks pass. No live messages/calls were sent; real WebSocket, physical media, TURN, global private-channel configuration, missing official teams and authenticated device tests remain separate open gates. Morning content now follows its publication/scheduled day in Asia/Amman.
