@@ -56,6 +56,20 @@ window.mfClassifyPendingPayment=async function(){
 };
 const savePaymentBefore=window.mfSavePayment;
 window.mfSavePayment=async function(){if(window.mfPaymentSaving)return;window.mfPaymentSaving=true;try{return await savePaymentBefore();}finally{window.mfPaymentSaving=false;}};
+const deciding=new Set();
+async function decideOperation(kind,id,status){
+  const table={writeOffs:'write_offs',deferrals:'deferrals',disbursements:'disbursements'}[kind];
+  const entry=(mfState()[kind]||[]).find(x=>String(x.id)===String(id));
+  if(!table||!entry?.dbId||!['approved','rejected'].includes(status))return mfToast('طلب محفوظ وقرار صحيح مطلوبان','bad');
+  if(deciding.has(id))return;deciding.add(id);let saved=false;
+  try{
+    const db=await dbRequired(),{data,error}=await db.from(table).update({status,approved_by:uid(),decided_at:mfNow()}).eq('id',entry.dbId).eq('status','pending').select().single();
+    if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات اعتماد القرار');saved=true;
+    await roleAwareBootstrap();await window.mfLoadBackendState();mfRenderClient();mfToast(status==='approved'?'تم اعتماد القرار وتحديث البيانات من قاعدة البيانات':'تم رفض الطلب');
+  }catch(e){mfToast(saved?'تم حفظ القرار؛ أعد تحميل البيانات دون إعادة اعتماده':('تعذر اعتماد القرار: '+e.message),'bad');}finally{deciding.delete(id);}
+}
+window.mfApproveWriteOff=(id,status)=>decideOperation('writeOffs',id,status);
+window.mfApproveOperation=(kind,id,status)=>decideOperation(kind,id,status);
 
 window.mfImportPaymentsFile=async function(){
   const file=el('mfPaymentsImport')?.files?.[0],status=el('mfImportStatus');if(!file)return mfToast('اختر ملف الدفعات','bad');
@@ -121,6 +135,11 @@ window.mfPreviewReport=function(){
 // Existing loaders initialize other operational areas; replace payment caches
 // only after authoritative paginated reads succeed.
 const loadBefore=window.mfLoadBackendState;
-window.mfLoadBackendState=async function(){await loadBefore();await mfRefreshAuthoritativePayments();};
-window.MF_NEXA_RELEASE='2026-09-16-r1';
+window.mfApplySavedDeferralDates=function(){
+  const seen=new Set(),byClient=new Map((clients||[]).map(c=>[String(mfClientKey(c)),c]));
+  const approved=(mfState().deferrals||[]).filter(d=>d.status==='approved'&&d.dbId&&/^\d{4}-\d{2}-\d{2}$/.test(d.newDate||'')).sort((a,b)=>String(b.decidedAt||b.createdAt||'').localeCompare(String(a.decidedAt||a.createdAt||'')));
+  for(const d of approved){const key=String(d.clientId),c=byClient.get(key);if(c&&!seen.has(key)){c.dueDate=d.newDate;seen.add(key);}}
+};
+window.mfLoadBackendState=async function(){await loadBefore();await mfRefreshAuthoritativePayments();mfApplySavedDeferralDates();};
+window.MF_NEXA_RELEASE='2026-09-16-r2';
 })();

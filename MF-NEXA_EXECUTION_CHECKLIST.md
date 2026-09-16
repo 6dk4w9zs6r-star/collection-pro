@@ -34,3 +34,7 @@ Data safety: preserve pre-existing working changes in Git stash `mf-nexa-preserv
 The table above records the initial acceptance gates. Location controls/persistence, classification replay, referenced imports/unmatched rematching, daily payment reports, payment/clients pagination and AI server-side scope now have implemented fixes and passing targeted checks. See `MF-NEXA_HANDOVER_20260916.md` for exact evidence and limits. Supabase additive migrations and AI version 4 are deployed. Frontend publication is tracked in the release commit and post-deployment verification.
 
 Synthetic volume check: 1000 pending records and 1000 duplicate replays, rolled back. It does not establish official-file compatibility or performance on the user's real largest dataset. The four security-definer helper warnings were reviewed as active-user boolean authorization helpers; leaked-password protection remains disabled. No final closure percentage is assigned.
+
+## Release r2 verification update
+
+Atomic write-off/deferral approval and disbursement request guards are implemented and verified with rollback-only database checks. Frontend decision handling, confirmed operational writers, attachment persistence and saved deferral-date reload are implemented; 34 targeted behaviors and local desktop/mobile browser checks passed. Stage 6 real-account/device/official-data testing, full recovery, final videos and external daily feeds remain open. Baseline areas marked Verify in the initial table have not been declared complete by these targeted checks.

@@ -24,5 +24,15 @@ function setup(){
  }
  const {scope:g,state:gs}=setup();g.navigator.geolocation={getCurrentPosition:async cb=>cb({coords:{latitude:31,longitude:35}})};g.mfCapturePartyLocation(0,'client');await new Promise(r=>setImmediate(r));assert.equal(gs.locations.length,0);assert.equal(g.mfPartyGpsSaving,false);count++;
  const {scope:p}=setup();let pageCount=0;const all=await p.mfFetchAllPages(()=>({range:async(a,b)=>{pageCount++;return {data:Array.from({length:a===0?500:1},(_,i)=>i+a)};}}));assert.equal(all.length,501);assert.equal(pageCount,2);count++;
+ for(const kind of ['writeOffs','deferrals','disbursements'])for(const mode of ['missing','error','empty','success','refresh_failure']){
+  const {scope,state,events,c}=setup();state[kind]=[{id:'decision',dbId:'decision',status:'pending'}];c.netToPay=100;
+  scope.getSecureClient=async()=>mode==='missing'?null:{from:()=>({update:()=>({eq:()=>({eq:()=>({select:()=>({single:async()=>mode==='error'?{error:Error('denied')}:{data:mode==='empty'?null:{id:'decision'}}})})})})})};
+  scope.mfLoadBackendState=async()=>{if(mode==='refresh_failure')throw Error('refresh failed');events.push({loaded:true});};
+  if(kind==='writeOffs')await scope.mfApproveWriteOff('decision','approved');else await scope.mfApproveOperation(kind,'decision','approved');
+  assert.equal(c.netToPay,100);assert.equal(events.some(e=>e.loaded),mode==='success');
+  if(mode==='refresh_failure')assert(events.some(e=>e.message?.includes('تم حفظ القرار')));
+  if(['missing','error','empty'].includes(mode))assert(!events.some(e=>e.reload));count++;
+ }
+ const {scope:ds,state:dst,c:dc}=setup();dst.deferrals=[{id:'old',dbId:'old',clientId:'2',status:'approved',newDate:'2026-10-16',decidedAt:'2026-09-16'},{id:'new',dbId:'new',clientId:'2',status:'approved',newDate:'2026-11-16',decidedAt:'2026-09-17'},{id:'pending',dbId:'pending',clientId:'2',status:'pending',newDate:'2027-01-16',decidedAt:'2026-09-18'}];ds.mfApplySavedDeferralDates();assert.equal(dc.dueDate,'2026-11-16');count++;
  console.log(JSON.stringify({approvedUpdateBehaviorChecks:count}));
 })().catch(e=>{console.error(e);process.exitCode=1});
