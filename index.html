@@ -982,15 +982,18 @@ const EMBEDDED_DUE_RECORDS=[];
 const __MEM_STORE={};
 const STORE={
   getItem(k){
+    if([CLIENTS_KEY,LATE_KEY,DUE_KEY,EMP_KEY,META_KEY].includes(k))return null;
     try{return window.localStorage.getItem(k)}
     catch(e){return Object.prototype.hasOwnProperty.call(__MEM_STORE,k)?__MEM_STORE[k]:null}
   },
   setItem(k,v){
+    if([CLIENTS_KEY,LATE_KEY,DUE_KEY,EMP_KEY,META_KEY].includes(k)){let actor;try{actor=CURRENT_PROFILE?.id}catch(_){}if(!actor)return;k="mf-nexa-account:"+actor+":"+k;}
     let sv=String(v);
     try{window.localStorage.setItem(k,sv)}
     catch(e){__MEM_STORE[k]=sv}
   },
   removeItem(k){
+    if([CLIENTS_KEY,LATE_KEY,DUE_KEY,EMP_KEY,META_KEY].includes(k)){let actor;try{actor=CURRENT_PROFILE?.id}catch(_){}if(!actor)return;k="mf-nexa-account:"+actor+":"+k;}
     try{window.localStorage.removeItem(k)}
     catch(e){delete __MEM_STORE[k]}
   }
@@ -1000,7 +1003,7 @@ let lateData=JSON.parse(STORE.getItem(LATE_KEY)||'{"month":"","startIds":[],"cur
 let dueData=JSON.parse(STORE.getItem(DUE_KEY)||'{"month":"","startIds":[],"currentIds":[],"paidIds":[],"lastUpdate":"","records":{},"byEmployee":{}}');
 let employees=JSON.parse(STORE.getItem(EMP_KEY)||"[]");
 let meta=JSON.parse(STORE.getItem(META_KEY)||'{"payments":[],"monthAppearances":{},"transitions":[],"paidCustomers":{},"bootstrapVersion":""}');
-if(!employees.length)employees=[{id:"sup",name:"\u0645\u0634\u0639\u0644 \u0639\u0628\u062f\u0627\u0644\u0642\u0627\u062f\u0631",cea:"",team:"\u0627\u0644\u0625\u0634\u0631\u0627\u0641"}];
+
 meta.payments=Array.isArray(meta.payments)?meta.payments:[];
 meta.monthAppearances=meta.monthAppearances||{};
 meta.transitions=Array.isArray(meta.transitions)?meta.transitions:[];
@@ -3317,7 +3320,7 @@ async function mfMaybeForcePasswordChange(){const must=!!CURRENT_AUTH_USER?.user
 async function mfChangeTempPassword(){const password=$("mfNewPassword")?.value||"";if(password.length<8)return mfToast("كلمة المرور يجب أن تكون 8 أحرف على الأقل","bad");try{const c=await getSecureClient(),{data,error}=await c.auth.updateUser({password,data:{must_change_password:false}});if(error)throw error;CURRENT_AUTH_USER=data.user;const close=$("mfFormModal")?.querySelector(".mfClose");if(close)close.style.display="";mfFormClose();mfAudit("password_changed");mfToast("تم تغيير كلمة المرور") }catch(e){mfToast(e.message||"تعذر تغيير كلمة المرور","bad")}}
 window.secureLogin=async function(){
   const identifier=$("loginEmail")?.value.trim(),password=$("loginPassword")?.value||"",err=$("authMsg"),btn=document.querySelector("#authGate .authPrimary");if(err)err.textContent="";if(!identifier||!password){if(err)err.textContent="أدخل البريد الإلكتروني أو الهاتف وكلمة المرور";return}if(btn){btn.disabled=true;btn.textContent="جاري الدخول..."}
-  try{const normalized=normalizeLoginIdentifier(identifier),mode=mfState().settings.loginMode||"both";if(mode!=="both"&&mode!==normalized.kind)throw new Error(mode==="email"?"الدخول متاح بالبريد الإلكتروني فقط":"الدخول متاح برقم الهاتف فقط");const payload=authPayload(normalized,password),c=await getSecureClient();if(!c)throw new Error("تعذر الاتصال بخدمة الدخول");saveRememberChoice();const {data,error}=await c.auth.signInWithPassword(payload);if(error)throw error;CURRENT_AUTH_USER=data.user;const ok=await loadSecureProfile();if(!ok){await c.auth.signOut();CURRENT_AUTH_USER=null;throw new Error("هذا الحساب غير مصرح له")};document.body.classList.remove("secureLocked");if($("authGate"))$("authGate").style.display="none";await roleAwareBootstrap();loadCfmpName();mfInstallStage5Dom();mfState();mfAudit("login",null,normalized.kind);await mfEnsureConsent();await mfMaybeForcePasswordChange();mfSchedulePaymentSync();mfSubscribeChat();mfCheckReminders()}catch(e){if(err)err.textContent=e.message||"تعذر تسجيل الدخول";document.body.classList.add("secureLocked");if($("authGate"))$("authGate").style.display="flex"}finally{if(btn){btn.disabled=false;btn.textContent="تسجيل الدخول"}}
+  try{const normalized=normalizeLoginIdentifier(identifier),mode=mfState().settings.loginMode||"both";if(mode!=="both"&&mode!==normalized.kind)throw new Error(mode==="email"?"الدخول متاح بالبريد الإلكتروني فقط":"الدخول متاح برقم الهاتف فقط");const payload=authPayload(normalized,password),c=await getSecureClient();if(!c)throw new Error("تعذر الاتصال بخدمة الدخول");saveRememberChoice();const {data,error}=await c.auth.signInWithPassword(payload);if(error)throw error;CURRENT_AUTH_USER=data.user;const ok=await loadSecureProfile();if(!ok){await c.auth.signOut();CURRENT_AUTH_USER=null;throw new Error("هذا الحساب غير مصرح له")};await roleAwareBootstrap();document.body.classList.remove("secureLocked");if($("authGate"))$("authGate").style.display="none";loadCfmpName();mfInstallStage5Dom();mfState();mfAudit("login",null,normalized.kind);await mfEnsureConsent();await mfMaybeForcePasswordChange();mfSchedulePaymentSync();mfSubscribeChat();mfCheckReminders()}catch(e){if(err)err.textContent=e.message||"تعذر تسجيل الدخول";document.body.classList.add("secureLocked");if($("authGate"))$("authGate").style.display="flex"}finally{if(btn){btn.disabled=false;btn.textContent="تسجيل الدخول"}}
 };
 async function mfSecureLogout(){try{mfAudit("logout");await pushCloud(false)}catch(_){}try{mfChatSubscription?.unsubscribe();mfEndCall();const c=await getSecureClient();await c?.auth?.signOut()}catch(_){}location.reload()}
 window.secureLogout=mfSecureLogout;
@@ -4506,5 +4509,6 @@ window.mfSaveDeferral=async function(){
 <script src="./mf-recovery-20260916.js"></script>
 <script src="./mf-messaging-20260916.js"></script>
 <script src="./mf-loading-20260916.js"></script>
+<script src="./mf-session-20260916.js"></script>
 </body>
 </html>

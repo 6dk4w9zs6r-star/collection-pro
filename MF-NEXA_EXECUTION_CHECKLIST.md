@@ -2,6 +2,8 @@
 
 Sources: 2026-09-14 unified master (local extracted reference), all six pages of the 2026-09-16 Arabic update, current main branch and live Supabase inspection. No completion percentage is claimed.
 
+r8: 24 local session checks, prior suites and desktop/mobile browser pass. Startup ignores unowned operational caches; writes use account-prefixed keys; state resets on account change/logout; normal login unlocks only after bootstrap; legacy snapshot reads/writes disabled. Existing cached records preserved, never silently attributed/imported. Payment scheduling is once per account with stale-session callbacks ignored. Live anonymous REST checks on 14 sensitive tables expose no rows (2026-09-16 16:05 UTC). Actual authenticated multi-role/device E2E and old local-only record ownership/migration remain open; no database changes.
+
 r7: 35 public HTML files checked; active entrypoints have empty embedded client datasets and 33 historical entrypoints are redirects. Original files and a verified full Git bundle are preserved locally outside the deployment repository. No database changes. Public Git history and third-party cached copies are NOT erased; historical exposure remediation and shared-browser session-state isolation remain open gates.
 
 r6: core operational/client/vehicle/deferral/audit loading uses id cursor pages and propagates errors; bootstrap awaits operational loading. 27 mocked loading tests pass (1201 rows per each of ten operational tables), all prior suites pass, local desktop/mobile browser passes. This is not a transactional multi-request snapshot or authenticated production E2E. No new database migration.

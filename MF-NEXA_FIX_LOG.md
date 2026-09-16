@@ -288,6 +288,13 @@ Do not mark either issue **Closed** until the UI retest passes.
 - Additive migration `durable_notes_and_publication_receipts` deployed. Rollback-only database tests passed for notes, cross-officer denial, author spoof rejection, branch management, publication windows, repeated receipts, unpublishing and inactive accounts. No test records or account changes retained.
 - 22 targeted local behavior checks passed; all existing targeted suites passed. Desktop/mobile browser fixtures now include notes, announcements, management controls and form fields, with database traffic blocked. Publication evidence is verified separately after push.
 
+# 2026-09-16 — Session view isolation and canonical reload, release r8
+
+- Startup does not load shared operational browser caches. New cache writes are account-prefixed; old records are preserved without automatic attribution. Financial state reloads from operational tables, not collection_app_snapshot. Legacy snapshot push/init/apply paths are disabled or redirected to authoritative reload.
+- Normal password login awaits bootstrap before revealing the application, concurrent login attempts are guarded, and entered passwords clear after completion. Logout hides and resets operational views immediately. Auth SIGNED_OUT/different-user events invalidate identities, state and local media. Token refresh for the same actor does not clear valid state.
+- Payment scheduling is once per actor; bootstrap refresh cannot continually reschedule immediate synchronization. Old callbacks ignore signed-out/changed accounts.
+- 24 mocked session/storage/scheduler checks, all previous suites and local desktop/mobile browser checks pass. Live read-only anonymous checks against 14 sensitive Supabase tables return no rows. No authenticated E2E or server session revocation guarantee is inferred from these checks. No database changes. Historical local-only records remain preserved but are not auto-restored into operational state.
+
 # 2026-09-16 — Public application shell, release r7
 
 - Active entrypoints no longer bundle Late/Due client datasets. Thirty-three legacy HTML entrypoints now redirect to the current login-protected application. Existing database loading remains authoritative.
