@@ -1,0 +1,37 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),path=require('path'),{webcrypto}=require('crypto');
+const source=fs.readFileSync(path.join(__dirname,'../mf-recovery-20260916.js'),'utf8');
+function archive(){const names=['activities','announcement_reads','announcements','approved_accounts','attachments','audit_log','branches','call_invitations','chat_messages','client_notes','clients','deferrals','disbursements','employees','escalated_cases','field_visits','follow_ups','late_due','legal_cases','loan_requests','locations','messages','notification_preferences','notifications','payments','portfolios','profiles','promises_to_pay','promotions','teams','usage_consents','write_offs'];return {product:'NEXA-MF',schema:'mf-nexa-operational-archive-v2',source:'thfnitjiiwdsbwcunlbs',disaster_recovery:false,exported_at:'2026-09-16T00:00:00Z',tables:Object.fromEntries(names.map(n=>[n,n==='clients'?[{id:2,name:'Private client fixture'}]:[]])),counts:Object.fromEntries(names.map(n=>[n,n==='clients'?1:0]))};}
+function setup(){
+ const state={consents:{}},dom={},events=[];let result={data:null};
+ const db={from:()=>({select:()=>{const q={eq:()=>q,maybeSingle:async()=>result};return q;}}),rpc:async name=>{events.push({rpc:name});return {data:name==='export_operational_archive'?archive():{id:'consent',user_id:'actor',policy_version:'2026-09-14',accepted_at:'now'}};}};
+ const s={console,TextEncoder,TextDecoder,Uint8Array,Blob,Date,Number,Promise,Object,String,JSON,Error,btoa,atob,crypto:webcrypto,setTimeout:fn=>{fn();return 0;},URL:{createObjectURL:b=>{events.push({blob:b});return 'blob:test';},revokeObjectURL:()=>{}},document:{getElementById:id=>dom[id],body:{appendChild:()=>{},classList:{contains:()=>false}},createElement:()=>({click:()=>events.push({download:true}),remove:()=>{}})},CURRENT_PROFILE:{id:'actor'},CURRENT_AUTH_USER:{id:'actor'},mfRole:()=> 'founder',getSecureClient:async()=>db,mfState:()=>state,mfToast:(message,type)=>events.push({message,type}),mfForm:()=>{},mfClose:()=>events.push({closed:true}),mfRequireConsent:()=>events.push({required:true}),mfLoadBackendState:async()=>{},roleAwareBootstrap:async()=>events.push({bootstrap:true}),secureLogin:async()=>events.push({login:true}),mfSecureLogout:async()=>events.push({logout:true})};s.window=s;vm.createContext(s);vm.runInContext(source,s);return {s,state,dom,events,db,setResult:r=>{result=r;}};
+}
+(async()=>{
+ let count=0;const {s}=setup(),password='Test-only strong passphrase',a=archive();
+ const encrypted=await s.mfEncryptOperationalArchive(a,password);assert(!JSON.stringify(encrypted).includes('Private client fixture'));count++;
+ assert.deepEqual(JSON.parse(JSON.stringify(await s.mfDecryptOperationalArchive(encrypted,password))),a);count++;
+ await assert.rejects(s.mfDecryptOperationalArchive(encrypted,'Wrong password long enough'));count++;
+ const tampered=structuredClone(encrypted),cipher=Buffer.from(tampered.payload,'base64');cipher[0]^=1;tampered.payload=cipher.toString('base64');await assert.rejects(s.mfDecryptOperationalArchive(tampered,password));count++;
+ await assert.rejects(s.mfDecryptOperationalArchive({...encrypted,iterations:1},password));count++;
+ await assert.rejects(s.mfEncryptOperationalArchive(a,'short'));count++;
+ for(const edit of [b=>b.counts.clients=3,b=>delete b.tables.clients,b=>b.source='another-project',b=>b.disaster_recovery=true]){const b=structuredClone(a);edit(b);assert.throws(()=>s.mfValidateOperationalArchive(b));count++;}
+ for(const mode of ['unchecked','missing','error','empty','mismatch','success']){
+  const {s,dom,state,events,db}=setup();dom.mfConsentCheck={checked:mode!=='unchecked'};
+  if(mode==='missing')s.getSecureClient=async()=>null;
+  if(mode==='error')db.rpc=async()=>({error:Error('denied')});if(mode==='empty')db.rpc=async()=>({data:null});if(mode==='mismatch')db.rpc=async()=>({data:{id:'x',user_id:'other',policy_version:'2026-09-14'}});
+  await s.mfAcceptConsent();assert.equal(!!state.consents.actor,mode==='success');assert.equal(events.some(e=>e.closed),mode==='success');count++;
+ }
+ {const {s,state,setResult}=setup();state.consents.actor={acceptedAt:'local-only'};assert.equal(await s.mfRefreshUsageConsent(),false);assert(!state.consents.actor);setResult({data:{id:'persisted',user_id:'actor',policy_version:'2026-09-14',accepted_at:'now'}});assert.equal(await s.mfRefreshUsageConsent(),true);assert.equal(state.consents.actor.dbId,'persisted');count++;}
+ for(const stale of [{data:null},{error:Error('stale read failed')}]){const {s,state,db,dom}=setup();let resolve;db.from=()=>({select:()=>{const q={eq:()=>q,maybeSingle:()=>new Promise(r=>resolve=r)};return q;}});const read=s.mfRefreshUsageConsent();await new Promise(r=>setImmediate(r));dom.mfConsentCheck={checked:true};await s.mfAcceptConsent();resolve(stale);await read;assert.equal(state.consents.actor.dbId,'consent');count++;}
+ {const {s,dom,events}=setup();dom.mfArchivePassword={value:password};dom.mfArchivePasswordAgain={value:password};await s.mfExportBackup();assert(events.some(e=>e.rpc==='export_operational_archive'));assert(events.some(e=>e.download));assert.equal(dom.mfArchivePassword.value,'');const data=JSON.parse(await events.find(e=>e.blob).blob.text());assert.equal((await s.mfDecryptOperationalArchive(data,password)).counts.clients,1);count++;}
+ {const {s,dom,events}=setup();s.mfRole=()=> 'lo';dom.mfArchivePassword={value:password};dom.mfArchivePasswordAgain={value:password};await s.mfExportBackup();assert(!events.some(e=>e.rpc||e.download));count++;}
+ {const {s,dom,events,db}=setup();dom.mfArchivePassword={value:password};dom.mfArchivePasswordAgain={value:password};db.rpc=async()=>({error:Error('denied')});await s.mfExportBackup();assert(!events.some(e=>e.download));assert(events.some(e=>e.type==='bad'));count++;}
+ {const {s,dom}=setup();dom.mfBackupValidation={textContent:''};dom.mfArchiveOpenPassword={value:password};const text=JSON.stringify(encrypted);await s.mfValidateBackupFile({size:text.length,text:async()=>text});assert(dom.mfBackupValidation.textContent.includes('لم تتغير أي بيانات'));assert.equal(s.__MF_PENDING_RESTORE,null);assert.equal(dom.mfArchiveOpenPassword.value,'');count++;}
+ {const {s,dom}=setup();dom.mfBackupValidation={textContent:''};s.__MF_PENDING_RESTORE={data:{clients:[{balance:999}]}};let changed=false;s.applySnapshot=()=>changed=true;s.mfApplyValidatedRestore();assert(!changed);assert.equal(s.__MF_PENDING_RESTORE,null);await s.mfValidateBackupFile({size:40,text:async()=>JSON.stringify({schema:'mf-nexa-backup-v1'})});assert(dom.mfBackupValidation.textContent.includes('نسخة محلية قديمة'));count++;}
+ for(const mode of ['success','error','empty']){
+  const {s,db,events}=setup();db.rpc=async(name,args)=>{events.push({rpc:name});return mode==='error'?{error:Error('denied')}:{data:mode==='empty'?null:{id:1,action:'session_'+args.p_action,actor_user_id:'actor'}};};
+  await s.secureLogin();assert(events.some(e=>e.rpc==='record_session_event'));if(mode!=='success')assert(events.some(e=>e.message?.includes('تم الدخول؛ تعذر')));await s.mfSecureLogout();assert(events.some(e=>e.logout));count++;
+ }
+ {const {s,events}=setup();s.document.body.classList.contains=()=>true;await s.secureLogin();assert(!events.some(e=>e.rpc));count++;}
+ console.log(JSON.stringify({recoveryConsentChecks:count,encryption:'real WebCrypto AES-GCM round trip, wrong password and tampering rejected',database:'mocked'}));
+})().catch(e=>{console.error(e);process.exitCode=1;});

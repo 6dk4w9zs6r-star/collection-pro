@@ -10,7 +10,7 @@ const root=path.join(__dirname,'..');
    const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r3');
+   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r4');
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
     CURRENT_PROFILE={id:'browser-fixture',role:'founder',branch_code:'B1',full_name:'UI regression'};
@@ -35,6 +35,11 @@ const root=path.join(__dirname,'..');
    });
    assert(collaboration.body.includes('إعلان توضيحي')&&collaboration.body.includes('عرض المرفق')&&collaboration.body.includes('إدارة المحتوى والمسودات'));assert.equal(collaboration.notes,1);assert(collaboration.form);
    await page.screenshot({path:path.join(output,`communications-${viewport.width}.png`),fullPage:true});
+   const recovery=await page.evaluate(()=>{
+    mfClose('mfCommsModal');mfOpenBackupRestore();return {password:document.getElementById('mfArchivePassword')?.type,confirm:!!document.getElementById('mfArchivePasswordAgain'),verify:!!document.getElementById('mfArchiveOpenPassword'),dangerousRestore:!!document.getElementById('mfRestoreConfirmBtn')};
+   });
+   assert.equal(recovery.password,'password');assert(recovery.confirm&&recovery.verify);assert(!recovery.dangerousRestore);
+   await page.screenshot({path:path.join(output,`recovery-${viewport.width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);await context.close();
   }
   console.log(JSON.stringify({browserChecks:'PASS',viewports:['desktop 1366','mobile 390'],databaseRequests:'blocked',authenticatedProductionE2E:false}));
