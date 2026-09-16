@@ -37,5 +37,5 @@ window.mfObserveSession=async function(){const db=await getSecureClient();if(!db
   db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(CURRENT_AUTH_USER?.id&&session?.user?.id&&CURRENT_AUTH_USER.id!==session.user.id))mfInvalidateSessionView();});
 };
 mfObserveSession().catch(()=>{});
-window.MF_NEXA_RELEASE='2026-09-16-r8';
+window.MF_NEXA_RELEASE='2026-09-16-r9';
 })();

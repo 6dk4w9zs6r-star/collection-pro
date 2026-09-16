@@ -11,7 +11,7 @@ const root=path.join(__dirname,'..');
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.addInitScript(()=>{localStorage.setItem('collection_clients',JSON.stringify([{id:'previous-account',name:'OLD_ACCOUNT_CLIENT'}]));localStorage.setItem('collection_meta_v3',JSON.stringify({payments:[{id:'previous-payment'}]}));});
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r8');
+   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r9');
    const initial=await page.evaluate(()=>({clients:clients.length,payments:meta.payments.length,locked:document.body.classList.contains('secureLocked'),preserved:localStorage.getItem('collection_clients').includes('OLD_ACCOUNT_CLIENT')}));assert.deepEqual(initial,{clients:0,payments:0,locked:true,preserved:true});
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
@@ -26,6 +26,16 @@ const root=path.join(__dirname,'..');
    });
    assert(result.send&&result.open&&result.source);assert(result.report.includes('كشف الدفعات للفرع'));assert(result.report.includes('عميل توضيحي'));
    const output=path.resolve(root,'../output/verification');fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`report-${viewport.width}.png`),fullPage:true});
+   const reconciliation=await page.evaluate(()=>{
+    // Synthetic financial values mirror the read-only SQL aggregate, not customer identities.
+    clients=[{id:901,clientNo:'DEMO-901',name:'عميل توضيحي',employee:'موظف توضيحي',assignedUserId:'E1',branchCode:'B1',inLate:true,inDue:true,arrears:100,netToPay:100,dueAmount:100,lateDays:40},{id:902,clientNo:'DEMO-902',name:'عميل توضيحي ثان',employee:'موظف ثان',assignedUserId:'E2',branchCode:'B1',inLate:true,inDue:false,arrears:100,netToPay:100,dueAmount:0,lateDays:35}];
+    meta.payments=[{id:'fixture',dbId:'fixture',clientId:'901',clientNo:'DEMO-901',name:'عميل توضيحي',employee:'موظف توضيحي',employeeId:'E1',branch:'B1',amount:50,date:'2026-09-14',type:'partial',status:'successful',balanceBefore:150,balanceAfter:100}];
+    ensureLegacyLOs();renderPaid();mfRenderDashboard();mfPaymentReportFilter={date:'2026-09-14',branch:'B1',employee:'E1'};document.getElementById('mfReportType').value='payments';mfPreviewReport();
+    const historic=mfReportRows('payments');mfPaymentReportFilter.date='2026-09-16';const current=mfReportRows('payments');mfPaymentReportFilter.date='2026-09-14';
+    return {employeeTotal:mfEmployeeMetrics(mfEmployeeCatalog().find(e=>e.id==='E1')).collected,paidCount:Number(document.getElementById('paymentsCount').textContent),total:mfCollectionTotal(),paidCustomers:mfPaidReportRows().length,late:mfReportRows('late').length,due:mfReportRows('due').length,historic:historic.reduce((n,p)=>n+p.Amount,0),current:current.length,dashboard:document.getElementById('mfDashboardBody').textContent};
+   });
+   assert.equal(reconciliation.employeeTotal,50);assert.equal(reconciliation.total,50);assert.equal(reconciliation.paidCount,1);assert.equal(reconciliation.paidCustomers,1);assert.equal(reconciliation.late,2);assert.equal(reconciliation.due,1);assert.equal(reconciliation.historic,50);assert.equal(reconciliation.current,0);assert(reconciliation.dashboard.includes('كل الأيام'));
+   await page.screenshot({path:path.join(output,`reconciled-report-${viewport.width}.png`),fullPage:true});
    const collaboration=await page.evaluate(()=>{
     mfClose('mfReportsModal');const s=mfState();
     s.announcements=[{id:'fixture-ann',dbId:'fixture-ann',title:'إعلان توضيحي',text:'محتوى منشور للاختبار المحلي',isPublished:true,authorId:CURRENT_PROFILE.id,createdAt:new Date().toISOString(),attachment:{storagePath:'fixture/path',type:'image/png'}}];
