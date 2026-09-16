@@ -2026,7 +2026,8 @@ async function roleAwareBootstrap(){
     query=query.eq("branch_code",CURRENT_PROFILE.branch_code);
   }
 
-  let {data:rows,error}=await query;
+  let rows=[],error=null;
+  try{for(let offset=0;;offset+=500){const page=await query.order('id',{ascending:true}).range(offset,offset+499);if(page.error)throw page.error;rows.push(...(page.data||[]));if((page.data||[]).length<500)break;}}catch(e){error=e;}
   if(error){
     console.error("V6.34 clients load",error);
     alert("تعذر تحميل بيانات العملاء من قاعدة البيانات: "+(error.message||"خطأ غير معروف"));
@@ -2566,7 +2567,7 @@ window.openBranchPage=async function(branchRef){
   const people=peopleRes.error?[]:(peopleRes.data||[]);
   const clientRes=await sb.from("clients").select("id,assigned_user_id,assigned_employee,days_overdue,paid_amount,overdue_amount,branch_code").eq("branch_code",code);
   const rows=clientRes.error?[]:(clientRes.data||[]);
-  const late=rows.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+  const late=rows.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60&&num(c.overdue_amount)>0).length;
   const due=rows.filter(c=>num(c.days_overdue)>0).length;
   const bm=people.find(p=>String(p.role||"").toLowerCase()==="bm");
   $("branchManagementSummary").innerHTML=`<div class="branchMini"><span>BM</span><b>${safe(bm?bm.full_name:"غير محدد")}</b></div>
@@ -2575,7 +2576,7 @@ window.openBranchPage=async function(branchRef){
   const supervisor=(CURRENT_PROFILE&&["founder","als"].includes(CURRENT_PROFILE.role))?CURRENT_PROFILE:null;
   const cards=los.map(lo=>{
     const mine=rows.filter(c=>String(c.assigned_user_id||"")===String(lo.id));
-    const ml=mine.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60).length;
+    const ml=mine.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60&&num(c.overdue_amount)>0).length;
     const md=mine.filter(c=>num(c.days_overdue)>0).length;
     return `<div class="nestedLo"><b>${safe(lo.full_name||lo.email||"LO")}</b><small>LO | Late: <span class="red">${ml}</span> | Due: <span class="yellow">${md}</span></small></div>`;
   }).join("");
@@ -3480,7 +3481,7 @@ window.mfSaveTargetFollowup=function(){
 
 function mfContactActionsFinal(i,target){
   const label=target==='guarantor'?'الكفيل':'العميل';
-  return `<div class="mfActionsGrid mfPartyActions">${mfAction('📞','اتصال',`mfOpenContactTarget('call',${i},'${target}')`)}${mfAction('✦','BluNet SMS',`mfOpenContactTarget('blunet',${i},'${target}')`)}${mfAction('✉','SMS',`mfOpenContactTarget('sms',${i},'${target}')`)}${mfAction('◉','WhatsApp',`mfOpenContactTarget('whatsapp',${i},'${target}')`)}${mfAction('📅','متابعة',`mfOpenTargetFollowup(${i},'${target}')`,mfCan('followup',clients[i]))}${mfAction('📍','الموقع',`mfCapturePartyLocation(${i},'${target}')`,mfCan('visit',clients[i]))}${mfAction('↗','إرسال الموقع',`mfSharePartyLocation(${i},'${target}')`,true)}</div><small class="mfPartyHint">إجراءات ${label}</small>`;
+  return `<div class="mfActionsGrid mfPartyActions">${mfAction('📞','اتصال',`mfOpenContactTarget('call',${i},'${target}')`)}${mfAction('✦','BluNet SMS',`mfOpenContactTarget('blunet',${i},'${target}')`)}${mfAction('✉','SMS',`mfOpenContactTarget('sms',${i},'${target}')`)}${mfAction('◉','WhatsApp',`mfOpenContactTarget('whatsapp',${i},'${target}')`)}${mfAction('📅','متابعة',`mfOpenTargetFollowup(${i},'${target}')`,mfCan('followup',clients[i]))}${mfAction('📍','الموقع',`mfCapturePartyLocation(${i},'${target}')`,mfCan('visit',clients[i]))}${mfAction('↗','فتح الموقع',`mfOpenPartyLocation(${i},'${target}')`,true)}${mfAction('↗','إرسال الموقع',`mfSharePartyLocation(${i},'${target}')`,true)}</div><small class="mfPartyHint">إجراءات ${label}</small>`;
 }
 
 const mfRenderClientOverviewBeforeCompletion=window.mfRenderClientOverview;
@@ -3517,7 +3518,16 @@ window.mfSharePartyLocation=async function(i,party){
   const url=`https://www.google.com/maps?q=${x.lat},${x.lng}`,label=party==='guarantor'?'موقع الكفيل':'موقع العميل';
   try{if(navigator.share)await navigator.share({title:label,text:`${label} — ${c.name}`,url});else{await navigator.clipboard.writeText(url);mfToast('تم نسخ رابط الموقع')}}catch(_){}
 };
-
+window.mfOpenPartyLocation=function(i,party){
+  const c=clients?.[i];
+  if(!c)return;
+  const rows=mfCompletionState().partyLocations
+    .filter(x=>x.clientId===mfClientKey(c)&&x.party===party&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng)))
+    .sort((a,b)=>String(b.createdAt||b.capturedAt||'').localeCompare(String(a.createdAt||a.capturedAt||'')));
+  const x=rows[0];
+  if(!x)return mfToast('لا يوجد موقع محفوظ لهذا الطرف','bad');
+  window.open(`https://www.google.com/maps?q=${encodeURIComponent(x.lat+','+x.lng)}`,'_blank');
+};
 window.mfOpenLoanRequest=function(){
   mfForm('طلب قرض',`<div class="mfPanel"><small>نشاط مستقل عن ملف العميل. الموقع يؤخذ مباشرة من الجهاز ولا يمكن تعديله يدويًا.</small></div><div class="mfForm"><div class="mfField"><label>اسم مقدم الطلب</label><input id="mfLoanLeadName"></div><div class="mfField"><label>الهاتف</label><input id="mfLoanLeadPhone" inputmode="tel"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfLoanLeadNote"></textarea></div><div class="mfField"><label>Latitude</label><input id="mfStandaloneLat" readonly></div><div class="mfField"><label>Longitude</label><input id="mfStandaloneLng" readonly></div></div><button class="mfSecondary" onclick="mfCaptureStandaloneGps()">📍 التقاط الموقع الآن</button><button class="mfSubmit" onclick="mfSaveStandaloneActivity('loan')">حفظ طلب القرض</button>`);window.mfStandaloneGps=null;
 };
@@ -3915,7 +3925,7 @@ window.mfLoadBackendState=async function(){
     st.deferrals=defs.map(x=>({id:String(x.id),dbId:x.id,kind:'Deferral',clientId:keyFromId(x.client_id),oldDate:x.old_due_date,newDate:x.new_due_date,reason:x.reason||'',times:x.deferral_count,status:x.status,createdAt:x.created_at}));
     st.disbursements=dis.map(x=>({id:String(x.id),dbId:x.id,kind:'Disbursement',clientId:keyFromId(x.client_id),amount:num(x.amount),date:x.disbursement_date,reason:x.notes||'',status:x.status,branch:x.branch_code||'',createdAt:x.created_at}));
     st.escalations=esc.map(x=>({id:String(x.id),dbId:x.id,linkedGroupId:x.linked_group_id,clientId:keyFromId(x.client_id),toRole:x.to_role||'',fromId:x.from_employee_id,toId:x.to_employee_id,reason:x.reason||'',lastAction:x.last_action||x.instructions||'',status:x.status,result:x.result||x.resolution_notes||'',createdAt:x.created_at,updatedAt:x.updated_at}));
-    st.locations=loc.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.location_type,status:x.status,description:x.description||'',lat:Number(x.latitude),lng:Number(x.longitude),accuracy:Number(x.accuracy||0),actorId:x.created_by,createdAt:x.created_at,locked:x.locked!==false}));
+    st.locations=loc.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.location_type,status:x.status,description:x.description||'',lat:x.latitude,lng:x.longitude,accuracy:Number(x.accuracy||0),actorId:x.created_by,createdAt:x.created_at,locked:x.locked!==false}));
     st.partyLocations=st.locations.filter(x=>['client','guarantor'].includes(x.type)).map(x=>({...x,party:x.type}));
     st.chat=chat.map(x=>({id:String(x.id),roomId:x.room_id,roomType:x.room_type,senderId:x.sender_id,senderName:x.sender_name||'موظف',targetId:x.target_user_id,text:x.message_text||'',attachment:x.attachment_url?{name:x.attachment_name||'مرفق',data:x.attachment_url}:null,createdAt:x.created_at}));
     st.announcements=anns.filter(x=>x.content_type==='announcement').map(x=>({id:String(x.id),title:x.title,text:x.body,audience:x.audience,branch:x.branch_code,team:x.team_key,authorId:x.created_by,authorName:'',mandatory:x.mandatory,createdAt:x.created_at}));
@@ -4110,7 +4120,7 @@ function installNotificationMenu(){const drawer=document.querySelector('.mainMen
 const training=[
 ['login','تسجيل الدخول وتغيير كلمة المرور','all'],['home','الرئيسية والتنقل والقائمة','all'],['role-switch','التبديل Founder / ALS','founder'],['search','البحث والبحث الصوتي','all'],['allocation','Allocation وLate/Due','ops'],['client','صفحة العميل','ops'],['contacts','العميل والكفيل والمعرفون','ops'],['communications','Call / BluNet SMS / SMS / WhatsApp','ops'],['payment','تسجيل الدفعة وإرفاق الإيصال','ops'],['payment-notifications','إشعارات الدفعات','ops'],['deferral','تأجيل دفعة أو دفعتين ورسوم التأجيل','ops'],['deferral-report','تقرير تأجيل الدفعات','ops'],['followup','Follow-up وToday وخطة العمل','ops'],['promise','Promise to Pay','ops'],['priority','Priority Score','ops'],['visit','Visit / Location / Field Collection','ops'],['escalation','Escalation إلى ALS/BM/الاثنين','ops'],['legal','Legal والمحامي','legal'],['writeoff','Write-Off / R-O','ops'],['disbursement','Disbursement','ops'],['loan-request','Loan Request','ops'],['promotion','Promotion','ops'],['chat','المحادثات والغرف','all'],['calls','المكالمات الداخلية','all'],['announcements','Announcements وTeam Spirit','all'],['dashboard','Supervisor Dashboard','als'],['ranking','Performance & Ranking','management'],['organization','الفروع والفرق والموظفين والمحافظ','management'],['access','إدارة المستخدمين والصلاحيات','management'],['reports','التقارير والتصدير والطباعة','ops'],['calculator','حاسبة القرض والحاسبات','all'],['ai','البحث الذكي / AI Assistant','all'],['notifications','الإشعارات وإعداداتها','all'],['audit','Audit Log','management'],['backup','Backup / Restore','founder'],['pwa','تثبيت PWA','all'],['lawyer-guide','دليل Lawyer','lawyer'],['lo-guide','دليل LO','lo'],['als-guide','دليل ALS','als'],['bm-guide','دليل BM','bm'],['dm-guide','دليل Department Manager','cfmp'],['founder-guide','دليل Founder','founder']
 ];
-window.mfOpenTrainingCenter=function(){const role=mfRole(),ok=x=>x==='all'||x==='ops'||x===role||(x==='management'&&['founder','cfmp','bm','als'].includes(role))||(x==='legal'&&['founder','cfmp','bm','als','lawyer'].includes(role));const rows=training.filter(x=>ok(x[2])).map((x,i)=>`<div class="mfListRow"><div class="mfListRowTop"><b>${String(i+1).padStart(2,'0')} — ${safe(x[1])}</b><span class="mfBadge">${safe(x[2])}</span></div><small>سيتم ربط الفيديو النهائي بعد تثبيت واجهة ووظيفة هذا الجزء.</small><button class="mfSmallBtn" disabled>شاهد الشرح — غير مسجل بعد</button></div>`).join('');mfForm('🎓 الفيديوهات التعليمية / Training Videos',`<div class="mfPanel"><small>المركز جاهز. روابط الفيديوهات تبقى فارغة حتى اعتماد الواجهة النهائية وتسجيل فيديو مطابق للنسخة الفعلية.</small></div><div class="mfPanel">${rows}</div>`)};
+window.mfOpenTrainingCenter=function(){const role=mfRole(),ok=x=>x==='all'||(x==='ops'&&['founder','cfmp','bm','als','lo'].includes(role))||x===role||(x==='management'&&['founder','cfmp','bm','als'].includes(role))||(x==='legal'&&['founder','cfmp','bm','als','lawyer'].includes(role));const rows=training.filter(x=>ok(x[2])).map((x,i)=>`<div class="mfListRow"><div class="mfListRowTop"><b>${String(i+1).padStart(2,'0')} — ${safe(x[1])}</b><span class="mfBadge">${safe(x[2])}</span></div><small>سيتم ربط الفيديو النهائي بعد تثبيت واجهة ووظيفة هذا الجزء.</small><button class="mfSmallBtn" disabled>شاهد الشرح — غير مسجل بعد</button></div>`).join('');mfForm('🎓 الفيديوهات التعليمية / Training Videos',`<div class="mfPanel"><small>المركز جاهز. روابط الفيديوهات تبقى فارغة حتى اعتماد الواجهة النهائية وتسجيل فيديو مطابق للنسخة الفعلية.</small></div><div class="mfPanel">${rows}</div>`)};
 function installTrainingMenu(){const drawer=document.querySelector('.mainMenuDrawer');if(!drawer||byId('mfMenuTraining'))return;const about=[...drawer.querySelectorAll('button.menuItem')].find(b=>String(b.getAttribute('onclick')||'').includes('mfOpenAbout'));const html='<button id="mfMenuTraining" class="menuItem" onclick="closeMainMenu();mfOpenTrainingCenter()">🎓 الفيديوهات التعليمية</button>';if(about)about.insertAdjacentHTML('beforebegin',html);else drawer.insertAdjacentHTML('beforeend',html)}
 
 /* 7) Load newly added backend fields without changing existing data mapping. */
@@ -4174,7 +4184,7 @@ window.mfOpenPaymentForm=function(i,source='manual'){
 async function holdPayment(c,amount,date,note='',receipt=null,source='unknown',dbId=null){
   const before=Math.max(num(c.arrears),num(c.dueAmount),num(c.netToPay)),p={id:'pending:'+mfId(),dbId,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||'',branch:c.branchCode||c.branch||'',amount,date,type:'unclassified',status:'pending_classification',note,receipt,source,balanceBefore:before,balanceAfter:before,installment:installment(c),createdAt:mfNow(),actor:mfActor()};
   if(!dbId&&source!=='system-sync'){
-    const row=await mfTryInsert('payments',{client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:'unclassified',status:'pending',notes:note||'دفعة أقل من القسط بانتظار التصنيف',balance_before:before,balance_after:before,payment_no:Number(c.paymentCount)||0,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null});
+    const row=await mfConfirmedInsert('payments',{client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:'unclassified',status:'pending',notes:note||'دفعة أقل من القسط بانتظار التصنيف',balance_before:before,balance_after:before,payment_no:Number(c.paymentCount)||0,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null});
     if(row?.id)p.dbId=row.id;
   }
   st().pendingPayments.push(p);mfCommit('payment_pending_classification',c,`المبلغ ${amount} أقل من القسط ${p.installment} — بانتظار اختيار دفعة جزئية أو رسوم تأجيل`);save(false);return p;
@@ -4183,7 +4193,7 @@ async function holdPayment(c,amount,date,note='',receipt=null,source='unknown',d
 async function recordDeferralFee(c,amount,date,note='',receipt=null,source='manual',existingDbId=null){
   const before=Math.max(num(c.arrears),num(c.dueAmount),num(c.netToPay)),payload={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:'deferral_fee',status:'successful',notes:note||'رسوم تأجيل',balance_before:before,balance_after:before,payment_no:Number(c.paymentCount)||0,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};
   let dbId=existingDbId;
-  if(existingDbId)await mfTryUpdate('payments',{payment_type:'deferral_fee',status:'successful',notes:payload.notes,balance_before:before,balance_after:before},'id',existingDbId);else if(source!=='system-sync'){const row=await mfTryInsert('payments',payload);dbId=row?.id||null}
+  if(existingDbId)await mfConfirmedUpdate('payments',{payment_type:'deferral_fee',status:'successful',notes:payload.notes,balance_before:before,balance_after:before},'id',existingDbId);else if(source!=='system-sync'){const row=await mfConfirmedInsert('payments',payload);dbId=row?.id||null}
   const p={id:mfId(),dbId,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||'',cea:c.cea||'',branch:c.branchCode||c.branch||'',amount,date,type:'deferral_fee',status:'successful',note:payload.notes,receipt,source,paymentNo:Number(c.paymentCount)||0,balanceBefore:before,balanceAfter:before,balance:before,isDeferralFee:true,actor:mfActor(),createdAt:mfNow()};
   meta.payments=mfArray(meta.payments);meta.payments.push(p);
   const defs=mfArray(st().deferrals).filter(x=>x.clientId===mfClientKey(c)).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));if(defs[0]){defs[0].feePaid=num(defs[0].feePaid)+amount;defs[0].feePaymentId=p.id}
@@ -4384,15 +4394,16 @@ window.mfSaveVisit=async function(){
   if(!description)return mfToast('وصف الموقع الميداني إلزامي','bad');
   if(!Number.isFinite(amount)||amount<0)return mfToast('مبلغ التحصيل غير صالح','bad');
   if(window.mfVisitSaving)return;window.mfVisitSaving=true;
+  let persisted=false;
   try{
     const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
     const attachment=await mfFileData($f('mfVisitAttachment')),locType=$f('mfVisitLocationType')?.value||'other',result=$f('mfVisitResult')?.value||'تمت الزيارة',locationStatus=$f('mfVisitStatus')?.value||'صحيح';
     if(attachment&&!attachment.storagePath)throw Error('لم يتم حفظ المرفق في التخزين الدائم');
     const {data,error}=await db.rpc('record_field_visit_atomic',{p_client_id:c.id,p_target:target,p_location_type:locType,p_latitude:gps.lat,p_longitude:gps.lng,p_accuracy:gps.accuracy??null,p_location_status:locationStatus,p_visit_result:result,p_description:description,p_amount:amount,p_attachment_url:attachment?.storagePath||null});
     if(error)throw error;if(!data?.location_id||!data?.visit_id||(amount>0&&!data.payment_id))throw Error('لم تؤكد قاعدة البيانات اكتمال الزيارة');
-    window.mfGpsCapture=null;const actor=mfActor(),base={id:String(data.location_id),dbId:data.location_id,visitDbId:data.visit_id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,type:target==='guarantor'?'guarantor':locType,status:locationStatus,visitResult:result,description,lat:gps.lat,lng:gps.lng,accuracy:gps.accuracy,capturedAt:gps.capturedAt,attachment,actorId:actor.id,actorName:actor.name,createdAt:mfNow()};
+    persisted=true;window.mfGpsCapture=null;const actor=mfActor(),base={id:String(data.location_id),dbId:data.location_id,visitDbId:data.visit_id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,type:target==='guarantor'?'guarantor':locType,status:locationStatus,visitResult:result,description,lat:gps.lat,lng:gps.lng,accuracy:gps.accuracy,capturedAt:gps.capturedAt,attachment,actorId:actor.id,actorName:actor.name,createdAt:mfNow()};
     st().locations.push(base);st().visits.push({...base,id:String(data.visit_id),dbId:data.visit_id});mfCommit('field_visit',c,result+' • '+description);mfFormClose();await roleAwareBootstrap();await window.mfLoadBackendState();mfSetClientTab('locations');mfToast('تم اعتماد الزيارة وحفظها في السجل الميداني');
-  }catch(e){mfToast(e?.message||'تعذر حفظ الزيارة','bad')}finally{window.mfVisitSaving=false}
+  }catch(e){mfToast(persisted?'تم حفظ الزيارة؛ تعذر تحديث العرض. أعد تحميل البيانات دون إعادة التسجيل':(e?.message||'تعذر حفظ الزيارة'),'bad')}finally{window.mfVisitSaving=false}
 };
 /* Keep the approved branding and Allocation wording stable after every bootstrap/render. */
 function enforceApprovedLabels(){
@@ -4500,5 +4511,6 @@ window.mfSaveDeferral=async function(){
 };
 })();
 </script>
+<script src="mf-update-20260916.js"></script>
 </body>
 </html>

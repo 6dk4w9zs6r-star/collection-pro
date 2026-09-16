@@ -1,5 +1,5 @@
-const CACHE='mf-nexa-shell-20260915-v1';
-const APP=['./','./index.html','./manifest.webmanifest','./nexa-mf-icon.svg'];
+const CACHE='mf-nexa-shell-20260916-r1';
+const APP=['./','./index.html','./manifest.webmanifest','./nexa-mf-icon.svg','./app.html','./mf-update-20260916.js'];
 const SHELL=new Set(APP.map(p=>new URL(p,self.registration.scope).href));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE&&(k.startsWith('mf-nexa-')||k.startsWith('nexa-mf-'))).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
