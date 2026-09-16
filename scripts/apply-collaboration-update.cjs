@@ -1,0 +1,13 @@
+const fs=require('fs'),path=require('path');const root=path.join(__dirname,'..');
+let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const before="const x=a?.attachment;if(!x?.data)return'';";
+const after="const x=a?.attachment;if(x?.storagePath&&!x.data)return `<button class=\"mfSecondary\" onclick=\"mfOpenCommunicationAttachment('${mfAttr(a.id)}')\">عرض المرفق</button>`;if(!x?.data)return'';";
+if(html.includes(before))html=html.replace(before,after);else if(!html.includes(after))throw Error('Attachment renderer not found');
+const script='<script src="./mf-collaboration-20260916.js"></script>';
+if(!html.includes(script))html=html.replace('</body>',script+'\n</body>');
+for(const file of ['index.html','app.html'])fs.writeFileSync(path.join(root,file),html);
+let sw=fs.readFileSync(path.join(root,'sw.js'),'utf8').replace('mf-nexa-shell-20260916-r2','mf-nexa-shell-20260916-r3');
+if(!sw.includes("'./mf-collaboration-20260916.js'"))sw=sw.replace("'./mf-update-20260916.js'","'./mf-update-20260916.js','./mf-collaboration-20260916.js'");
+fs.writeFileSync(path.join(root,'sw.js'),sw);
+const test=path.join(root,'scripts/test-browser-update.cjs');fs.writeFileSync(test,fs.readFileSync(test,'utf8').replace('2026-09-16-r2','2026-09-16-r3'));
+console.log('Collaboration runtime installed in both entry points and public shell.');

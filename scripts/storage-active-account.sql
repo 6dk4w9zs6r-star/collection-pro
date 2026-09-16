@@ -1,0 +1,1 @@
+create policy mf_nexa_storage_active_account on storage.objects as restrictive for all to authenticated using (bucket_id <> 'mf-nexa-attachments' or exists(select 1 from public.profiles where id=(select auth.uid()) and is_active)) with check (bucket_id <> 'mf-nexa-attachments' or exists(select 1 from public.profiles where id=(select auth.uid()) and is_active));

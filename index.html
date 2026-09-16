@@ -3648,7 +3648,7 @@ window.mfSaveCommunicationFinal=async function(){
   try{const attachment=await mfFileData($('mfCommAttachment'),12*1024*1024),a=mfActor(),entry={id:mfId(),title,text,audience,branch:a.branch,team:mfTeamKey(),authorId:a.id,authorName:a.name,mandatory:!!$('mfCommMandatory')?.checked,readBy:[],attachment,createdAt:a.at};mfCompletionState()[kind==='morning'?'morningContent':'announcements'].push(entry);mfCommit('communication_published',null,`${kind} • ${audience}`);mfFormClose();mfRenderCommunications();mfToast('تم النشر') }catch(e){mfToast(e.message||'تعذر حفظ المرفق','bad')}
 };
 function mfCommAttachmentHtml(a){
-  const x=a?.attachment;if(!x?.data)return'';if(String(x.type||'').startsWith('video/'))return `<video controls class="mfCommMedia" src="${mfAttr(x.data)}"></video>`;return `<img class="mfCommMedia" src="${mfAttr(x.data)}" alt="مرفق الإعلان">`;
+  const x=a?.attachment;if(x?.storagePath&&!x.data)return `<button class="mfSecondary" onclick="mfOpenCommunicationAttachment('${mfAttr(a.id)}')">عرض المرفق</button>`;if(!x?.data)return'';if(String(x.type||'').startsWith('video/'))return `<video controls class="mfCommMedia" src="${mfAttr(x.data)}"></video>`;return `<img class="mfCommMedia" src="${mfAttr(x.data)}" alt="مرفق الإعلان">`;
 }
 const mfRenderCommunicationsBeforeCompletion=window.mfRenderCommunications;
 window.mfRenderCommunications=function(){
@@ -4512,5 +4512,6 @@ window.mfSaveDeferral=async function(){
 })();
 </script>
 <script src="mf-update-20260916.js"></script>
+<script src="./mf-collaboration-20260916.js"></script>
 </body>
 </html>

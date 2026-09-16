@@ -10,7 +10,7 @@ const root=path.join(__dirname,'..');
    const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r2');
+   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-16-r3');
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
     CURRENT_PROFILE={id:'browser-fixture',role:'founder',branch_code:'B1',full_name:'UI regression'};
@@ -24,6 +24,17 @@ const root=path.join(__dirname,'..');
    });
    assert(result.send&&result.open&&result.source);assert(result.report.includes('كشف الدفعات للفرع'));assert(result.report.includes('عميل توضيحي'));
    const output=path.resolve(root,'../output/verification');fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`report-${viewport.width}.png`),fullPage:true});
+   const collaboration=await page.evaluate(()=>{
+    mfClose('mfReportsModal');const s=mfState();
+    s.announcements=[{id:'fixture-ann',dbId:'fixture-ann',title:'إعلان توضيحي',text:'محتوى منشور للاختبار المحلي',isPublished:true,authorId:CURRENT_PROFILE.id,createdAt:new Date().toISOString(),attachment:{storagePath:'fixture/path',type:'image/png'}}];
+    s.morningContent=[];s.teamSpiritContent=[];s.clientNotes=[{id:'fixture-note',clientId:'901',text:'ملاحظة توضيحية محفوظة',createdAt:new Date().toISOString()}];
+    mfRenderCommunications();mfOpen('mfCommsModal');const body=document.getElementById('mfCommsBody').innerText;
+    const timeline=mfTimelineRows(clients[0]);mfOpenAnnouncementForm('morning');
+    const form=!!document.getElementById('mfCommPublish')&&!!document.getElementById('mfCommStarts')&&!!document.getElementById('mfCommTeam');mfFormClose();
+    return {body,notes:timeline.filter(x=>x.type==='note').length,form};
+   });
+   assert(collaboration.body.includes('إعلان توضيحي')&&collaboration.body.includes('عرض المرفق')&&collaboration.body.includes('إدارة المحتوى والمسودات'));assert.equal(collaboration.notes,1);assert(collaboration.form);
+   await page.screenshot({path:path.join(output,`communications-${viewport.width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);await context.close();
   }
   console.log(JSON.stringify({browserChecks:'PASS',viewports:['desktop 1366','mobile 390'],databaseRequests:'blocked',authenticatedProductionE2E:false}));

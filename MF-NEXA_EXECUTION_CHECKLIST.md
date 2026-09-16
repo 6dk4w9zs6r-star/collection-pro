@@ -38,3 +38,7 @@ Synthetic volume check: 1000 pending records and 1000 duplicate replays, rolled 
 ## Release r2 verification update
 
 Atomic write-off/deferral approval and disbursement request guards are implemented and verified with rollback-only database checks. Frontend decision handling, confirmed operational writers, attachment persistence and saved deferral-date reload are implemented; 34 targeted behaviors and local desktop/mobile browser checks passed. Stage 6 real-account/device/official-data testing, full recovery, final videos and external daily feeds remain open. Baseline areas marked Verify in the initial table have not been declared complete by these targeted checks.
+
+## Release r3 verification update
+
+Client notes, explicit announcement publication/windows, branch/team scope, durable morning receipts and Team Spirit content are implemented. Database rollback checks and 22 targeted local checks passed, alongside all previous regression suites and local desktop/mobile browser fixtures. The private attachment opener and 30-second video validation are implemented; authenticated upload/access/device checks remain open. Initial table entries remain acceptance gates, not claims that the later fixes are absent. Full operational stage-6/7 closure is still not established.
