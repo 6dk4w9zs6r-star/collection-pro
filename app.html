@@ -2078,19 +2078,12 @@ async function roleAwareBootstrap(){
     };
   });
 
+  // Publish only after both complete scoped reads succeed.
+  const followRows=await mfReadOperationalRows(sb,'follow_ups');
+  if(loadingActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل المتابعات');
   clients=mapped;
-
-  // V6.37: load the authenticated user's follow-up history. RLS keeps the
-  // result limited to the same client scope used by the clients table.
-  let {data:followRows,error:followError}=await sb.from("follow_ups")
-    .select("*")
-    .order("created_at",{ascending:false})
-    .limit(5000);
-  if(followError){
-    console.error("V6.37 follow-ups load",followError);
-    followUps=[];
-  }else{
-    followUps=Array.isArray(followRows)?followRows:[];
+  {
+    followUps=followRows.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
     const pendingByClient=new Map();
     followUps.filter(f=>f.status==="pending"&&f.next_follow_up_at).forEach(f=>{
       const key=String(f.client_id),old=pendingByClient.get(key);

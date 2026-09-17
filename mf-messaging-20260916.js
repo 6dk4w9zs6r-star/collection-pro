@@ -26,13 +26,19 @@ window.mfOpenChatAttachment=async function(id){const item=(mfState().chat||[]).f
   try{await dbRequired();const url=await mfStorageSignedUrl(item.attachment.storagePath);if(!url)throw Error('المرفق غير متاح ضمن صلاحيتك');mfForm('مرفق المحادثة',`<a class="mfSubmit" href="${mfAttr(url)}" target="_blank" rel="noopener noreferrer">فتح ${safe(item.attachment.name||'المرفق')}</a>`);}catch(e){mfToast(e.message,'bad');}
 };
 window.mfOpenChat=async function(){try{await mfRefreshChat();if(!mfCurrentChatRoom)mfCurrentChatRoom='general';mfRenderChat();mfOpen('mfChatModal');await mfSubscribeChat();}catch(e){mfToast('تعذر تحميل المحادثات: '+e.message,'bad');}};
-let chatActor=null,chatChannel=null;
+let chatActor=null,chatChannel=null,chatEpoch=0;
+window.mfStopChatSubscription=function(){
+  chatEpoch++;const channel=chatChannel;chatActor=null;chatChannel=null;
+  if(typeof mfChatSubscription!=='undefined')mfChatSubscription=null;
+  if(channel){try{Promise.resolve(channel.unsubscribe()).catch(()=>{});}catch(_){}}
+};
 window.mfSubscribeChat=async function(){
   const actor=uid();if(!actor)return;if(chatActor===actor&&chatChannel)return;
-  try{const db=await dbRequired();if(chatChannel)await db.removeChannel(chatChannel);if(typeof mfChatSubscription!=='undefined'&&mfChatSubscription)await mfChatSubscription.unsubscribe();
-    if(actor!==uid())return;chatActor=actor;chatChannel=db.channel('mf-nexa-chat-v5-'+actor).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},({new:r})=>{if(actor!==uid()||!r?.id)return;const seen=(mfState().chat||[]).some(x=>String(x.id)===String(r.id));const m=mfMergeChatMessage(r);if(!seen&&r.sender_id!==actor&&mfChatVisible(m)){mfToast('رسالة داخلية جديدة');if(document.visibilityState!=='visible'&&mfState().settings.notifications!==false&&typeof mfNotify==='function')Promise.resolve(mfNotify('دائرة التمويل الصغير','رسالة داخلية جديدة')).catch(()=>{});}if(el('mfChatModal')?.classList.contains('open'))mfRenderChat();}).subscribe();
+  mfStopChatSubscription();const epoch=chatEpoch;
+  try{const db=await dbRequired();
+    if(actor!==uid()||epoch!==chatEpoch)return;chatActor=actor;chatChannel=db.channel('mf-nexa-chat-v5-'+actor).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},({new:r})=>{if(actor!==uid()||epoch!==chatEpoch||!r?.id)return;const seen=(mfState().chat||[]).some(x=>String(x.id)===String(r.id));const m=mfMergeChatMessage(r);if(!seen&&r.sender_id!==actor&&mfChatVisible(m)){mfToast('رسالة داخلية جديدة');if(document.visibilityState!=='visible'&&mfState().settings.notifications!==false&&typeof mfNotify==='function')Promise.resolve(mfNotify('دائرة التمويل الصغير','رسالة داخلية جديدة')).catch(()=>{});}if(el('mfChatModal')?.classList.contains('open'))mfRenderChat();}).subscribe();
     if(typeof mfChatSubscription!=='undefined')mfChatSubscription=chatChannel;
-  }catch(e){chatActor=null;chatChannel=null;console.warn('Chat realtime unavailable');}
+  }catch(e){if(epoch===chatEpoch)mfStopChatSubscription();console.warn('Chat realtime unavailable');}
 };
 function applyPreferences(row){const settings=mfState().settings;settings.notifications=row?.general_enabled??true;settings.paymentNotifications=row?.payment_enabled??true;settings.followupNotifications=row?.followup_enabled??true;}
 window.mfRefreshNotificationPreferences=async function(){const actor=uid(),db=await dbRequired(),{data,error}=await db.from('notification_preferences').select('*').eq('user_id',actor).maybeSingle();if(error)throw error;if(actor!==uid())throw Error('تغير الحساب');applyPreferences(data);};

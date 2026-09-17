@@ -74,3 +74,8 @@ Continues r8 (65aeec58ce21471a6221585d6c4321edc12aee70); no schema changes, data
 - Official dataset reconciliation, authenticated multi-role/device E2E, source feeds, full disaster recovery and other previously open acceptance gates remain open. Publication and final data fingerprints are verified separately in this task's delivery evidence.
 
 Reference reconciliation for r9: reviewed the latest messages and saved release evidence from «المرحلة-5 تكملة الاعدادات16-09-2026» (highest priority), the local transcript for «أصلح أمان MF-NEXA وانشره» after the app reader failed, «تحية عربية», relevant recent decisions in «تكملة التطبيق», «الملف الرئيسي» and its existing master text, and «Deployment Completion Watch». These confirm the r8 continuation, fixed employee IDs, Late 30–60, daily branch/employee reports, and outstanding real-role/device/source/DR acceptance gates. No older claim of completion overrides executable evidence. Full historic conversations were not exhaustively re-audited.
+
+
+## 2026-09-17 — R8 continuation, release r10
+
+Continues verified main ec0ee0a (r9). Complete follow-up cursor loading, fail-closed bootstrap, session-generation checks and chat subscription invalidation are implemented. 254 local behavior checks, public-shell checks and desktop/mobile browser fixtures pass; live anonymous checks on 14 tables expose no rows. No database writes or Base44 use. Phase 5 remains OPEN. See [the detailed audit and external closure gates](MF-NEXA_R8_CONTINUATION_20260917.md). Deployment and data-preservation verification are recorded separately in delivery evidence.
