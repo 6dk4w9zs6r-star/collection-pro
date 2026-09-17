@@ -11,7 +11,7 @@ const root=path.join(__dirname,'..');
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.addInitScript(()=>{localStorage.setItem('collection_clients',JSON.stringify([{id:'previous-account',name:'OLD_ACCOUNT_CLIENT'}]));localStorage.setItem('collection_meta_v3',JSON.stringify({payments:[{id:'previous-payment'}]}));});
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-17-r10');
+   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-17-r11');
    const initial=await page.evaluate(()=>({clients:clients.length,payments:meta.payments.length,locked:document.body.classList.contains('secureLocked'),preserved:localStorage.getItem('collection_clients').includes('OLD_ACCOUNT_CLIENT')}));assert.deepEqual(initial,{clients:0,payments:0,locked:true,preserved:true});
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.

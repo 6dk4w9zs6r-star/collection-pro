@@ -38,3 +38,9 @@ The referenced Base44-level-2 preview contains no detailed R8 checklist. A read_
 | AI provider and final handover | Actual scoped provider availability, final role training, stage-6 acceptance and stage-7 handover |
 
 Further asynchronous application paths and actual cross-tab/account timing still require authenticated E2E. These targeted generation guards do not claim a comprehensive concurrency proof or transactional snapshot across multiple REST reads.
+
+## r11 continuation — 2026-09-17
+
+Continues main `59a8b979bbad193f76c3346d681acdbac901d135`. Generic paginated reads now reject missing identity or changed account/session generation before returning rows. Delayed GPS capture binds its originating identity and checks the generation before the database write and before updating local state. A completed write from an invalidated session is not inserted into the next session's view; no completed server write is undone or automatically retried.
+
+Seven new mocked regressions cover account/generation changes while reading, anonymous read rejection, GPS callback/connection/response invalidation and successful GPS persistence. The regression suite totals 261 local behavior checks. The new stale-page test failed against r10 before the fix. No real GPS, operational database write or message was performed. Existing external acceptance gates remain open; Phase 5 is not closed. Local browser and publication evidence are in the task's r11 verification output.

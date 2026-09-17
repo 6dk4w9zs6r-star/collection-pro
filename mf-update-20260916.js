@@ -3,9 +3,11 @@
 'use strict';
 const el=id=>document.getElementById(id);
 const uid=()=>CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;
+const sessionStamp=()=>({actor:uid(),epoch:window.mfSessionEpoch?.()});
+function requireSession(stamp){if(!stamp.actor||stamp.actor!==uid()||stamp.epoch!==window.mfSessionEpoch?.())throw Error('تغيرت جلسة المستخدم؛ أعد تحميل البيانات');}
 const operational=()=>['founder','cfmp','bm','als','lo'].includes(mfRole());
 async function dbRequired(){const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');return db;}
-async function pages(build){const rows=[];for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);if(error)throw error;if(!Array.isArray(data))throw Error('تعذر تأكيد البيانات');rows.push(...data);if(data.length<500)return rows;}}
+async function pages(build){const stamp=sessionStamp(),rows=[];requireSession(stamp);for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);requireSession(stamp);if(error)throw error;if(!Array.isArray(data))throw Error('تعذر تأكيد البيانات');rows.push(...data);if(data.length<500)return rows;}}
 window.mfFetchAllPages=pages;
 window.mfConfirmedInsert=async function(table,payload){const db=await dbRequired(),{data,error}=await db.from(table).insert(payload).select().single();if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات الحفظ');return data;};
 window.mfConfirmedUpdate=async function(table,payload,key,value){const db=await dbRequired(),{data,error}=await db.from(table).update(payload).eq(key,value).select().single();if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات التعديل');return data;};
@@ -22,14 +24,15 @@ window.mfSharePartyLocation=async function(i,party){
   try{if(navigator.share)await navigator.share({title,url});else{await navigator.clipboard.writeText(url);mfToast('تم نسخ رابط الموقع');}}catch(e){if(e.name!=='AbortError')mfToast('تعذر إرسال الموقع: '+e.message,'bad');}
 };
 window.mfCapturePartyLocation=function(i,party){
+  const stamp=sessionStamp();
   const c=clients?.[i];if(!c||!['client','guarantor'].includes(party)||!mfCan('visit',c))return mfToast('غير مصرح لك بحفظ الموقع','bad');
   if(!navigator.geolocation)return mfToast('خدمة GPS غير متاحة','bad');if(window.mfPartyGpsSaving)return;
   window.mfPartyGpsSaving=true;mfToast('جاري التقاط الموقع...');
   navigator.geolocation.getCurrentPosition(async position=>{
     let saved=false;
-    try{const coords={lat:position.coords.latitude,lng:position.coords.longitude};if(!mfValidCoordinates(coords))throw Error('إحداثيات GPS غير صالحة');
-      const db=await dbRequired(),{data:row,error}=await db.from('locations').insert({client_id:c.id,latitude:coords.lat,longitude:coords.lng,location_type:party,status:'صحيح',description:'GPS مباشر — '+(party==='guarantor'?'الكفيل':'العميل'),created_by:uid()}).select().single();
-      if(error)throw error;if(!row?.id)throw Error('لم تؤكد قاعدة البيانات حفظ الموقع');saved=true;
+    try{requireSession(stamp);const coords={lat:position.coords.latitude,lng:position.coords.longitude};if(!mfValidCoordinates(coords))throw Error('إحداثيات GPS غير صالحة');
+      const db=await dbRequired();requireSession(stamp);const {data:row,error}=await db.from('locations').insert({client_id:c.id,latitude:coords.lat,longitude:coords.lng,location_type:party,status:'صحيح',description:'GPS مباشر — '+(party==='guarantor'?'الكفيل':'العميل'),created_by:stamp.actor}).select().single();
+      if(error)throw error;if(!row?.id)throw Error('لم تؤكد قاعدة البيانات حفظ الموقع');saved=true;requireSession(stamp);
       const entry={id:String(row.id),dbId:row.id,clientId:mfClientKey(c),type:party,party,lat:row.latitude,lng:row.longitude,createdAt:row.created_at,actorId:row.created_by};
       mfState().locations.push(entry);mfState().partyLocations.push(entry);mfRenderClient();mfToast('تم حفظ الموقع');
     }catch(e){mfToast(saved?'تم حفظ الموقع؛ أعد تحميل العرض دون إعادة الحفظ':e.message,'bad');}finally{window.mfPartyGpsSaving=false;}

@@ -34,5 +34,18 @@ function setup(){
   if(['missing','error','empty'].includes(mode))assert(!events.some(e=>e.reload));count++;
  }
  const {scope:ds,state:dst,c:dc}=setup();dst.deferrals=[{id:'old',dbId:'old',clientId:'2',status:'approved',newDate:'2026-10-16',decidedAt:'2026-09-16'},{id:'new',dbId:'new',clientId:'2',status:'approved',newDate:'2026-11-16',decidedAt:'2026-09-17'},{id:'pending',dbId:'pending',clientId:'2',status:'pending',newDate:'2027-01-16',decidedAt:'2026-09-18'}];ds.mfApplySavedDeferralDates();assert.equal(dc.dueDate,'2026-11-16');count++;
+ for(const change of ['account','generation']){
+  const {scope}=setup();let epoch=0,calls=0;scope.mfSessionEpoch=()=>epoch;
+  await assert.rejects(scope.mfFetchAllPages(()=>({range:async()=>{calls++;if(change==='account')scope.CURRENT_AUTH_USER={id:'other'};else epoch++;return {data:[{id:1}]};}})));
+  assert.equal(calls,1);count++;
+ }
+ {const {scope}=setup();scope.CURRENT_AUTH_USER=null;scope.CURRENT_PROFILE=null;let calls=0;await assert.rejects(scope.mfFetchAllPages(()=>{calls++;return {range:async()=>({data:[]})}}));assert.equal(calls,0);count++;}
+ for(const changeAt of ['gps','connect','response','none']){
+  const {scope,state}=setup();let callback,epoch=0,writes=0,payload;scope.mfSessionEpoch=()=>epoch;
+  scope.navigator.geolocation={getCurrentPosition:cb=>callback=cb};
+  scope.getSecureClient=async()=>{if(changeAt==='connect')epoch++;return {from:()=>({insert:p=>{writes++;payload=p;return {select:()=>({single:async()=>{if(changeAt==='response')epoch++;return {data:{id:9,latitude:31,longitude:35,created_by:'user'}}}})}}})}};
+  scope.mfCapturePartyLocation(0,'client');if(changeAt==='gps')epoch++;await callback({coords:{latitude:31,longitude:35}});
+  assert.equal(writes,['gps','connect'].includes(changeAt)?0:1);assert.equal(state.locations.length,changeAt==='none'?1:0);assert.equal(scope.mfPartyGpsSaving,false);if(payload)assert.equal(payload.created_by,'user');count++;
+ }
  console.log(JSON.stringify({approvedUpdateBehaviorChecks:count}));
 })().catch(e=>{console.error(e);process.exitCode=1});
