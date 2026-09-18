@@ -3477,7 +3477,7 @@ function mfPatchHomeFinal(){
 
 const mfOpenAiBeforeCompletion=window.mfOpenAi;
 function mfSmartAssistantEnabled(){
-  return !!(CURRENT_PROFILE?.smart_assistant_enabled||CURRENT_PROFILE?.ai_enabled||CURRENT_PROFILE?.smart_search_enabled);
+  return CURRENT_PROFILE?.smart_assistant_enabled===true;
 }
 window.mfOpenAi=function(){
   if(!mfSmartAssistantEnabled()){
