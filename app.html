@@ -4278,7 +4278,7 @@ window.mfCalcLoan=function(){const p=num(byId('mfCalcPrincipal')?.value),rate=nu
 
 /* 5) Visible notification center + settings. */
 window.mfOpenNotificationCenter=async function(){
-  let rows=[];try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(db&&uid){const {data,error}=await db.from('notifications').select('*').eq('recipient_id',uid).order('created_at',{ascending:false}).limit(200);if(error)throw error;rows=data||[]}}catch(e){console.warn(e)}
+  let rows=[];try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(db&&uid)rows=await mfReadOperationalRows(db,'notifications','*',q=>q.eq('recipient_id',uid).order('created_at',{ascending:false}))}catch(e){console.warn(e)}
   const body=rows.map(n=>`<div class="mfListRow"><div class="mfListRowTop"><b>${safe(n.title||'إشعار')}</b><span class="mfBadge ${n.is_read?'':'pending'}">${n.is_read?'مقروء':'جديد'}</span></div><small>${mfDate(n.created_at)} • ${safe(n.notification_type||'')}</small><div>${safe(n.body||'')}</div><div class="mfRowActions">${n.client_id?`<button class="mfSmallBtn" onclick="mfOpenNotificationClient('${mfAttr(n.id)}','${mfAttr(n.client_id)}','${mfAttr(n.deep_link||'')}')">فتح</button>`:''}</div></div>`).join('')||'<div class="mfEmpty">لا توجد إشعارات حالياً</div>';
   mfForm('🔔 الإشعارات',`<div class="mfRowActions"><button class="mfSecondary" onclick="mfFormClose();mfOpenNotificationSettings()">إعدادات الإشعارات</button></div><div class="mfPanel"><div class="mfPanelTitle">الإشعارات <small>${rows.length}</small></div>${body}</div>`);
 };
