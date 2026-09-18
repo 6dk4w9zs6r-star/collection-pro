@@ -509,3 +509,9 @@
 - الواجهة الحالية لا تقرأ جدول late_due مباشرة؛ التصنيف التشغيلي الحالي مبني على clients overdue/due + late days/flags وقاعدة Late 30–60. لذلك لم يتم ربط جدول snapshot القديم تلقائيًا حتى لا نعيد حالات مغلقة إلى الواجهة.
 - successful payments=1 وdeferral_fee successful=0؛ كشف الدفعات اليومي يبقى مبنيًا على successful collection فقط.
 - لا تغيير بيانات تشغيلية في هذه الجولة؛ تم اعتبار late_due مصدر snapshot/history لا مصدر active state ما لم تُعتمد آلية مزامنة لاحقًا.
+
+
+## Calculator stale duplicate cleanup — 2026-09-18
+- فحص جميع التعريفات المتكررة للحاسبة كشف بقاء مثالين قديمين يحملان المضاعف الثابت 3 رغم أن التعريف النهائي سبق تصحيحه.
+- أزيل المثال الثابت من جميع النسخ داخل runtime واستبدل بـ «عدد الدفعات» المتغير؛ معادلة الفائدة نفسها بقيت flat monthly rate × months بدون تغيير.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `17ee657555292d5134b1763593031737949c3ad4`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
