@@ -459,3 +459,9 @@
 - فحص جميع التعريفات المتكررة لـ mfOpenCalculator كشف نسختين أقدم ما زالتا تحملان مثال `* 3` رغم أن التعريف النهائي كان قد صُحح سابقًا. المعادلة نفسها بقيت صحيحة ومتغيرة الأشهر.
 - تم تنظيف جميع أمثلة `* 3` المتبقية من app/index حتى لا يعود الرقم 3 للظهور إذا تغيّر ترتيب تحميل/override مستقبلًا.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index synced; current content SHA `7503103c5a03639878fcdfc6aad2a69510471bfd`.
+
+
+## Notification pagination hardening — 2026-09-18
+- فحص fixed row caps كشف cap=200 في Notification Center؛ هذا كان يخفي الإشعارات الأقدم للحسابات طويلة الاستخدام.
+- استُبدل الاستعلام المحدود بـ mfReadOperationalRows paginated مع نفس recipient scope وترتيب created_at desc.
+- app commit `5b6bdb612ca91c8723b843b3a18f73f0220e15f2`; index `f6ae9237891e803fccfdad8938b1719ba2d735aa`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
