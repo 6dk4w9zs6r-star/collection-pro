@@ -3724,6 +3724,18 @@ window.mfRenderCommunications=function(){
   const out=$('mfCommsBody'),s=mfCompletionState(),anns=s.announcements.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),morning=s.morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=['founder','cfmp','bm','als'].includes(mfRole());
   out.innerHTML=`<div class="mfTabs"><button class="mfTab active">الإعلانات</button><button class="mfTab" onclick="mfShowMorningFinal()">محتوى صباحي</button><button class="mfTab" onclick="mfShowTeamSpirit()">Team Spirit</button></div>${can?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm()">إضافة إعلان</button>':''}<div class="mfPanel"><div class="mfPanelTitle">الإعلانات ضمن نطاقك <small>${anns.length}</small></div>${anns.map(a=>`<div class="mfListRow"><b>${safe(a.title)}</b><small>${safe(a.authorName)} • ${mfDate(a.createdAt)} • ${safe(a.audience)}</small><div>${safe(a.text).replaceAll('\n','<br>')}</div>${mfCommAttachmentHtml(a)}</div>`).join('')||'<div class="mfEmpty">لا توجد إعلانات منشورة</div>'}</div>${morning.some(x=>x.mandatory&&!x.readBy?.includes(mfActor().id))?'<div class="mfPanel"><b>يوجد محتوى صباحي إلزامي غير مقروء</b><button class="mfSubmit" onclick="mfShowMorningFinal()">عرضه الآن</button></div>':''}`;
 };
+window.mfMarkMorningRead=async function(id){
+  const x=mfCompletionState().morningContent.find(a=>String(a.id)===String(id));if(!x)return;
+  const uid=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;if(!uid)return mfToast('يلزم تسجيل الدخول لحفظ القراءة','bad');
+  try{
+    const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+    const {data,error}=await db.from('announcement_reads').upsert({announcement_id:id,user_id:uid,read_at:new Date().toISOString()},{onConflict:'announcement_id,user_id'}).select().single();
+    if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات حفظ القراءة');
+    x.readBy=mfArray(x.readBy);const actorId=mfActor().id;if(!x.readBy.includes(actorId))x.readBy.push(actorId);
+    mfCommit('morning_content_read',null,id);mfShowMorningFinal();mfToast('تم تسجيل القراءة');
+  }catch(e){mfToast('تعذر تسجيل القراءة: '+(e?.message||e),'bad')}
+};
+
 window.mfShowMorningFinal=function(){
   const out=$('mfCommsBody'),rows=mfCompletionState().morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=['founder','cfmp','bm','als'].includes(mfRole());
   out.innerHTML=`<button class="mfSecondary" onclick="mfRenderCommunications()">← الإعلانات</button>${can?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm(\'morning\')">إضافة محتوى صباحي</button>':''}<div class="mfPanel">${rows.map(a=>`<div class="mfListRow"><div class="mfListRowTop"><b>${safe(a.title)}</b>${a.mandatory?'<span class="mfBadge pending">إلزامي</span>':''}</div><small>${mfDate(a.createdAt)} • ${safe(a.authorName)}</small><div>${safe(a.text).replaceAll('\n','<br>')}</div>${mfCommAttachmentHtml(a)}${a.mandatory&&!mfArray(a.readBy).includes(mfActor().id)?`<button class="mfSubmit" onclick="mfMarkMorningRead('${mfAttr(a.id)}')">قرأت المحتوى</button>`:''}</div>`).join('')||'<div class="mfEmpty">لا يوجد محتوى صباحي</div>'}</div>`;
