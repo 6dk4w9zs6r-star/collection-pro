@@ -355,3 +355,14 @@
 - Verified the final smart-assistant entry is labeled `الاسم الذكي`, blocks access until consent exists, and when the protected profile flag is false shows `لم يُفعل بعد` with the approved later-activation action.
 - The active assistant path checks only `profiles.smart_assistant_enabled === true`; no fallback self-activation flag remains.
 - No additional source mutation was required for this checkpoint because the active final patch already contains the intended gate.
+
+
+## Escalation + Write-Off hardening — 2026-09-18
+- Escalation final path now resolves and stores the real recipient employee for every target, rejects duplicate active escalation to the same target, and inserts LO→ALS/BM grouped targets in one database INSERT so the pair cannot partially insert.
+- ALS→BM now resolves the actual Branch Manager and, if parent-status update fails after child creation, attempts a compensating delete; it fails closed and warns not to repeat if safe rollback cannot be confirmed.
+- Current employee data still has no active ALS/Supervisor account, so LO→ALS remains intentionally fail-closed until an approved ALS identity exists.
+- Write-Off approval was corrected to be database-authoritative: the existing `guard_writeoff_decision` trigger owns the balance mutation and Before/After values; frontend no longer updates the write-off row and then separately zeros client balances a second time.
+- After a write-off decision the frontend reloads the authoritative client financial fields from Supabase before updating local Late/Due state.
+- The current UI intentionally requests full write-off equal to outstanding balance; this was preserved because the historical requirement has not yet been found explicitly enough to justify changing full vs partial behavior.
+- app/index content SHA: `b250cc2760feee446db81fb5c19d64360884fb03` and exact content equality verified: `true`.
+- latest index sync commit: `684c3d885b6497254315df348c9312a62d2fc23f`.
