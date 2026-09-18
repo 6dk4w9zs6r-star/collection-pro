@@ -348,3 +348,10 @@
 - Smart assistant remains unavailable unless protected `profiles.smart_assistant_enabled=true`; disabled state displays `لم يُفعل بعد` and does not self-activate.
 - No additional source change was required in this verification pass.
 - Current app/index content SHA remains `af84d4cd8f712f3e27e9cee915486218d193f5f4`.
+
+
+## Consent enforcement + Smart Name verification — 2026-09-18
+- Verified the final active patch already enforces first-use consent at modal/form entry points: non-consent modals are blocked, the consent modal cannot be dismissed by backdrop/close while acceptance is missing, and mfEnsureConsent returns the persisted policy state after DB restore.
+- Verified the final smart-assistant entry is labeled `الاسم الذكي`, blocks access until consent exists, and when the protected profile flag is false shows `لم يُفعل بعد` with the approved later-activation action.
+- The active assistant path checks only `profiles.smart_assistant_enabled === true`; no fallback self-activation flag remains.
+- No additional source mutation was required for this checkpoint because the active final patch already contains the intended gate.
