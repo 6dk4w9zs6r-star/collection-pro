@@ -562,3 +562,9 @@
 - فحص جميع التعريفات المكررة للحاسبة كشف بقاء مثالين قديمين يحتويان المضاعف الثابت 3 رغم أن التعريف النهائي سبق تصحيحه.
 - تم تنظيف جميع الأمثلة المتبقية إلى نص يوضح أن المضاعف هو عدد الدفعات المتغير؛ معادلة الفائدة نفسها لم تتغير: principal × monthly rate × months.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `45a1534d6c0b74ac5489f31a27019a449fb3ccbd`; content SHA `466c9a9f0933ee3c6555ccf28665d0bc8256d505`.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- فحص جميع التعريفات المتكررة لـ mfOpenCalculator كشف نسختين أقدم بقي فيهما مثال ثابت `* 3` رغم إصلاح النسخة النهائية سابقًا.
+- أزيل المثال الثابت من جميع التعريفات المتبقية واستبدل بتعبير «× عدد الدفعات». المعادلة نفسها بقيت flat monthly interest: principal × monthly rate × months.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `4a1139c0ef3d7d424025a7829f27a07c75f112f5`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
