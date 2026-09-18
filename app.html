@@ -580,7 +580,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   <span id="themeToggleIcon">☀️</span>
   <span id="themeToggleText">Light</span>
 </button>
-<div class="logo">NEXA-MF</div>
+<div class="logo">Microfinance Department</div>
 <div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
@@ -592,7 +592,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 
 <div id="newHome" class="newHome">
   <section class="bankHero" aria-label="لوحة التحصيل">
-    <div class="bankHeroEyebrow">UNRWA • MICROFINANCE DEPARTMENT • NEXA-MF</div>
+    <div class="bankHeroEyebrow">UNRWA • MICROFINANCE DEPARTMENT</div>
     <div class="bankHeroTitle">لوحة التحصيل الذكية</div>
     <div class="bankHeroSub">نظرة سريعة على المحفظة والمتابعات اليومية، مع وصول مباشر لأهم إجراءات التحصيل.</div>
   </section>
@@ -631,7 +631,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
       <div class="branchesSub">افتح قائمة الفروع</div>
     </button>
   </section>
-  <div class="bankFooterNote">NEXA-MF • MicroFinance Next-Generation Operations &amp; Intelligence</div>
+  <div class="bankFooterNote">UNRWA • Microfinance Department</div>
 </div>
 <div id="legacyOperationalArea" style="display:none">
 
@@ -734,7 +734,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 <div id="mainMenuOverlay" class="mainMenuOverlay" onclick="if(event.target===this)closeMainMenu()">
   <div class="mainMenuDrawer">
     <button class="menuClose" onclick="closeMainMenu()">&#10005;</button>
-    <div class="menuLogo">NEXA-MF</div>
+    <div class="menuLogo">Microfinance Department</div>
     <div class="menuSub">&#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1582;&#1610;&#1575;&#1585;&#1575;&#1578;</div>
 
     <button class="menuItem" onclick="openSectionFromMenu('summarySection')">&#128202; &#1575;&#1604;&#1605;&#1604;&#1582;&#1589; &#1575;&#1604;&#1593;&#1575;&#1605;</button>
@@ -2766,7 +2766,7 @@ function mfInstallStage5Dom(){
   const oldHome=$("newHome");
   if(oldHome){oldHome.classList.add("mfHiddenLegacy");oldHome.insertAdjacentHTML("beforebegin",`
     <section id="mfStage5Home" class="mfHome" aria-label="الصفحة الرئيسية NEXA-MF">
-      <div class="mfBrandPanel"><div class="mfBrandTop"><div><div class="mfBrandName">NEXA-MF</div><div class="mfBrandDesc">MicroFinance Next-Generation Operations &amp; Intelligence</div></div><span class="mfVersion">V6.42 • PHASE 5</span></div></div>
+      <div class="mfBrandPanel"><div class="mfBrandTop"><div><div class="mfBrandName">Microfinance Department</div><div class="mfBrandDesc">دائرة التمويل الصغير • UNRWA</div></div><span class="mfVersion">V6.42 • PHASE 5</span></div></div>
       <div class="mfSearchWrap"><div class="mfSearchRow"><input id="mfHomeSearch" class="mfSearchInput" placeholder="ابحث باسم العميل أو رقمه أو هاتفه أو الكفيل أو المعرّفين" oninput="mfRunHomeSearch()"><button id="mfVoiceSearchBtn" class="mfIconButton" onclick="mfVoiceSearch('mfHomeSearch',mfRunHomeSearch)" aria-label="بحث صوتي">🎙️</button></div><div class="mfSearchFilters"><select id="mfSearchStatus" onchange="mfRunHomeSearch()"><option value="all">الكل</option><option value="active">Active</option><option value="late">Late</option><option value="due">Due</option></select><select id="mfSearchEmployee" onchange="mfRunHomeSearch()"><option value="">كل الموظفين</option></select><select id="mfSearchBranch" onchange="mfRunHomeSearch()"><option value="">كل الفروع</option></select></div><div id="mfHomeSearchResults" class="mfSearchResults"></div></div>
       <div class="mfHomeTiles"><button class="mfPrimaryTile ai" onclick="mfOpenAi()"><span class="mfTileIcon">✦</span><div class="mfTileTitle">البحث الذكي</div><div class="mfTileSub">تلخيص العملاء، صياغة الرسائل، وتحليل Late وDue ضمن صلاحيتك</div></button><button class="mfPrimaryTile allocation" onclick="mfOpenAllocation()"><span class="mfTileIcon">▦</span><div class="mfTileTitle">Allocation</div><div class="mfTileSub">الفروع، الفرق، الموظفين، ثم Late وDue وملف العميل</div></button></div>
       <div class="mfHomePulse mfHomePulseInternalOnly" style="display:none" aria-hidden="true"><b id="mfTodayCount">0</b><b id="mfPromiseCount">0</b><b id="mfEscalatedCount">0</b></div><div class="mfSlogan"><b>معًا نستطيع النجاح</b></div>
@@ -2787,7 +2787,7 @@ function mfInstallStage5Dom(){
     ${mfModalShell("mfAuditModal","Audit Log","mfAuditBody",true)}
     ${mfModalShell("mfOrgModal","الفروع والفرق والموظفين","mfOrgBody",true)}
     ${mfModalShell("mfCommsModal","الإعلانات وTeam Spirit","mfCommsBody",true)}
-    ${mfModalShell("mfAboutModal","عن NEXA-MF","mfAboutBody")}
+    ${mfModalShell("mfAboutModal","عن النظام","mfAboutBody")}
     ${mfModalShell("mfConsentModal","سياسة الاستخدام والموافقة","mfConsentBody")}
     ${mfModalShell("mfCallModal","مكالمة داخلية","mfCallBody",true)}
     <div id="mfPrintArea" class="mfPrintOnly"></div>`);
