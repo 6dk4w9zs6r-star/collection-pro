@@ -147,3 +147,12 @@
 - بعد إنشاء helper ظهر تحذيرا direct EXECUTE لـ anon/authenticated.
 - تم revoke EXECUTE من public/anon/authenticated والإبقاء على تشغيله كـ trigger فقط؛ migration `revoke_direct_execute_payment_promise_trigger_helper_20260918`.
 - Security Advisor أعيد تشغيله بعد الإصلاح.
+
+
+## Escalation recipient resolution — 2026-09-18
+- تم إغلاق خطر إنشاء تصعيد دائم بـ `to_employee_id=null`.
+- قبل INSERT أصبح التطبيق يحل المستلم الفعلي من `employees`: ALS/Supervisor عبر supervisor_employee_id أو دور الفرع، وBM عبر branch_manager/bm لنفس الفرع.
+- عند غياب/تعدد مستلم صالح يفشل التصعيد قبل إنشاء سجل غير مرئي، بدل حفظ تصعيد بلا مستلم.
+- `to_employee_id` واسم المستلم يحفظان مع السجل، وملكية العميل لا تتغير.
+- التطبيق commit: `54697c37a5a32c034b8976858cbb17893a85a8c6`.
+- بيانات الإنتاج الحالية: يوجد Branch Manager واحد فعّال B1؛ لا يوجد موظف بدور ALS/Supervisor مستقل حاليًا، لذلك مسار ALS سيبقى fail-closed حتى إضافة الحساب/التعيين المعتمد، ولا يتم اختلاق حساب اختبار.
