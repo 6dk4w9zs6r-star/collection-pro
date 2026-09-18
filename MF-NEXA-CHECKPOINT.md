@@ -175,3 +175,13 @@
 - app commit: `08c9d3b080a5e2a5d6caa061e69da8603636a130`.
 - index synced commit: `6bf33a969d07f2dca2ce6113a95989dff143f57a`; app/index content SHA متطابق `ed0e0cc30ba052d8d504a9f7c00a408fff0aa40c`.
 - بقي مسار إدارة flag نفسه بحاجة مطابقة schema/permissions قبل توفير زر تفعيل إداري؛ لا يتم تجاوز ذلك محليًا.
+
+
+## Smart assistant protected admin flag — 2026-09-18
+- schema لم يكن يحتوي أي flag فعلي لتفعيل الاسم الذكي؛ لذلك تم إنشاء `profiles.smart_assistant_enabled boolean not null default false`.
+- migration: `add_admin_controlled_smart_assistant_flag_20260918`.
+- trigger `trg_protect_profile_admin_fields` يمنع أي مستخدم غير Founder من تغيير flag حتى لو كان يملك UPDATE على profile الخاص به؛ helper غير قابل للاستدعاء مباشرة من anon/authenticated.
+- جميع profiles السبعة الحالية بقيت false؛ لم يُفعّل AI لأي حساب تلقائيًا.
+- الواجهة أصبحت تعتمد فقط `CURRENT_PROFILE.smart_assistant_enabled===true` بدل flags افتراضية غير موجودة.
+- app commit: `d2deea7dd0366030e4b9669108b71cd510d02e30`.
+- index synced commit: `b954f2b88ae95a1af4e68770a683bcaf237475ec`.
