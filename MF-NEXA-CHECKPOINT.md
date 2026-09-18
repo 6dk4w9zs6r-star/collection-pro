@@ -297,3 +297,13 @@
 - app commit: `c8add109ba58389611235bb9939a0c73bda7517f`.
 - index sync: `c0740306d05c723880a0f99b4ad631607cdca0a5`; content SHA متطابق `317e3a9ebe9d8669ed512fb43ce0264b3c43cc98`.
 - لا حذف لسجلات audit التاريخية؛ الإصلاح يمنع التكرار الجديد فقط حفاظًا على البيانات.
+
+
+## Mandatory first-use consent enforcement — 2026-09-18
+- Consent was durable/restored from usage_consents, but the consent modal could still be dismissed from its backdrop and general forms could be opened before acceptance.
+- Consent backdrop dismissal is now blocked while consent is pending.
+- General operational form opening is gated by persisted/restored consent; the consent modal is shown instead until acceptance is confirmed.
+- The consent modal itself cannot be programmatically closed through the normal close helper until consent is accepted.
+- Smart assistant retains its explicit consent gate and protected admin activation flag.
+- app commit: `b32acd56129b653685cbf95059e99575cb2abb90`.
+- index synced commit: `6ca6e786dbb60544194761b83a7136bd7e81cb01`; content SHA `d4efcfd335f0af1022fbbe2ec36c5333cde56fc8`.
