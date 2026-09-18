@@ -4634,7 +4634,8 @@ window.mfSaveDeferral=async function(){
 <script id="mfNexaConsentAndSmartNameGate_20260918">
 (function(){
 'use strict';
-const consentAccepted=()=>{const id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;return !!(id&&mfState().consents?.[id]);};
+const CONSENT_POLICY_VERSION='phase5-20260918';
+const consentAccepted=()=>{const id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,rec=id&&mfState().consents?.[id];return !!(rec&&rec.policyVersion===CONSENT_POLICY_VERSION);};
 window.mfEnsureConsent=async function(){await mfRequireConsent();return consentAccepted();};
 const openBeforeConsent=window.mfOpen;
 window.mfOpen=function(id){if(id!=="mfConsentModal"&&!consentAccepted()){mfRequireConsent();mfToast('يجب الموافقة على سياسة الاستخدام أولًا','bad');return}return openBeforeConsent?.(id)};
