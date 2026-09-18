@@ -202,3 +202,12 @@
 - تم إزالة 3 الثابت من المثال واستبداله بنص يوضح أن المضاعف «عدد الدفعات» متغير، بدون تغيير معادلة الفائدة الشهرية الثابتة.
 - app commit: `d402d26c05f64516066fa7c7186ca5533c1e1867`.
 - index synced commit: `6ecfd3e55cfa10a115158ebfdc848d4c05279a74`; content SHA متطابق `4e3dcf7612d321b6654cfcb0074d3cc52c60ba2a`.
+
+
+## Mandatory morning-content read durability — 2026-09-18
+- اكتُشف أن زر «قرأت المحتوى» كان يغيّر `readBy` محليًا فقط، رغم وجود جدول `announcement_reads` وسياسات RLS/unique key مخصصة له.
+- تم استبدال المسار النشط بـ DB-first upsert على `announcement_reads(announcement_id,user_id,read_at)` ثم تحديث الحالة المحلية فقط بعد تأكيد الصف.
+- تحقق schema: FK للإعلان والمستخدم + UNIQUE `(announcement_id,user_id)` موجود، لذلك upsert idempotent ولا يكرر القراءة.
+- فشل قاعدة البيانات لا يسجل قراءة محلية وهمية.
+- app commit: `03a54ab0f1a5a4752819573963234f8e740e2376`.
+- index synced commit: `c91a2eff7aece172995735a307bccaab08a388ce`; content SHA متطابق `d70a26829a7abe4302b737366db3e59b186b167d`.
