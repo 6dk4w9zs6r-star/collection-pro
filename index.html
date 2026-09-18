@@ -3476,10 +3476,17 @@ function mfPatchHomeFinal(){
 }
 
 const mfOpenAiBeforeCompletion=window.mfOpenAi;
+function mfSmartAssistantEnabled(){
+  return !!(CURRENT_PROFILE?.smart_assistant_enabled||CURRENT_PROFILE?.ai_enabled||CURRENT_PROFILE?.smart_search_enabled);
+}
 window.mfOpenAi=function(){
+  if(!mfSmartAssistantEnabled()){
+    mfForm('الاسم الذكي',`<div class="mfPanel"><div class="mfPanelTitle">الاسم الذكي</div><div class="mfEmpty">لم يُفعل بعد</div><small>التفعيل يحتاج صلاحية إدارية معتمدة.</small></div><button class="mfSecondary" onclick="mfFormClose()">لا، فعّله لاحقًا</button>`);
+    return;
+  }
   mfOpenAiBeforeCompletion();
-  const modal=$('mfAiModal');if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='البحث الذكي'}
-  const panel=$('mfAiBody')?.querySelector('.mfPanelTitle');if(panel)panel.innerHTML='البحث الذكي <small>بيانات النظام حسب صلاحيتك + أسئلة عامة</small>';
+  const modal=$('mfAiModal');if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='الاسم الذكي'}
+  const panel=$('mfAiBody')?.querySelector('.mfPanelTitle');if(panel)panel.innerHTML='الاسم الذكي <small>بيانات النظام حسب صلاحيتك + أسئلة عامة</small>';
 };
 
 window.mfOpenContactTarget=function(channel,i,target){
