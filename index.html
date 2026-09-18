@@ -2702,7 +2702,7 @@ function mfToast(text,type="ok"){
 }
 function mfOpen(id){const el=$(id);if(el){el.classList.add("open");el.setAttribute("aria-hidden","false")}}
 function mfClose(id){const el=$(id);if(el){el.classList.remove("open");el.setAttribute("aria-hidden","true")}}
-function mfCloseOnBackdrop(ev,id){if(ev.target===ev.currentTarget)mfClose(id)}
+function mfCloseOnBackdrop(ev,id){if(id==="mfConsentModal")return;if(ev.target===ev.currentTarget)mfClose(id)}
 function mfAudit(action,c=null,details="",deferSave=false){
   const s=mfState(),a=mfActor();
   s.audit.push({id:mfId(),action,clientId:c?mfClientKey(c):null,clientNo:c?.clientNo||null,clientName:c?.name||null,details:String(details||""),actorId:a.id,actorName:a.name,actorRole:a.role,branch:a.branch,createdAt:a.at});
@@ -4635,6 +4635,10 @@ window.mfSaveDeferral=async function(){
 (function(){
 'use strict';
 const consentAccepted=()=>{const id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;return !!(id&&mfState().consents?.[id]);};
+const closeBeforeConsent=window.mfClose;
+window.mfClose=function(id){if(id==="mfConsentModal"&&!consentAccepted())return;return closeBeforeConsent?.(id)};
+const formBeforeConsent=window.mfForm;
+window.mfForm=function(title,html){if(!consentAccepted()){mfRequireConsent();return mfToast('يجب الموافقة على سياسة الاستخدام أولًا','bad')}return formBeforeConsent?.(title,html)};
 const openSmart=window.mfOpenAi;
 window.mfOpenAi=function(){
   if(!consentAccepted()){mfRequireConsent();return mfToast('يجب الموافقة على سياسة الاستخدام أولًا','bad')}
