@@ -385,3 +385,11 @@
 - EXECUTE المباشر للـ SECURITY DEFINER helper ما زال مسحوبًا من public/anon/authenticated؛ يعمل من trigger فقط.
 - لم تُنشأ بيانات اختبار وهمية: promises=0 وقت الفحص؛ kept=0؛ kept_missing_payment_date=0.
 - هذا يغلق عيب «دفعة واحدة لا يجوز أن تجعل عدة وعود Kept» على مستوى قاعدة البيانات، ويبقى E2E ببيانات تشغيل معتمدة gate منفصلًا.
+
+
+## Search + client hydration hardening — 2026-09-18
+- فحص البحث كشف أن `mfSearchHay` كان يحتوي حقول العمل والمراجع، لكن bootstrap من Supabase لم يكن يحمّل معظمها إلى client model؛ لذلك كانت الحقول موجودة في الكود ولكن تختفي عمليًا بعد logout/login/reload.
+- أضيفت hydration من `clients` للحقول: alternate phone، reference 1/2 name+phone، company، work location، work manager phone، employment status، new work، مع client address fallback.
+- وُسع البحث العام/الذكي الذي كان يقتصر على العميل/الكفيل/المراجع/الموظف ليشمل حقول العمل والشركة والمدير وحالة العمل والعمل الجديد والفرع أيضًا.
+- البحث المنزلي `mfSearchHay` كان أصلًا يشمل هذه الحقول، والبحث الصوتي ما زال مضبوطًا على `ar-JO`.
+- app commit: `38d649f4170f3ba096e36c60ff5d3a2b6a9050f2`؛ index sync: `d1b6c6f57733df754692b54575cabbbac09ef521`; content SHA `91b3a6bd1e6510fbd31c0f8a4a622ff978e6f597`.
