@@ -502,3 +502,10 @@
 - مراجعة جميع التعريفات المتراكمة لـ mfOpenCalculator كشفت نسختين أقدم ما زالتا تعرضان المثال الثابت `(250 + 40) * 3` رغم إصلاح النسخة النهائية سابقًا.
 - تم تنظيف كل الأمثلة المتبقية إلى نص يوضح أن المضاعف هو عدد الدفعات المتغير. معادلة القرض لم تتغير: principal × monthly rate × months؛ لا يوجد 3 ثابت في المعادلة.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `d25a293a1976b8d4af8fb59d19ad8fc180f195bf`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
+
+
+## Late/Due source consistency audit — 2026-09-18
+- فحص قاعدة البيانات أظهر late_due: 2 Late + 1 Due، لكن جميعها status غير active حاليًا؛ clients نفسها تحتوي 2 overdue و1 due.
+- الواجهة الحالية لا تقرأ جدول late_due مباشرة؛ التصنيف التشغيلي الحالي مبني على clients overdue/due + late days/flags وقاعدة Late 30–60. لذلك لم يتم ربط جدول snapshot القديم تلقائيًا حتى لا نعيد حالات مغلقة إلى الواجهة.
+- successful payments=1 وdeferral_fee successful=0؛ كشف الدفعات اليومي يبقى مبنيًا على successful collection فقط.
+- لا تغيير بيانات تشغيلية في هذه الجولة؛ تم اعتبار late_due مصدر snapshot/history لا مصدر active state ما لم تُعتمد آلية مزامنة لاحقًا.
