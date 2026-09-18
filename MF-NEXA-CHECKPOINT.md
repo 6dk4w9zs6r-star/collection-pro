@@ -229,3 +229,12 @@
 - سجل بلا `dbId` يفشل مغلقًا ويطلب إعادة تحميل البيانات بدل ترحيل وهمي.
 - app commit: `29c758ded1935f87428c0cf8e989d8b9bfbfe1bb`.
 - index synced commit: `e4ee1936f463f17602c08629a16a75c3e00f275a`; content SHA متطابق `89505f004bf0fdc6206015b1e71bb94d6a412da3`.
+
+
+## Pending payment approval — no duplicate posting — 2026-09-18
+- تم إصلاح مسار اعتماد Pending الذي كان يغيّر النسخة المحلية إلى cancelled ثم ينشئ دفعة Successful ثانية ويترك سجل Pending الأصلي في قاعدة البيانات.
+- الاعتماد الآن DB-first ويحدّث نفس `payments.id` من `pending → successful` فقط، وهو transition مدعوم من trigger الحالي؛ لا INSERT ثانٍ ولا حالة superseded وهمية.
+- المسار يفشل مغلقًا إذا لم يكن للسجل `dbId` مؤكدًا.
+- بعد نجاح الاعتماد يعاد جلب العميل من قاعدة البيانات لتحديث balances/paid/last payment في الواجهة من المصدر الحقيقي.
+- app commit: `29c758ded1935f87428c0cf8e989d8b9bfbfe1bb`.
+- index synced commit: `cc4c9b73055d26e31bc89a7cf54edb777c4e201d`; content SHA متطابق `89505f004bf0fdc6206015b1e71bb94d6a412da3`.
