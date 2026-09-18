@@ -471,3 +471,9 @@
 - مراجعة جميع التعريفات المتكررة للحاسبة كشفت نسختين قديمتين ما زال مثال placeholder فيهما يحتوي multiplier ثابت 3 رغم أن التعريف النهائي سبق تصحيحه.
 - تم تنظيف كل النسخ المتبقية إلى نص «× عدد الدفعات» مع إبقاء المعادلة المعتمدة كما هي: principal × monthlyRate × months، وعدد الأشهر متغير.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `5ddc56d3c440f7c9637f88f77c79587d1687164b`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
+
+
+## Promise concurrency duplicate guard — 2026-09-18
+- فحص record_promise_atomic أكد أنه DB-first ويحدّث client + inserts promise في transaction واحدة، لكنه لم يكن يمنع طلبين متزامنين من إنشاء Pending مكرر لنفس client/date.
+- أضيف partial unique index `promises_to_pay_one_pending_client_date_idx` على (client_id,promise_date) فقط عندما status='pending'. هذا يغلق race condition على مستوى قاعدة البيانات مع السماح بسجل تاريخي Kept/Broken لنفس التاريخ.
+- لا توجد بيانات promises حالية، لذلك migration لم تحتج حذف/دمج أي سجل.
