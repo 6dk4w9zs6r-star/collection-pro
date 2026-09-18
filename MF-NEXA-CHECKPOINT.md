@@ -441,3 +441,9 @@
 - فحص تقارير المرحلة الخامسة وجد أن Due report يعتمد flag `c.inDue` بينما قاعدة Due المالية الفعلية في بقية المسار تعتمد `dueAmount > 0`; flag قد يصبح stale بين refreshes/عمليات الترحيل.
 - تم جعل تقرير Due balance-driven مباشرة من dueAmount>0، مع بقاء نطاق الصلاحيات كما هو. هذا يمنع إسقاط عميل مستحق من التقرير بسبب flag محلي قديم.
 - app commit `84930234895836a2ba1b9d7313e60c98d596d44c`; index sync `04561bc0e56b155c1d465fc14c0ff48acbee0a27`; content SHA `1acd0242866ad277c6614e3c4e6dfc622132275d`.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- بعد مراجعة جميع التعريفات المتكررة للحاسبة، ظهر أن تعريفين legacy ما زالا يحملان مثالًا ثابتًا `* 3` رغم أن التعريف النهائي كان مصححًا سابقًا.
+- تم إزالة المثال الثابت من جميع النسخ المتبقية واستبداله بصياغة توضح أن المضاعف هو عدد الدفعات المتغير. معادلة الفائدة بقيت كما هي: principal × monthlyRate × months.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `f519934a33df6f993558c99ca0e4b0a78f510c1c`; content SHA `1acd0242866ad277c6614e3c4e6dfc622132275d`.
