@@ -2748,10 +2748,16 @@ function mfPriority(c){
   score=Math.max(0,Math.min(100,score));
   return {score,label:score>=65?"عالية":score>=35?"متوسطة":"منخفضة",cls:score>=65?"high":score>=35?"medium":"low"};
 }
-function mfAutoStates(){
-  const s=mfState(),d=today();let changed=false;
-  s.promises.forEach(p=>{if(p.status==="pending"&&p.promiseDate&&p.promiseDate<d){p.status="broken";p.updatedAt=mfNow();changed=true}});
-  if(changed)save(false);
+async function mfAutoStates(){
+  const s=mfState(),d=today(),expired=s.promises.filter(p=>p.status==="pending"&&p.promiseDate&&p.promiseDate<d);
+  for(const p of expired){
+    const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);
+    if(!c||!mfCan("followup",c)||!p.dbId)continue;
+    try{
+      const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status:"broken",updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+      p.status=row.status;p.updatedAt=row.updated_at||mfNow();mfCommit("promise_status",c,`${p.promiseDate} → broken (expired)`);
+    }catch(_){}
+  }
 }
 async function mfTryInsert(table,payload){
   try{const c=await getSecureClient();if(!c)return null;const r=await c.from(table).insert(payload).select().maybeSingle();if(r.error)return null;return r.data||true}catch(_){return null}
@@ -3078,7 +3084,15 @@ async function mfRescheduleFollowup(id){
 
 function mfOpenPromiseForm(i){const c=clients?.[i];if(!c)return;mfForm("Promise to Pay",`<input id="mfPromiseIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>Promise Date</label><input id="mfPromiseDate" type="date" value="${c.promiseDate||today()}"></div><div class="mfField"><label>المبلغ</label><input id="mfPromiseAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfPromiseNote"></textarea></div></div><button class="mfSubmit" onclick="mfSavePromise()">حفظ الوعد Pending</button>`)}
 async function mfSavePromise(){const i=Number($("mfPromiseIndex")?.value),c=clients?.[i],date=$("mfPromiseDate")?.value,amount=num($("mfPromiseAmount")?.value),note=$("mfPromiseNote")?.value.trim();if(!c||!date||amount<=0)return mfToast("أدخل تاريخًا ومبلغًا صحيحين","bad");const a=mfActor(),entry={id:mfId(),clientId:mfClientKey(c),clientNo:c.clientNo,promiseDate:date,amount,note,status:"pending",employeeId:a.id,employeeName:a.name,actorRole:a.role,createdAt:a.at};mfState().promises.push(entry);c.promiseDate=date;c.status="وعد بالدفع";mfCommit("promise_created",c,`${date} • ${amount}`);await mfTryUpdate("clients",{promise_date:date,follow_up_status:"وعد بالدفع"},"id",c.id);mfFormClose();mfToast("تم حفظ وعد الدفع")}
-function mfUpdatePromise(id,status){const p=mfState().promises.find(x=>x.id===id);if(!p)return;p.status=status;p.updatedAt=mfNow();const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);mfCommit("promise_status",c,`${p.promiseDate} → ${status}`);mfRenderClient();mfToast("تم تحديث حالة الوعد")}
+async function mfUpdatePromise(id,status){
+  const p=mfState().promises.find(x=>x.id===id);if(!p)return;
+  const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);if(!c||!mfCan("followup",c))return mfToast("غير مصرح لك بهذا الوعد","bad");
+  if(!["pending","kept","broken"].includes(status))return mfToast("حالة وعد غير صالحة","bad");
+  try{
+    const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+    p.status=row.status;p.updatedAt=row.updated_at;mfCommit("promise_status",c,`${p.promiseDate} → ${row.status}`);mfRenderClient();mfToast("تم تحديث حالة الوعد");
+  }catch(e){mfToast("تعذر تحديث الوعد: "+(e?.message||e),"bad")}
+}
 
 function mfOpenNoteForm(i){const c=clients?.[i];if(!c)return;mfForm("إضافة ملاحظة",`<input id="mfNoteIndex" type="hidden" value="${i}"><div class="mfField"><label>الملاحظة</label><textarea id="mfNoteText"></textarea></div><button class="mfSubmit" onclick="mfSaveNote()">حفظ</button>`)}
 function mfSaveNote(){const i=Number($("mfNoteIndex")?.value),c=clients?.[i],text=$("mfNoteText")?.value.trim();if(!c||!text)return;c.history=mfArray(c.history);c.history.push({date:new Date().toLocaleString("ar-JO"),createdAt:mfNow(),text});mfCommit("client_note",c,text);mfFormClose();mfToast("تم حفظ الملاحظة")}
