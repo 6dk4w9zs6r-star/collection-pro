@@ -316,3 +316,11 @@
 - Smart assistant remains additionally protected by the founder-controlled `profiles.smart_assistant_enabled` flag and is labeled `الاسم الذكي`.
 - app commit: `b5e4a4033f2eb2b6e9513deea0db4454cdcf700e`.
 - index synced commit: `2f353a14eab415c2977be499990004ec4c1ca661`; content SHA `603e5d85b1779365dbee29a8caea96e289ef87f7`.
+
+
+## Smart assistant naming + consent gate verification — 2026-09-18
+- Verified final additive consent gate is active after all imported scripts: non-consent users cannot open operational modals/forms, cannot close the consent modal, and `mfEnsureConsent` returns the actual accepted state.
+- Verified smart assistant remains disabled unless the protected `profiles.smart_assistant_enabled===true` flag is present.
+- Removed the remaining base visible label `البحث الذكي` from the active smart assistant panel/home source and standardized the approved visible name to `الاسم الذكي`.
+- app commit: `0daa690f1876e881968084676fed3097222bf49d`.
+- index synced commit: `d76a829c993cd7b12fda19f8b7240d024983a95a`; content SHA `cc6a69e1288e008f5985d363a64ee4e84d6c24bc`.
