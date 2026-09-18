@@ -288,3 +288,12 @@
 - Visible home tile and active assistant modal use the approved name `الاسم الذكي`.
 - app commit: `3b954011f8cd47d9f8d87030c74c09162a669869`.
 - index synced commit: `ac58ad5da9e8916c744268d56539a41d05161da3`; content SHA `22539ae75ded49f989cc146abfb6c19cf4983699`.
+
+
+## Audit Log duplicate-write hardening — 2026-09-18
+- فحص المسار النشط كشف أن `mfCommit()` يستدعي `mfAudit()`، بينما runtime hardening يلف `mfAudit` ويحفظ الحدث في `audit_log`؛ وبعد ذلك كان `mfCommit` ينفذ INSERT ثانٍ لنفس الحدث.
+- أزيل INSERT المكرر من `mfCommit` مع إبقاء local timeline/save/render كما هي، وأصبح backend audit يُكتب مرة واحدة عبر wrapper المحمي.
+- تحقق RLS: INSERT مقيد بـ `actor_user_id = auth.uid()`، وSELECT حسب النطاق/Founder/CFMP.
+- app commit: `c8add109ba58389611235bb9939a0c73bda7517f`.
+- index sync: `c0740306d05c723880a0f99b4ad631607cdca0a5`; content SHA متطابق `317e3a9ebe9d8669ed512fb43ce0264b3c43cc98`.
+- لا حذف لسجلات audit التاريخية؛ الإصلاح يمنع التكرار الجديد فقط حفاظًا على البيانات.
