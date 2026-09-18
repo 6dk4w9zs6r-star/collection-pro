@@ -515,3 +515,10 @@
 - فحص جميع التعريفات المتكررة للحاسبة كشف بقاء مثالين قديمين يحملان المضاعف الثابت 3 رغم أن التعريف النهائي سبق تصحيحه.
 - أزيل المثال الثابت من جميع النسخ داخل runtime واستبدل بـ «عدد الدفعات» المتغير؛ معادلة الفائدة نفسها بقيت flat monthly rate × months بدون تغيير.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `17ee657555292d5134b1763593031737949c3ad4`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
+
+
+## Operational pagination filter-safety — 2026-09-18
+- فحص helper المركزي `mfReadOperationalRows` كشف خلل بنيوي مع filters التي تضيف order مختلف (مثل notifications created_at desc): helper كان يضيف keyset `id > cursor` مع `order(id asc)`، ما قد يسبب تخطي/تكرار عند وجود ترتيب إضافي.
+- تم تحويل pagination إلى range paging ثابت 500 صف مع id tie-order والتحقق من ترتيب كل صفحة، مع بقاء session epoch/actor guards كما هي.
+- هذا يجعل جميع المستهلكين الحاليين للـhelper (clients/payments/announcements/notifications/audit/operational tables) لا يعتمدون على توافق cursor مع ترتيب filter.
+- commit `2455e73526ae678bd0eddb9a1b42f419cb100106`؛ helper SHA `176c1e8c1d7ed9589f4e9b94cd7d7e0a0e6c5aff`.
