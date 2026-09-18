@@ -453,3 +453,9 @@
 - تم توحيد تقرير Late مع قاعدة الخروج التشغيلية: العميل لا يعود للتقرير إذا كانت inLate=false بعد استيفاء قاعدة الخروج، حتى لو بقي arrears/days يطابقان التصنيف الخام.
 - LateDays في التقرير أصبح يستخدم canonical mfLateDaysValue ليأخذ lateDays/dueLateDays بشكل موحد.
 - app commit `4cd9902501ddccc45cb6dbc8b2138c4d73dcab21`; index sync `74dd0ee81edba4b3dd12a7563d898c31fca0100c`; content SHA `7503103c5a03639878fcdfc6aad2a69510471bfd`.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- فحص جميع التعريفات المتكررة لـ mfOpenCalculator كشف نسختين أقدم ما زالتا تحملان مثال `* 3` رغم أن التعريف النهائي كان قد صُحح سابقًا. المعادلة نفسها بقيت صحيحة ومتغيرة الأشهر.
+- تم تنظيف جميع أمثلة `* 3` المتبقية من app/index حتى لا يعود الرقم 3 للظهور إذا تغيّر ترتيب تحميل/override مستقبلًا.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index synced; current content SHA `7503103c5a03639878fcdfc6aad2a69510471bfd`.
