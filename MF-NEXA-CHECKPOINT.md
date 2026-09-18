@@ -550,3 +550,9 @@
 - duplicate Pending promises by client/date=0.
 - successful payments without posted_at=0; successful financial balance mismatches=0.
 - This is a read-only integrity gate; no fake operational rows were inserted.
+
+
+## Calculator stale override cleanup — 2026-09-18
+- متابعة فحص التعريفات المتعددة للحاسبة كشفت نسختين لاحقتين ما زال placeholder فيهما يحتوي `* 3` رغم إصلاح النسخة السابقة؛ وبسبب override order كان يمكن أن يعود المثال القديم في الواجهة.
+- تم إزالة جميع أمثلة 3 الثابتة المتبقية من التعريفات النشطة/اللاحقة واستبدالها بصياغة «× عدد الدفعات»؛ معادلة الفائدة نفسها لم تتغير وتبقى monthly flat rate × months.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `af4c44b1fd5f915286965984f6cf0c71c990d13c`; content SHA `466c9a9f0933ee3c6555ccf28665d0bc8256d505`؛ stale fixed-3 placeholders=0.
