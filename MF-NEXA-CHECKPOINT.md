@@ -416,3 +416,10 @@
 - وجد اختلاف في مسار اعتماد Pending: كان يعيد حساب inLate من days/arrears فقط بعد قراءة client من DB، فيستطيع إعادة العميل Late رغم وصول payment_no إلى 2.
 - تم توحيد هذا المسار مع قاعدة الدفعتين: بعد refresh من DB، إذا payment_no >= 2 يصبح inLate=false؛ Due يبقى مرتبطًا بالرصيد.
 - app commit `30317833e1462242163243faa1b03b9584b1bddc`; index sync `df648ae7241b5211e04e05a54458e3af09d23f96`; content SHA `20f8d83f7292e7a1642b7e4b7e15e5dd5269f884`.
+
+
+## Escalation rollback RLS hardening — 2026-09-18
+- راجعت RLS الفعلي لـ escalated_cases: كان INSERT/SELECT/UPDATE موجودًا لكن DELETE غير موجود، بينما مسار ALS→BM rollback الآمن يحتاج حذف child المفتوح إذا فشل تحديث parent.
+- أضيفت migration `allow_safe_escalation_rollback_delete_20260918` بسياسة DELETE ضيقة فقط للمستخدم authenticated الذي أنشأ التصعيد بنفسه، والسجل ما زال status=open، ومع استمرار can_access_client.
+- لا يوجد منح حذف عام ولا bypass لـRLS.
+- فحص البيئة: active escalations=0؛ active BM=1؛ active ALS/Supervisor=0. غياب ALS/Supervisor يبقى blocker بيانات لا يتم تزويره أو تعيين دور دون مرجع معتمد.
