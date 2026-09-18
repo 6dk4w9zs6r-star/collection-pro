@@ -423,3 +423,9 @@
 - أضيفت migration `allow_safe_escalation_rollback_delete_20260918` بسياسة DELETE ضيقة فقط للمستخدم authenticated الذي أنشأ التصعيد بنفسه، والسجل ما زال status=open، ومع استمرار can_access_client.
 - لا يوجد منح حذف عام ولا bypass لـRLS.
 - فحص البيئة: active escalations=0؛ active BM=1؛ active ALS/Supervisor=0. غياب ALS/Supervisor يبقى blocker بيانات لا يتم تزويره أو تعيين دور دون مرجع معتمد.
+
+
+## Calculator stale override cleanup — 2026-09-18
+- بعد فحص جميع overrides، وُجد أن إصلاح مثال الرقم 3 السابق لم يشمل نسختين أقدم من واجهة الحاسبة بقيتا في المصدر. رغم أن override النهائي كان صحيحًا، أزيلت كل أمثلة `(250 + 40) * 3` المتبقية حتى لا يعود الرقم الثابت عند تغير ترتيب/تحميل overrides.
+- المعادلة بقيت كما هي: principal × monthly rate × months؛ لم يتم تغيير منطق الفائدة.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `e83807df73356cb79ba162e0bf81a547c313671e`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
