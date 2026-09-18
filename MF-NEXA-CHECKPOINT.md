@@ -535,3 +535,9 @@
 - تم توسيع المسارين داخل نفس مجموعة العملاء المحملة والمحكومة بالصلاحية لتشمل الهاتف البديل، المراجع 1/2، الشركة، مكان العمل، هاتف مدير العمل، حالة العمل، العمل الجديد، الفرع والفريق.
 - لم يتغير security boundary: البحث لا يستعلم خارج clients المحملة حسب role/RLS.
 - app commit `5842af5246f1e58c550d443417ee2da6de0d8231`; index sync `10edfbbc559ea5b015f2383a8a1969d55d263d9f`; content SHA `466c9a9f0933ee3c6555ccf28665d0bc8256d505`.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- فحص جميع التعريفات المتراكمة للحاسبة كشف نسختين legacy ما زال مثال placeholder فيهما يحتوي `* 3` رغم أن التعريف النهائي سبق تصحيحه.
+- تم إزالة الرقم 3 من جميع أمثلة الحاسبة المتبقية واستبداله بعبارة `× عدد الدفعات`، بدون تغيير المعادلة المعتمدة `interest = principal × monthlyRate × months`.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `34e5f3dd456ff596cf109eb0322ef890ed1ab7bb`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`; stale fixed-3 placeholders after sync=0.
