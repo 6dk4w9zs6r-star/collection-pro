@@ -332,3 +332,10 @@
 - Hardened consent acceptance check so only the current policy version `phase5-20260918` unlocks operational access; stale/local consent objects no longer satisfy the final gate.
 - app commit: `006aa0b5c74d17de644e90131a54818fc9484369`.
 - index synced commit: `aefa4a599764d9459b0aa5683f7a948d72b16edc`; content SHA `4344a789133af15ca26fe999a9a25068cd802417`.
+
+
+## Smart assistant execution boundary — 2026-09-18
+- Verified the visible tile/modal already use the approved name `الاسم الذكي`, consent gating is active, and the protected profile flag is the activation source.
+- Added the same protected-flag check directly at both local and backend AI execution functions, so invoking the function directly cannot bypass the disabled state.
+- app commit: `dfcc9faf987921619383419642df41ecd568373f`.
+- index synced commit: `1029562dc73fed1f7f3748bcef084e1b67fd01da`; content SHA `8958c617fed3bb7aff108651f375beb22fe652ee`.
