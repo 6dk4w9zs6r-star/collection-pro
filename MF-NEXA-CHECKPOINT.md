@@ -71,3 +71,12 @@
 - Security Advisor بعد التنفيذ لم يعد يعرض تحذيرات SECURITY DEFINER الأربعة.
 - التحذير الأمني المتبقي: Leaked Password Protection Disabled، وهو إعداد Auth وليس تعديل بيانات تشغيل.
 - لم يتم حذف أو reset أو تعديل بيانات العملاء.
+
+
+## تحسين RLS للأداء — 2026-09-18
+- فُحص Performance Advisor بعد الإغلاق الأمني.
+- عولجت تحذيرات auth_rls_initplan الثلاثة المتبقية في سياسات payments باستبدال استدعاءات auth.uid المباشرة داخل السياسات باستدعاء initplan ثابت `(select auth.uid())` مع الحفاظ على نفس شروط النطاق.
+- migration: `optimize_remaining_payment_auth_rls_initplans_20260918`.
+- إعادة فحص Performance Advisor: تحذيرات auth_rls_initplan اختفت. بقيت معلومات unused indexes فقط؛ لم تُحذف الفهارس لأن قاعدة البيانات الحالية صغيرة ولا تكفي لإثبات عدم الحاجة إليها في حجم الإنتاج.
+- فحص الأدوار الحالية: founder=1, bm=1, lo=5. لا توجد حاليًا حسابات ALS/CFMP/Department Manager مستقلة مثبتة في profiles، لذلك E2E لهذه الأدوار لا يمكن ادعاء نجاحه حتى تتوفر حسابات معتمدة.
+- snapshot تشغيلي للعد فقط: clients=2, successful payments=1, followups=2, late_due=3, audit rows=110, consents=1. لا يُعامل كمصدر العملاء الرسمي.
