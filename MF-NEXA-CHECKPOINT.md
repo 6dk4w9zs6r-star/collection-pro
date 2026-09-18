@@ -141,3 +141,9 @@
 - migration: `link_successful_payments_to_promises_20260918`.
 - التطبيق commit: `84009bacb86141813cf4b8088c7d451880cb499a`.
 - لا توجد promises تشغيلية حاليًا، لذلك لم يُنشأ وعد وهمي لاختبار الإنتاج.
+
+
+## Security follow-up للـ Promise trigger
+- بعد إنشاء helper ظهر تحذيرا direct EXECUTE لـ anon/authenticated.
+- تم revoke EXECUTE من public/anon/authenticated والإبقاء على تشغيله كـ trigger فقط؛ migration `revoke_direct_execute_payment_promise_trigger_helper_20260918`.
+- Security Advisor أعيد تشغيله بعد الإصلاح.
