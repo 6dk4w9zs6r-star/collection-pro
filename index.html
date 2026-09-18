@@ -3326,10 +3326,11 @@ async function mfSyncPayments(showToast=false){
     const s=mfState(),c=await getSecureClient();if(!c)return false;
     // Payment rows are already posted by DB triggers. Never replay them against the
     // locally loaded client balance; refresh authoritative client state instead.
-    let q=c.from("payments").select("*").order("created_at",{ascending:true}).limit(1000);
-    if(s.settings.lastPaymentSync)q=q.gt("created_at",s.settings.lastPaymentSync);
-    const {data,error}=await q;if(error)return false;
-    const rows=mfArray(data);
+    const syncAfter=s.settings.lastPaymentSync||null;
+    const rows=await mfReadOperationalRows(c,"payments","*",q=>{
+      q=q.order("created_at",{ascending:true});
+      return syncAfter?q.gt("created_at",syncAfter):q;
+    });
     let added=0;
     meta.payments=mfArray(meta.payments);
     for(const row of rows){
