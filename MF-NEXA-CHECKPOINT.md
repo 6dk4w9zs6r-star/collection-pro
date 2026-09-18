@@ -489,3 +489,10 @@
 - متابعة الفحص كشفت نسختين legacy إضافيتين من واجهة الحاسبة ما زالتا تحملان مثال `(250 + 40) * 3` رغم أن النسخة النهائية كانت مصححة.
 - تم تنظيف جميع الأمثلة القديمة حتى لا يعاود الرقم 3 الظهور إذا تغيّر ترتيب التعريفات أو جرى استدعاء legacy path. معادلة القرض نفسها بقيت monthly flat-interest والمتغير هو عدد الأشهر.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `842b42e1bb7e170f6c186b948998e6e60c45e3f9`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`; stale fixed-3 placeholders after check=0.
+
+
+## Pagination / operational-load verification — 2026-09-18
+- راجعت loader الفعلي في `mf-loading-20260916.js`: `mfReadOperationalRows` يستخدم keyset pagination على id بصفحات 500 مع session/epoch guard وفحوص ترتيب/تكرار، وليس limit ثابت نهائي.
+- Audit وNotification Center والمسارات التي تستدعي loader ترث القراءة الكاملة ضمن RLS؛ لا يوجد cap تشغيلي 200/500/1000 في النسخة الحالية من app.html.
+- فحص DB الحالي: audit=110, notifications=3, followups=2, late_due=3, payments=1, promises=0؛ لذلك لا يوجد ضغط بيانات حالي لاختبار صفحة ثانية دون إنشاء بيانات وهمية، وهو غير مسموح في فحص الإنتاج.
+- لم يلزم تعديل كود في هذه الجولة.
