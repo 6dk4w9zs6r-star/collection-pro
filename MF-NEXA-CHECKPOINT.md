@@ -522,3 +522,9 @@
 - تم تحويل pagination إلى range paging ثابت 500 صف مع id tie-order والتحقق من ترتيب كل صفحة، مع بقاء session epoch/actor guards كما هي.
 - هذا يجعل جميع المستهلكين الحاليين للـhelper (clients/payments/announcements/notifications/audit/operational tables) لا يعتمدون على توافق cursor مع ترتيب filter.
 - commit `2455e73526ae678bd0eddb9a1b42f419cb100106`؛ helper SHA `176c1e8c1d7ed9589f4e9b94cd7d7e0a0e6c5aff`.
+
+
+## Calculator stale override cleanup — 2026-09-18
+- متابعة الفحص كشفت نسختين override لاحقتين من واجهة الحاسبة ما زالتا تحملان مثالًا ثابتًا `* 3` رغم إصلاح النسخة السابقة؛ وبسبب ترتيب JavaScript كان يمكن أن يعود الرقم 3 للواجهة.
+- تم تنظيف كل overrides المتبقية من المثال الثابت، مع إبقاء معادلة الفائدة الشهرية الثابتة وعدد الأشهر المتغير دون تغيير.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `79d63740f66466b35bd750e97f9376c08a2b4bd6`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
