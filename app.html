@@ -3026,7 +3026,14 @@ async function mfApplyPayment(c,amount,date,type,status="successful",note="",rec
     if(num(c.dueAmount)>0)c.dueAmount=after;
     if(num(c.netToPay)>0)c.netToPay=after;
     c.paymentCount=no;c.totalPaid=num(c.totalPaid)+amount;c.lastPaymentDate=date;c.status=no===1?"دفعة 1":"دفعتان من أصل دفعتين";
-    mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate).forEach(p=>{p.status="kept";p.updatedAt=mfNow();p.keptByPayment=id});
+    const linkedPromises=mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate);
+    for(const p of linkedPromises){
+      if(!p.dbId)continue;
+      try{
+        const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status:"kept",payment_date:date,paid_amount:amount,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+        p.status=row.status;p.updatedAt=row.updated_at;p.paymentDate=row.payment_date;p.paidAmount=row.paid_amount;p.keptByPayment=savedPayment?.id||id;
+      }catch(_){}
+    }
   }
   const payment={id,dbId:savedPayment?.id||null,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",branch:c.branchCode||c.branch||"",amount,date,type,status,note,receipt,source,paymentNo:no,balanceBefore:before,balanceAfter:after,balance:after,actor:mfActor(),createdAt:mfNow()};
   meta.payments.push(payment);meta.paidCustomers=meta.paidCustomers||{};
