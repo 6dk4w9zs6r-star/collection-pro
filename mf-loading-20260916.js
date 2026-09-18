@@ -4,12 +4,12 @@ const uid=()=>CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;
 function compare(a,b){if(/^\d+$/.test(String(a))&&/^\d+$/.test(String(b))){const x=BigInt(a),y=BigInt(b);return x<y?-1:x>y?1:0;}return String(a)<String(b)?-1:String(a)>String(b)?1:0;}
 window.mfReadOperationalRows=async function(db,table,columns='*',filter=q=>q){
   const actor=uid(),epoch=window.mfSessionEpoch?.();if(!db||!actor)throw Error('يلزم تسجيل الدخول والاتصال لتحميل السجلات');
-  const result=[];let cursor=null;
-  for(;;){let query=filter(db.from(table).select(columns)).order('id',{ascending:true}).limit(500);if(cursor!==null)query=query.gt('id',cursor);
+  const result=[];let from=0;const pageSize=500;
+  for(;;){const query=filter(db.from(table).select(columns)).order('id',{ascending:true}).range(from,from+pageSize-1);
     const {data,error}=await query;if(actor!==uid()||epoch!==window.mfSessionEpoch?.())throw Error('تغير الحساب أثناء التحميل؛ أُهملت النتائج السابقة');if(error)throw error;if(!Array.isArray(data))throw Error('لم يؤكد الخادم سجلات '+table);
-    if(data.length>500)throw Error('عدد سجلات الصفحة غير متوقع');
-    for(const row of data){if(row?.id===undefined||row.id===null||(typeof row.id==='number'&&!Number.isSafeInteger(row.id))||(cursor!==null&&compare(row.id,cursor)<=0))throw Error('ترتيب سجلات '+table+' غير صالح؛ أُوقف التحميل لتجنب التكرار');cursor=row.id;result.push(row);}
-    if(data.length<500)return result;
+    if(data.length>pageSize)throw Error('عدد سجلات الصفحة غير متوقع');
+    for(let i=0;i<data.length;i++){const row=data[i],prev=i?data[i-1]:null;if(row?.id===undefined||row.id===null||(typeof row.id==='number'&&!Number.isSafeInteger(row.id))||(prev&&compare(row.id,prev.id)<=0))throw Error('ترتيب سجلات '+table+' غير صالح؛ أُوقف التحميل لتجنب التكرار');result.push(row);}
+    if(data.length<pageSize)return result;from+=pageSize;
   }
 };
 window.mfOpenAudit=async function(){
