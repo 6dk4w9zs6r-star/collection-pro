@@ -4631,5 +4631,22 @@ window.mfSaveDeferral=async function(){
 <script src="./mf-messaging-20260916.js"></script>
 <script src="./mf-loading-20260916.js"></script>
 <script src="./mf-session-20260916.js"></script>
+<script id="mfNexaConsentAndSmartNameGate_20260918">
+(function(){
+'use strict';
+const consentAccepted=()=>{const id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;return !!(id&&mfState().consents?.[id]);};
+const openSmart=window.mfOpenAi;
+window.mfOpenAi=function(){
+  if(!consentAccepted()){mfRequireConsent();return mfToast('يجب الموافقة على سياسة الاستخدام أولًا','bad')}
+  if(CURRENT_PROFILE?.smart_assistant_enabled!==true){mfForm('الاسم الذكي','<div class="mfPanel"><div class="mfPanelTitle">لم يُفعل بعد</div><div>تفعيل الاسم الذكي يحتاج إلى صلاحية إدارية معتمدة.</div></div><button class="mfSubmit" onclick="mfFormClose()">لا، فعّله لاحقًا</button>');return}
+  openSmart?.();
+  const modal=document.getElementById('mfAiModal'),body=document.getElementById('mfAiBody');
+  if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='الاسم الذكي'}
+  if(body){const p=body.querySelector('.mfPanelTitle');if(p)p.innerHTML='الاسم الذكي <small>أسئلة عامة + بحث وتحليل بيانات النظام حسب صلاحيتك</small>'}
+};
+function labels(){document.querySelectorAll('.mfPrimaryTile.ai .mfTileTitle').forEach(el=>el.textContent='الاسم الذكي')}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',labels,{once:true});else labels();
+})();
+</script>
 </body>
 </html>
