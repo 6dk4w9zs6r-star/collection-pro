@@ -253,3 +253,11 @@
 - Performance Advisor: لم تعد auth-RLS initplan findings السابقة موجودة. المتبقي 70 `unused_index` INFO و8 `multiple_permissive_policies` WARN.
 - لم يتم حذف indexes لأن قاعدة البيانات الحالية صغيرة جدًا ولا يوجد حجم إنتاج رسمي يبرر حذفها؛ هذا يحافظ على السلامة ولا يحول lint usage statistics المبكرة إلى قرار destructive.
 - multiple-permissive policies سُجلت للمراجعة المنضبطة لاحقًا؛ لا تغيير صلاحيات جماعي قبل اختبارات multi-role الفعلية حتى لا نكسر الوصول المعتمد.
+
+
+## Audit Log server durability — 2026-09-18
+- Customer Timeline remains intact.
+- Operational commits now also write an audit record to the server audit table with action, actor, client reference, details, and timestamp.
+- Existing database audit triggers remain unchanged.
+- app commit: `6810799ac3d0e0d52cda31205165d0868e5be784`.
+- index synced commit: `89ca7b7c00081c14cb1c2540008fd0704bda5bda`; content SHA `6ff5fc9de01467204773b4c83c412389adcc6383`.
