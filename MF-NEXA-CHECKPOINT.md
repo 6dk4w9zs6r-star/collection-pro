@@ -185,3 +185,12 @@
 - الواجهة أصبحت تعتمد فقط `CURRENT_PROFILE.smart_assistant_enabled===true` بدل flags افتراضية غير موجودة.
 - app commit: `d2deea7dd0366030e4b9669108b71cd510d02e30`.
 - index synced commit: `b954f2b88ae95a1af4e68770a683bcaf237475ec`.
+
+
+## Performance / Ranking successful-payment integrity — 2026-09-18
+- فحص المصدر أثبت أن إجمالي التحصيل نفسه كان يستخدم `mfCollectionTotal` الذي يستبعد غير Successful، لكن قائمة payments الداخلة لمؤشر الموظف لم تكن مصفاة مسبقًا، كما أن تقرير Payments كان يعرض كل الحالات.
+- تم جعل `mfEmployeeMetrics` يمرر فقط `mfCollectedPayments`، وبالتالي Pending/Failed/Cancelled وdeferral_fee لا تدخل التحصيل أو الأداء.
+- تقرير Payments التشغيلي أصبح يعرض الدفعات Successful فقط وفق تعريف التحصيل المعتمد؛ history الخام يبقى محفوظًا ولا يُحذف.
+- Late داخل employee metrics أصبح يستخدم canonical `mfIsLate30to60` بدل flag قديم.
+- app commit: `2bc6ca7f0f8f3baf80339e5037fb8b14eb06be32`.
+- index synced commit: `f657f24282f53ffcff91aedc9afd21988c87c1f0`; content SHA متطابق `10013169d2d086f5a4f0c8856e6015568ec05ab3`.
