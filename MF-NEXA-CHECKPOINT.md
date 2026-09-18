@@ -568,3 +568,9 @@
 - فحص جميع التعريفات المتكررة لـ mfOpenCalculator كشف نسختين أقدم بقي فيهما مثال ثابت `* 3` رغم إصلاح النسخة النهائية سابقًا.
 - أزيل المثال الثابت من جميع التعريفات المتبقية واستبدل بتعبير «× عدد الدفعات». المعادلة نفسها بقيت flat monthly interest: principal × monthly rate × months.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `4a1139c0ef3d7d424025a7829f27a07c75f112f5`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
+
+
+## Phase 5 operational reports completion — 2026-09-18
+- أكملت فجوات التقارير التشغيلية بإضافة تقارير scoped للصلاحيات: Write-Off requests، Legal follow-up، Field Visits، مع بقاء Pending Payments والتقارير السابقة.
+- جميعها تستخدم state المحمّل من Supabase وتطبق mfInScope عند وجود عميل مطابق؛ لا تغيير على البيانات التشغيلية.
+- app commit `6b6bf14091d1f21e67bf7e726643bf27c5a7f7d9`; index sync `96001dbbc0308c9f0a361f8802376cd8bc5050e8`; content SHA `390443adfc444419a75fb86d661961a0b5bcc078`.
