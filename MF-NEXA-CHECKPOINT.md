@@ -477,3 +477,9 @@
 - فحص record_promise_atomic أكد أنه DB-first ويحدّث client + inserts promise في transaction واحدة، لكنه لم يكن يمنع طلبين متزامنين من إنشاء Pending مكرر لنفس client/date.
 - أضيف partial unique index `promises_to_pay_one_pending_client_date_idx` على (client_id,promise_date) فقط عندما status='pending'. هذا يغلق race condition على مستوى قاعدة البيانات مع السماح بسجل تاريخي Kept/Broken لنفس التاريخ.
 - لا توجد بيانات promises حالية، لذلك migration لم تحتج حذف/دمج أي سجل.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- متابعة الفحص وجدت نسختين legacy إضافيتين من واجهة الحاسبة ما زالتا تحملان مثالًا ثابتًا `* 3` رغم أن التعريف النهائي كان قد صُحح سابقًا.
+- أزيل المثال الثابت من جميع التعريفات المتبقية واستبدل بوصف «× عدد الدفعات»؛ معادلة الفائدة نفسها لم تتغير وتبقى principal × monthlyRate × months.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `bfdf606f6a360452d45a4599f7ac7e338f92937e`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
