@@ -4635,6 +4635,9 @@ window.mfSaveDeferral=async function(){
 (function(){
 'use strict';
 const consentAccepted=()=>{const id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;return !!(id&&mfState().consents?.[id]);};
+window.mfEnsureConsent=async function(){await mfRequireConsent();return consentAccepted();};
+const openBeforeConsent=window.mfOpen;
+window.mfOpen=function(id){if(id!=="mfConsentModal"&&!consentAccepted()){mfRequireConsent();mfToast('يجب الموافقة على سياسة الاستخدام أولًا','bad');return}return openBeforeConsent?.(id)};
 const closeBeforeConsent=window.mfClose;
 window.mfClose=function(id){if(id==="mfConsentModal"&&!consentAccepted())return;return closeBeforeConsent?.(id)};
 const formBeforeConsent=window.mfForm;
