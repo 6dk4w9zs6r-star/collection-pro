@@ -3507,7 +3507,7 @@ function mfPatchHomeFinal(){
   const home=$('mfStage5Home');if(!home)return;
   const brand=home.querySelector('.mfBrandPanel');if(brand)brand.style.display='none';
   const pulse=home.querySelector('.mfHomePulse');if(pulse)pulse.style.display='none';
-  home.querySelectorAll('.mfTileTitle').forEach(x=>{if((x.textContent||'').includes('ChatGPT'))x.textContent='البحث الذكي'});
+  home.querySelectorAll('.mfTileTitle').forEach(x=>{if((x.textContent||'').includes('ChatGPT'))x.textContent='الاسم الذكي'});
   home.querySelectorAll('.mfTileSub').forEach(x=>{if((x.textContent||'').includes('تلخيص العملاء'))x.textContent='بحث وتحليل ذكي ضمن صلاحياتك، مع دعم الأسئلة العامة'});
 }
 
@@ -4465,7 +4465,7 @@ window.mfAskAi=async function(){
   if(!operational(prompt)){
     out.textContent='جاري معالجة السؤال العام…';
     const ok=await generalBackend(prompt,out);
-    if(!ok)out.textContent='البحث الذكي العام غير متصل بخدمة AI الآمنة حاليًا. لن أعرض بيانات عملاء لسؤال عام. بعد تفعيل خدمة AI سيُجاب عن هذا النوع من الأسئلة مباشرة هنا.';
+    if(!ok)out.textContent='الاسم الذكي العام غير متصل بخدمة AI الآمنة حاليًا. لن أعرض بيانات عملاء لسؤال عام. بعد تفعيل خدمة AI سيُجاب عن هذا النوع من الأسئلة مباشرة هنا.';
     try{mfAudit?.('ai_general_question',null,prompt.slice(0,250))}catch(_){}return;
   }
   try{
@@ -4490,8 +4490,8 @@ const openAiBeforeAudit=window.mfOpenAi;
 window.mfOpenAi=function(){
   openAiBeforeAudit?.();
   const modal=document.getElementById('mfAiModal'),body=document.getElementById('mfAiBody');
-  if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='البحث الذكي'}
-  if(body){const panel=body.querySelector('.mfPanelTitle');if(panel)panel.innerHTML='البحث الذكي <small>أسئلة عامة + بحث وتحليل بيانات النظام حسب صلاحيتك</small>';const input=document.getElementById('mfAiPrompt');if(input)input.placeholder='اسأل سؤالًا عامًا أو ابحث عن عميل/تحليل تشغيلي';const out=document.getElementById('mfAiOutput');if(out)out.textContent='اسأل كما تسأل ChatGPT. الأسئلة العامة لا تُحوّل إلى نتائج عملاء، وطلبات العملاء/المحفظة تُحلل ضمن صلاحيتك.'}
+  if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='الاسم الذكي'}
+  if(body){const panel=body.querySelector('.mfPanelTitle');if(panel)panel.innerHTML='الاسم الذكي <small>أسئلة عامة + بحث وتحليل بيانات النظام حسب صلاحيتك</small>';const input=document.getElementById('mfAiPrompt');if(input)input.placeholder='اسأل سؤالًا عامًا أو ابحث عن عميل/تحليل تشغيلي';const out=document.getElementById('mfAiOutput');if(out)out.textContent='اسأل كما تسأل ChatGPT. الأسئلة العامة لا تُحوّل إلى نتائج عملاء، وطلبات العملاء/المحفظة تُحلل ضمن صلاحيتك.'}
 };
 function labels(){document.querySelectorAll('.mfTileTitle').forEach(el=>{if(/allocation/i.test(el.textContent||''))el.textContent='Allocation'});const modal=document.getElementById('mfAllocationModal');if(modal){const h=modal.querySelector('.mfModalTitle');if(h)h.textContent='Allocation'}document.querySelectorAll('.mainMenuDrawer .menuItem').forEach(el=>{if((el.getAttribute('onclick')||'').includes('mfOpenAllocation'))el.innerHTML='▦ Allocation — Late &amp; Due'})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',labels,{once:true});else labels();
@@ -4531,7 +4531,7 @@ function enforceApprovedLabels(){
   document.querySelectorAll('.mfTileTitle').forEach(el=>{
     const t=(el.textContent||'').trim();
     if(/allocation/i.test(t))el.textContent='Allocation';
-    if(t==='ChatGPT / AI Assistant')el.textContent='البحث الذكي';
+    if(t==='ChatGPT / AI Assistant')el.textContent='الاسم الذكي';
   });
   document.querySelectorAll('.mainMenuDrawer .menuItem').forEach(el=>{
     if((el.getAttribute('onclick')||'').includes('mfOpenAllocation'))el.innerHTML='▦ Allocation — Late &amp; Due';
