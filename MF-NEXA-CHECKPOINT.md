@@ -238,3 +238,11 @@
 - بعد نجاح الاعتماد يعاد جلب العميل من قاعدة البيانات لتحديث balances/paid/last payment في الواجهة من المصدر الحقيقي.
 - app commit: `29c758ded1935f87428c0cf8e989d8b9bfbfe1bb`.
 - index synced commit: `cc4c9b73055d26e31bc89a7cf54edb777c4e201d`; content SHA متطابق `89505f004bf0fdc6206015b1e71bb94d6a412da3`.
+
+
+## Consent restore across devices/sessions — 2026-09-18
+- تم إكمال مسار first-use consent بحيث لا يعتمد قرار إظهار نافذة الموافقة على localStorage فقط.
+- `mfRequireConsent` أصبح يقرأ أحدث موافقة `phase5-20260918` للمستخدم الحالي من `usage_consents` عبر RLS؛ عند وجودها يعيد بناء الحالة المحلية ولا يطلب موافقة مكررة على جهاز/جلسة جديدة.
+- عند عدم وجود موافقة موثقة تبقى النافذة إلزامية، والحفظ نفسه DB-first كما في checkpoint السابق.
+- app commit: `a3dddefeddb63a14368b9c99b0864ed79f8602d6`.
+- index synced commit: `d5c4b8a64a5dc16a3c61b54278a05f121a428c82`; content SHA متطابق `5d3cb06999ec80bc2a3d58e324236e8d6027dad0`.
