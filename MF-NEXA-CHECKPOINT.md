@@ -393,3 +393,11 @@
 - وُسع البحث العام/الذكي الذي كان يقتصر على العميل/الكفيل/المراجع/الموظف ليشمل حقول العمل والشركة والمدير وحالة العمل والعمل الجديد والفرع أيضًا.
 - البحث المنزلي `mfSearchHay` كان أصلًا يشمل هذه الحقول، والبحث الصوتي ما زال مضبوطًا على `ar-JO`.
 - app commit: `38d649f4170f3ba096e36c60ff5d3a2b6a9050f2`؛ index sync: `d1b6c6f57733df754692b54575cabbbac09ef521`; content SHA `91b3a6bd1e6510fbd31c0f8a4a622ff978e6f597`.
+
+
+## Backend hydration audit + legal metadata — 2026-09-18
+- راجعت السلسلة الفعلية لـ `mfLoadBackendState`: التحميل الأساسي يعيد promises, legal_cases, write_offs, deferrals, disbursements, escalated_cases, locations, field_visits, messages, chat_messages, announcements, follow_ups؛ والـ wrappers اللاحقة تعيد payments/attachments وبيانات المركبات.
+- ظهر نقص محدد في Legal hydration: الحفظ يكتب `transferred_to_lawyer_at`, `attachment_url`, actor/update metadata، لكن reload كان يسقطها من state.
+- تم توسيع Legal mapping ليحفظ transferredToLawyerAt، attachment storage path، actorId، updatedById، updatedAt؛ وبذلك لا تختفي metadata القانونية بعد logout/login/reload.
+- فحص read-only الحالي: legal=0, messages=0, field_visits=0, escalations=0, writeoffs=0, deferrals=0, disbursements=0, locations=4. لم تُنشأ بيانات تشغيلية وهمية.
+- app commit `e2d5ef5cfaae75e41666d294df3020d3f3528587`; index sync `1350dcaa31d0762304deb9f6048e4e0641b96069`; content SHA `bfda595857124cac67f3a421bae1924436a138b3`.
