@@ -261,3 +261,12 @@
 - Existing database audit triggers remain unchanged.
 - app commit: `6810799ac3d0e0d52cda31205165d0868e5be784`.
 - index synced commit: `89ca7b7c00081c14cb1c2540008fd0704bda5bda`; content SHA `6ff5fc9de01467204773b4c83c412389adcc6383`.
+
+
+## Supervisor Dashboard operational metrics — 2026-09-18
+- Employee metrics now expose Today, Follow-ups completed/total, Pending follow-ups, Kept promises, Broken promises, successful collections, Late 30–60 and Due from the same scoped records.
+- Supervisor ranking cards now show the approved operational outcome counts instead of only portfolio/collection/completed follow-ups.
+- Employee detail dashboard adds Today, Follow-ups, Kept/Broken and Pending KPI cards while preserving employee photo/profile and existing Performance/Portfolio/Late/Due/Collected.
+- Payment component remains successful-only and excludes deferral fees per prior integrity fix.
+- app commit: `a56d7b88c99d98bdaa027dcab94203722d70bebd`.
+- index synced commit: `a21543154173ba1a6601402651fe841f9344b260`; content SHA `eaca30c5348889ca0e4ae23b952a2de1d2be764d`.
