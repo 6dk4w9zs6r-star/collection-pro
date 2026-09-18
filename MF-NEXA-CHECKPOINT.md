@@ -270,3 +270,12 @@
 - Payment component remains successful-only and excludes deferral fees per prior integrity fix.
 - app commit: `a56d7b88c99d98bdaa027dcab94203722d70bebd`.
 - index synced commit: `a21543154173ba1a6601402651fe841f9344b260`; content SHA `eaca30c5348889ca0e4ae23b952a2de1d2be764d`.
+
+
+## Employee profile/photo durability — 2026-09-18
+- Employee profile editing was local-first and ignored backend update failure.
+- It is now DB-first and updates the correct backend table: profiles for profile-backed identities, employees for employee-backed identities.
+- Local employeeProfiles/dashboard state changes only after the backend confirms the row.
+- Employee-table title mapping uses official_title; profile-table mapping keeps job_title. Stored attachment path is retained for persisted avatars.
+- app commit: `78e07b40f06b06897f8aa733e428d3cfa076b816`.
+- index synced commit: `359c9dba195ad168e80fe2c8d5b386711be3a58a`; content SHA `af84d4cd8f712f3e27e9cee915486218d193f5f4`.
