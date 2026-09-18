@@ -541,3 +541,12 @@
 - فحص جميع التعريفات المتراكمة للحاسبة كشف نسختين legacy ما زال مثال placeholder فيهما يحتوي `* 3` رغم أن التعريف النهائي سبق تصحيحه.
 - تم إزالة الرقم 3 من جميع أمثلة الحاسبة المتبقية واستبداله بعبارة `× عدد الدفعات`، بدون تغيير المعادلة المعتمدة `interest = principal × monthlyRate × months`.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `34e5f3dd456ff596cf109eb0322ef890ed1ab7bb`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`; stale fixed-3 placeholders after sync=0.
+
+
+## Phase-5 integrity gate rerun — 2026-09-18
+- RLS enabled on all public tables checked: no public table with RLS disabled.
+- No authenticated EXECUTE privilege remains on SECURITY DEFINER functions in public.
+- escalation DELETE rollback policy count=1.
+- duplicate Pending promises by client/date=0.
+- successful payments without posted_at=0; successful financial balance mismatches=0.
+- This is a read-only integrity gate; no fake operational rows were inserted.
