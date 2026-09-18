@@ -3915,9 +3915,20 @@ window.mfSaveStandaloneActivity=async function(kind){
 
 // Escalations: LO -> ALS / BM / both, ALS -> BM. Ownership remains unchanged.
 window.mfSaveEscalationFinal=async function(){
-  const i=Number($('mfEscIndex')?.value),c=clients?.[i],reason=$('mfEscReason')?.value.trim(),choice=$('mfEscTargetRole')?.value||'als';if(!c||!reason)return mfToast('سبب التصعيد مطلوب','bad');const a=mfActor(),targets=choice==='both'?['als','bm']:[choice],groupId=crypto.randomUUID?crypto.randomUUID():mfId(),lastAction=$('mfEscLastAction')?.value.trim()||'';
-  try{for(const targetRole of targets){const level=a.role==='als'?'supervisor_to_branch_manager':targetRole==='bm'?'lo_to_branch_manager':'lo_to_supervisor';const row=await mustInsert('escalated_cases',{client_id:c.id,from_employee_id:null,to_employee_id:null,linked_group_id:/^[0-9a-f-]{36}$/i.test(groupId)?groupId:null,to_role:targetRole,escalation_level:choice==='both'?'lo_to_supervisor_and_branch_manager':level,reason,instructions:lastAction||null,last_action:lastAction||null,status:'open',escalated_by:currentUid()});state().escalations.push({id:String(row?.id||mfId()),dbId:row?.id,linkedGroupId:groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toName:targetRole==='als'?(c.supervisorName||CURRENT_PROFILE?.supervisor_email||'ALS'):'Branch Manager / BM',reason,lastAction,status:'open',result:'',createdAt:a.at,history:[{from:a.role,to:targetRole,at:a.at,by:a.name}]})}mfCommit('case_escalated',c,`${a.role} → ${targets.join('+')}; ${reason}; ownership unchanged: ${c.employee||'LO'}`);mfFormClose();mfUpdateHome();mfToast(choice==='both'?'تم التصعيد إلى ALS وBM دون نقل الملكية':'تم التصعيد دون نقل ملكية العميل')}
-  catch(e){mfToast('تعذر حفظ التصعيد: '+(e?.message||e),'bad')}
+  const i=Number($('mfEscIndex')?.value),c=clients?.[i],reason=$('mfEscReason')?.value.trim(),choice=$('mfEscTargetRole')?.value||'als';if(!c||!reason)return mfToast('سبب التصعيد مطلوب','bad');
+  const a=mfActor(),targets=choice==='both'?['als','bm']:[choice],groupId=crypto.randomUUID?crypto.randomUUID():mfId(),lastAction=$('mfEscLastAction')?.value.trim()||'';
+  try{
+    const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+    const recipients=[];
+    for(const targetRole of targets)recipients.push([targetRole,await mfResolveEscalationRecipient(c,targetRole)]);
+    const active=await mfReadOperationalRows(db,'escalated_cases','id,to_role,status,to_employee_id',q=>q.eq('client_id',c.id).in('status',['open','in_progress','returned']));
+    for(const [targetRole] of recipients)if(active.some(x=>String(x.to_role||x.escalation_level||'').toLowerCase()===targetRole))throw Error('يوجد تصعيد نشط لهذا العميل إلى '+targetRole.toUpperCase());
+    const payloads=recipients.map(([targetRole,recipient])=>({client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:recipient.id,linked_group_id:/^[0-9a-f-]{36}$/i.test(groupId)?groupId:null,to_role:targetRole,escalation_level:choice==='both'?'lo_to_supervisor_and_branch_manager':(a.role==='als'?'supervisor_to_branch_manager':targetRole==='bm'?'lo_to_branch_manager':'lo_to_supervisor'),reason,instructions:lastAction||null,last_action:lastAction||null,status:'open',escalated_by:currentUid()}));
+    const {data,error}=await db.from('escalated_cases').insert(payloads).select();if(error)throw error;
+    if(!Array.isArray(data)||data.length!==payloads.length)throw Error('لم تؤكد قاعدة البيانات جميع سجلات التصعيد');
+    const staged=data.map((row,n)=>{const [targetRole,recipient]=recipients[n];return {id:String(row.id),dbId:row.id,linkedGroupId:row.linked_group_id||groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toEmployeeId:recipient.id,toName:recipient.full_name||targetRole,reason,lastAction,status:row.status||'open',result:row.result||'',createdAt:row.created_at||a.at,history:[{from:a.role,to:targetRole,at:row.created_at||a.at,by:a.name}]};});
+    state().escalations.push(...staged);mfCommit('case_escalated',c,`${a.role} → ${targets.join('+')}; ${reason}; ownership unchanged: ${c.employee||'LO'}`);mfFormClose();mfUpdateHome();mfToast(choice==='both'?'تم التصعيد إلى ALS وBM دون نقل الملكية':'تم التصعيد دون نقل ملكية العميل');
+  }catch(e){mfToast('تعذر حفظ التصعيد: '+(e?.message||e),'bad')}
 };
 
 // Personal notification preferences are stored per user in Supabase.
