@@ -220,3 +220,12 @@
 - هذا يغطي consent الخاص بحفظ الرسائل/المحادثات/المكالمات الصوتية والمرئية والمرفقات بدل الاعتماد على localStorage وحده.
 - app commit: `af9071ab9dea8f6f1a3f55d52a77449901d1c441`.
 - index synced commit: `4d3b95f5071702cbbcd4b9f0cef090be77ac56b8`; content SHA متطابق `8962f78e5f4d25c1019e9bdc021911ad8c6ea306`.
+
+
+## Pending payment approval — no duplicate posting — 2026-09-18
+- اكتُشف أن المسار القديم `mfUpdatePaymentStatus` كان يغيّر Pending محليًا ثم يستدعي `mfApplyPayment` لإنشاء INSERT جديد Successful، بينما سجل Pending الأصلي يبقى في قاعدة البيانات؛ هذا خطر تكرار/فقد اتساق.
+- تم تحويل الاعتماد إلى UPDATE DB-first لنفس `payments.id` من `pending` إلى `successful` مع شرط الحالة الحالية، مستفيدًا من trigger الترحيل المالي الموجود.
+- بعد التأكيد يعاد جلب العميل من Supabase لمزامنة outstanding/overdue/due/paid/last payment محليًا؛ لا يتم إنشاء دفعة ثانية ولا استخدام حالات محلية غير مدعومة مثل superseded.
+- سجل بلا `dbId` يفشل مغلقًا ويطلب إعادة تحميل البيانات بدل ترحيل وهمي.
+- app commit: `29c758ded1935f87428c0cf8e989d8b9bfbfe1bb`.
+- index synced commit: `e4ee1936f463f17602c08629a16a75c3e00f275a`; content SHA متطابق `89505f004bf0fdc6206015b1e71bb94d6a412da3`.
