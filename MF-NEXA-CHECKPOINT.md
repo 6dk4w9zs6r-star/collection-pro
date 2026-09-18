@@ -131,3 +131,13 @@
 - Schema الفعلي يدعم status/payment_date/paid_amount/updated_by/updated_at.
 - التطبيق commit: `3840bc6cc7a767c1b4033914ba19b075fc7011e9`.
 - بقي ربط Kept تلقائيًا بالدفعة الناجحة بحاجة إغلاق مستقل؛ مسار الدفع الحالي يحدّث الوعد محليًا فقط ولا يكفي كدليل دوام.
+
+
+## ربط Promise بالدفعة الناجحة — 2026-09-18
+- أضيف trigger DB فعلي `trg_link_successful_payment_to_promises` على payments INSERT/UPDATE بعد الترحيل.
+- الدفعة Successful المؤكدة والمربوطة بعميل تحوّل الوعد Pending المؤهل إلى Kept في Supabase، وتحفظ payment_date وpaid_amount وupdated_by.
+- trigger يعتمد `posted_at`، لذلك لا يعتبر Pending أو دفعة غير مُرحّلة وفاءً للوعد.
+- الواجهة لم تعد تقلب الوعد محليًا فقط؛ تحاول مزامنة سجل promise المؤكد DB-first وتحفظ معرف الدفعة المؤكدة.
+- migration: `link_successful_payments_to_promises_20260918`.
+- التطبيق commit: `84009bacb86141813cf4b8088c7d451880cb499a`.
+- لا توجد promises تشغيلية حاليًا، لذلك لم يُنشأ وعد وهمي لاختبار الإنتاج.
