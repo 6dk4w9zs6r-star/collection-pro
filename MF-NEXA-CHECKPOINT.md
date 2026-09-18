@@ -112,3 +112,13 @@
 - promises/escalations لا تحتوي سجلات حاليًا، لذلك لا يجوز تحويل غياب البيانات إلى ادعاء E2E.
 - كود الواجهة النشط يستخدم `mfIsLate30to60` بشرط 30<=days<=60 ومبلغ متأخر>0، وتقارير التحصيل تجمع status=successful وتستبعد deferral_fee.
 - لا تعديل بيانات في هذه الوحدة.
+
+
+## إصلاح حفظ Escalation — 2026-09-18
+- كشف فحص المصدر أن مسار التصعيد النهائي كان يضيف الحالة إلى local state فقط رغم وجود جدول `escalated_cases` وRLS فعليين في Supabase؛ هذا كان خطر فقدان التصعيد بعد reload.
+- تم تحويل `mfSaveEscalationFinal` إلى DB-first: يحفظ كل target في `escalated_cases`، ينتظر `insert().select().single()` المؤكد، ثم فقط يضيف السجل المؤكد إلى local state.
+- ملكية العميل لم تُعدّل إطلاقًا؛ payload لا يغير `clients.assigned_user_id`.
+- عند فشل DB لا يُنشأ local escalation وهمي.
+- التطبيق commit: `78c1156be60e00c2b3eabfa18f990b31f107867a`.
+- التحقق الساكن بعد commit يؤكد أن local push يأتي بعد DB confirmation.
+- بقي E2E الحقيقي للتصعيد مفتوحًا لأن قاعدة الإنتاج الحالية لا تحتوي حساب ALS مستقل معتمد.
