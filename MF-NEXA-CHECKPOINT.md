@@ -435,3 +435,9 @@
 - إعادة فحص كل التعريفات المتكررة لـ mfOpenCalculator كشفت بقاء مثالين قديمين داخل overrides لاحقة يعرضان `* 3` رغم أن المعادلة نفسها صحيحة ومتغيرة الأشهر.
 - تم تنظيف كل الأمثلة القديمة النشطة/المحتملة واستبدالها بصياغة «× عدد الدفعات»؛ لا يوجد الآن placeholder ثابت 3 في app/index.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `3b64d4c6b6dc38bdf157160697303767f6276242`; content SHA `aeebe98381cf94dd7fbaf6f73278287a22b040ae`.
+
+
+## Due report consistency hardening — 2026-09-18
+- فحص تقارير المرحلة الخامسة وجد أن Due report يعتمد flag `c.inDue` بينما قاعدة Due المالية الفعلية في بقية المسار تعتمد `dueAmount > 0`; flag قد يصبح stale بين refreshes/عمليات الترحيل.
+- تم جعل تقرير Due balance-driven مباشرة من dueAmount>0، مع بقاء نطاق الصلاحيات كما هو. هذا يمنع إسقاط عميل مستحق من التقرير بسبب flag محلي قديم.
+- app commit `84930234895836a2ba1b9d7313e60c98d596d44c`; index sync `04561bc0e56b155c1d465fc14c0ff48acbee0a27`; content SHA `1acd0242866ad277c6614e3c4e6dfc622132275d`.
