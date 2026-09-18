@@ -246,3 +246,10 @@
 - عند عدم وجود موافقة موثقة تبقى النافذة إلزامية، والحفظ نفسه DB-first كما في checkpoint السابق.
 - app commit: `a3dddefeddb63a14368b9c99b0864ed79f8602d6`.
 - index synced commit: `d5c4b8a64a5dc16a3c61b54278a05f121a428c82`; content SHA متطابق `5d3cb06999ec80bc2a3d58e324236e8d6027dad0`.
+
+
+## Supabase advisor recheck after Phase 5 hardening — 2026-09-18
+- Security Advisor أعيد تشغيله بعد migrations الأخيرة: لا توجد تحذيرات RLS/function-search-path/definer جديدة. التحذير الأمني الوحيد المتبقي هو `auth_leaked_password_protection` (إعداد Supabase Auth خارجي عن تغييرات SQL الحالية).
+- Performance Advisor: لم تعد auth-RLS initplan findings السابقة موجودة. المتبقي 70 `unused_index` INFO و8 `multiple_permissive_policies` WARN.
+- لم يتم حذف indexes لأن قاعدة البيانات الحالية صغيرة جدًا ولا يوجد حجم إنتاج رسمي يبرر حذفها؛ هذا يحافظ على السلامة ولا يحول lint usage statistics المبكرة إلى قرار destructive.
+- multiple-permissive policies سُجلت للمراجعة المنضبطة لاحقًا؛ لا تغيير صلاحيات جماعي قبل اختبارات multi-role الفعلية حتى لا نكسر الوصول المعتمد.
