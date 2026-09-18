@@ -409,3 +409,10 @@
 - لم تُحذف أي سجلات تاريخية من Supabase.
 - فحص payment read-only الحالي: payments=1, successful=1, pending=0, successful_unposted=0, successful balance mismatch=0.
 - app commit `3d1f34b8d45bac847906a7e6d9ca14b76c05017a`; index sync `bc2e9095f65fbee4d42be8ed1c8fc1e605d570c8`; content SHA `8ef8cc6208b0be9bb3fa5cb8dda2732f8d15a0fc`.
+
+
+## Payment → Late/Due consistency — 2026-09-18
+- راجعت مسار successful المباشر ومسار Pending→Successful مقابل قاعدة Late المعتمدة الموجودة في الكود: الخروج من Late بعد payment_no >= 2، بينما Due يخرج عند تصفير الرصيد المستحق.
+- وجد اختلاف في مسار اعتماد Pending: كان يعيد حساب inLate من days/arrears فقط بعد قراءة client من DB، فيستطيع إعادة العميل Late رغم وصول payment_no إلى 2.
+- تم توحيد هذا المسار مع قاعدة الدفعتين: بعد refresh من DB، إذا payment_no >= 2 يصبح inLate=false؛ Due يبقى مرتبطًا بالرصيد.
+- app commit `30317833e1462242163243faa1b03b9584b1bddc`; index sync `df648ae7241b5211e04e05a54458e3af09d23f96`; content SHA `20f8d83f7292e7a1642b7e4b7e15e5dd5269f884`.
