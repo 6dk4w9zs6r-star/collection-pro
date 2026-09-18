@@ -580,7 +580,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   <span id="themeToggleIcon">☀️</span>
   <span id="themeToggleText">Light</span>
 </button>
-<div class="logo">NEXA-MF</div>
+<div class="logo">Microfinance Department</div>
 <div style="display:inline-block;margin-top:4px;padding:2px 8px;border:1px solid #e5b94f;border-radius:10px;color:#e5b94f;font-size:11px;font-weight:700">V6.42</div>
 <div class="sub">&#1606;&#1592;&#1575;&#1605; &#1573;&#1583;&#1575;&#1585;&#1577; &#1608;&#1605;&#1578;&#1575;&#1576;&#1593;&#1577; &#1575;&#1604;&#1578;&#1581;&#1589;&#1610;&#1604;</div>
 <div class="user">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1605;&#1588;&#1585;&#1601; &#8212; &#1605;&#1588;&#1593;&#1604; &#1593;&#1576;&#1583;&#1575;&#1604;&#1602;&#1575;&#1583;&#1585;</div>
@@ -592,7 +592,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 
 <div id="newHome" class="newHome">
   <section class="bankHero" aria-label="لوحة التحصيل">
-    <div class="bankHeroEyebrow">UNRWA • MICROFINANCE DEPARTMENT • NEXA-MF</div>
+    <div class="bankHeroEyebrow">UNRWA • MICROFINANCE DEPARTMENT</div>
     <div class="bankHeroTitle">لوحة التحصيل الذكية</div>
     <div class="bankHeroSub">نظرة سريعة على المحفظة والمتابعات اليومية، مع وصول مباشر لأهم إجراءات التحصيل.</div>
   </section>
@@ -631,7 +631,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
       <div class="branchesSub">افتح قائمة الفروع</div>
     </button>
   </section>
-  <div class="bankFooterNote">NEXA-MF • MicroFinance Next-Generation Operations &amp; Intelligence</div>
+  <div class="bankFooterNote">UNRWA • Microfinance Department</div>
 </div>
 <div id="legacyOperationalArea" style="display:none">
 
@@ -734,7 +734,7 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 <div id="mainMenuOverlay" class="mainMenuOverlay" onclick="if(event.target===this)closeMainMenu()">
   <div class="mainMenuDrawer">
     <button class="menuClose" onclick="closeMainMenu()">&#10005;</button>
-    <div class="menuLogo">NEXA-MF</div>
+    <div class="menuLogo">Microfinance Department</div>
     <div class="menuSub">&#1602;&#1575;&#1574;&#1605;&#1577; &#1575;&#1604;&#1582;&#1610;&#1575;&#1585;&#1575;&#1578;</div>
 
     <button class="menuItem" onclick="openSectionFromMenu('summarySection')">&#128202; &#1575;&#1604;&#1605;&#1604;&#1582;&#1589; &#1575;&#1604;&#1593;&#1575;&#1605;</button>
@@ -2748,10 +2748,16 @@ function mfPriority(c){
   score=Math.max(0,Math.min(100,score));
   return {score,label:score>=65?"عالية":score>=35?"متوسطة":"منخفضة",cls:score>=65?"high":score>=35?"medium":"low"};
 }
-function mfAutoStates(){
-  const s=mfState(),d=today();let changed=false;
-  s.promises.forEach(p=>{if(p.status==="pending"&&p.promiseDate&&p.promiseDate<d){p.status="broken";p.updatedAt=mfNow();changed=true}});
-  if(changed)save(false);
+async function mfAutoStates(){
+  const s=mfState(),d=today(),expired=s.promises.filter(p=>p.status==="pending"&&p.promiseDate&&p.promiseDate<d);
+  for(const p of expired){
+    const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);
+    if(!c||!mfCan("followup",c)||!p.dbId)continue;
+    try{
+      const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status:"broken",updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+      p.status=row.status;p.updatedAt=row.updated_at||mfNow();mfCommit("promise_status",c,`${p.promiseDate} → broken (expired)`);
+    }catch(_){}
+  }
 }
 async function mfTryInsert(table,payload){
   try{const c=await getSecureClient();if(!c)return null;const r=await c.from(table).insert(payload).select().maybeSingle();if(r.error)return null;return r.data||true}catch(_){return null}
@@ -2766,10 +2772,10 @@ function mfInstallStage5Dom(){
   const oldHome=$("newHome");
   if(oldHome){oldHome.classList.add("mfHiddenLegacy");oldHome.insertAdjacentHTML("beforebegin",`
     <section id="mfStage5Home" class="mfHome" aria-label="الصفحة الرئيسية NEXA-MF">
-      <div class="mfBrandPanel"><div class="mfBrandTop"><div><div class="mfBrandName">NEXA-MF</div><div class="mfBrandDesc">MicroFinance Next-Generation Operations &amp; Intelligence</div></div><span class="mfVersion">V6.42 • PHASE 5</span></div></div>
+      <div class="mfBrandPanel"><div class="mfBrandTop"><div><div class="mfBrandName">Microfinance Department</div><div class="mfBrandDesc">دائرة التمويل الصغير • UNRWA</div></div><span class="mfVersion">V6.42 • PHASE 5</span></div></div>
       <div class="mfSearchWrap"><div class="mfSearchRow"><input id="mfHomeSearch" class="mfSearchInput" placeholder="ابحث باسم العميل أو رقمه أو هاتفه أو الكفيل أو المعرّفين" oninput="mfRunHomeSearch()"><button id="mfVoiceSearchBtn" class="mfIconButton" onclick="mfVoiceSearch('mfHomeSearch',mfRunHomeSearch)" aria-label="بحث صوتي">🎙️</button></div><div class="mfSearchFilters"><select id="mfSearchStatus" onchange="mfRunHomeSearch()"><option value="all">الكل</option><option value="active">Active</option><option value="late">Late</option><option value="due">Due</option></select><select id="mfSearchEmployee" onchange="mfRunHomeSearch()"><option value="">كل الموظفين</option></select><select id="mfSearchBranch" onchange="mfRunHomeSearch()"><option value="">كل الفروع</option></select></div><div id="mfHomeSearchResults" class="mfSearchResults"></div></div>
       <div class="mfHomeTiles"><button class="mfPrimaryTile ai" onclick="mfOpenAi()"><span class="mfTileIcon">✦</span><div class="mfTileTitle">البحث الذكي</div><div class="mfTileSub">تلخيص العملاء، صياغة الرسائل، وتحليل Late وDue ضمن صلاحيتك</div></button><button class="mfPrimaryTile allocation" onclick="mfOpenAllocation()"><span class="mfTileIcon">▦</span><div class="mfTileTitle">Allocation</div><div class="mfTileSub">الفروع، الفرق، الموظفين، ثم Late وDue وملف العميل</div></button></div>
-      <div class="mfHomePulse"><button class="mfPulseCard" onclick="mfOpenToday()"><b id="mfTodayCount">0</b><span>مهامي اليوم</span></button><button class="mfPulseCard" onclick="mfOpenPromises()"><b id="mfPromiseCount">0</b><span>وعود الدفع المعلقة</span></button><button class="mfPulseCard" onclick="mfOpenEscalated()"><b id="mfEscalatedCount">0</b><span>الحالات المصعّدة</span></button></div><div class="mfSlogan"><b>معًا نستطيع النجاح</b></div>
+      <div class="mfHomePulse mfHomePulseInternalOnly" style="display:none" aria-hidden="true"><b id="mfTodayCount">0</b><b id="mfPromiseCount">0</b><b id="mfEscalatedCount">0</b></div><div class="mfSlogan"><b>معًا نستطيع النجاح</b></div>
     </section>`)}
   const headerLogo=document.querySelector("header .logo");
   if(headerLogo&&!$("nexaHeaderIdentity"))headerLogo.insertAdjacentHTML("afterend",`<div id="nexaHeaderIdentity" class="nexaHeaderIdentity"><img class="nexaUnrwaLogo" src="${MF_UNRWA_LOGO}" alt="UNRWA" onerror="this.style.display='none'"><div class="nexaHeaderDept"><b>Microfinance Department</b><span>دائرة التمويل الصغير</span></div></div>`);
@@ -2787,7 +2793,7 @@ function mfInstallStage5Dom(){
     ${mfModalShell("mfAuditModal","Audit Log","mfAuditBody",true)}
     ${mfModalShell("mfOrgModal","الفروع والفرق والموظفين","mfOrgBody",true)}
     ${mfModalShell("mfCommsModal","الإعلانات وTeam Spirit","mfCommsBody",true)}
-    ${mfModalShell("mfAboutModal","عن NEXA-MF","mfAboutBody")}
+    ${mfModalShell("mfAboutModal","عن النظام","mfAboutBody")}
     ${mfModalShell("mfConsentModal","سياسة الاستخدام والموافقة","mfConsentBody")}
     ${mfModalShell("mfCallModal","مكالمة داخلية","mfCallBody",true)}
     <div id="mfPrintArea" class="mfPrintOnly"></div>`);
@@ -3020,7 +3026,14 @@ async function mfApplyPayment(c,amount,date,type,status="successful",note="",rec
     if(num(c.dueAmount)>0)c.dueAmount=after;
     if(num(c.netToPay)>0)c.netToPay=after;
     c.paymentCount=no;c.totalPaid=num(c.totalPaid)+amount;c.lastPaymentDate=date;c.status=no===1?"دفعة 1":"دفعتان من أصل دفعتين";
-    mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate).forEach(p=>{p.status="kept";p.updatedAt=mfNow();p.keptByPayment=id});
+    const linkedPromises=mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate);
+    for(const p of linkedPromises){
+      if(!p.dbId)continue;
+      try{
+        const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status:"kept",payment_date:date,paid_amount:amount,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+        p.status=row.status;p.updatedAt=row.updated_at;p.paymentDate=row.payment_date;p.paidAmount=row.paid_amount;p.keptByPayment=savedPayment?.id||id;
+      }catch(_){}
+    }
   }
   const payment={id,dbId:savedPayment?.id||null,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",branch:c.branchCode||c.branch||"",amount,date,type,status,note,receipt,source,paymentNo:no,balanceBefore:before,balanceAfter:after,balance:after,actor:mfActor(),createdAt:mfNow()};
   meta.payments.push(payment);meta.paidCustomers=meta.paidCustomers||{};
@@ -3078,7 +3091,15 @@ async function mfRescheduleFollowup(id){
 
 function mfOpenPromiseForm(i){const c=clients?.[i];if(!c)return;mfForm("Promise to Pay",`<input id="mfPromiseIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>Promise Date</label><input id="mfPromiseDate" type="date" value="${c.promiseDate||today()}"></div><div class="mfField"><label>المبلغ</label><input id="mfPromiseAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfPromiseNote"></textarea></div></div><button class="mfSubmit" onclick="mfSavePromise()">حفظ الوعد Pending</button>`)}
 async function mfSavePromise(){const i=Number($("mfPromiseIndex")?.value),c=clients?.[i],date=$("mfPromiseDate")?.value,amount=num($("mfPromiseAmount")?.value),note=$("mfPromiseNote")?.value.trim();if(!c||!date||amount<=0)return mfToast("أدخل تاريخًا ومبلغًا صحيحين","bad");const a=mfActor(),entry={id:mfId(),clientId:mfClientKey(c),clientNo:c.clientNo,promiseDate:date,amount,note,status:"pending",employeeId:a.id,employeeName:a.name,actorRole:a.role,createdAt:a.at};mfState().promises.push(entry);c.promiseDate=date;c.status="وعد بالدفع";mfCommit("promise_created",c,`${date} • ${amount}`);await mfTryUpdate("clients",{promise_date:date,follow_up_status:"وعد بالدفع"},"id",c.id);mfFormClose();mfToast("تم حفظ وعد الدفع")}
-function mfUpdatePromise(id,status){const p=mfState().promises.find(x=>x.id===id);if(!p)return;p.status=status;p.updatedAt=mfNow();const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);mfCommit("promise_status",c,`${p.promiseDate} → ${status}`);mfRenderClient();mfToast("تم تحديث حالة الوعد")}
+async function mfUpdatePromise(id,status){
+  const p=mfState().promises.find(x=>x.id===id);if(!p)return;
+  const c=(clients||[]).find(x=>mfClientKey(x)===p.clientId);if(!c||!mfCan("followup",c))return mfToast("غير مصرح لك بهذا الوعد","bad");
+  if(!["pending","kept","broken"].includes(status))return mfToast("حالة وعد غير صالحة","bad");
+  try{
+    const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
+    p.status=row.status;p.updatedAt=row.updated_at;mfCommit("promise_status",c,`${p.promiseDate} → ${row.status}`);mfRenderClient();mfToast("تم تحديث حالة الوعد");
+  }catch(e){mfToast("تعذر تحديث الوعد: "+(e?.message||e),"bad")}
+}
 
 function mfOpenNoteForm(i){const c=clients?.[i];if(!c)return;mfForm("إضافة ملاحظة",`<input id="mfNoteIndex" type="hidden" value="${i}"><div class="mfField"><label>الملاحظة</label><textarea id="mfNoteText"></textarea></div><button class="mfSubmit" onclick="mfSaveNote()">حفظ</button>`)}
 function mfSaveNote(){const i=Number($("mfNoteIndex")?.value),c=clients?.[i],text=$("mfNoteText")?.value.trim();if(!c||!text)return;c.history=mfArray(c.history);c.history.push({date:new Date().toLocaleString("ar-JO"),createdAt:mfNow(),text});mfCommit("client_note",c,text);mfFormClose();mfToast("تم حفظ الملاحظة")}
@@ -3314,7 +3335,7 @@ function mfOpenCalculator(){mfForm("الحاسبات",`<div class="mfPanel"><div
 function mfCalcLoan(){const p=num($("mfCalcPrincipal")?.value),rate=num($("mfCalcRate")?.value)/100,n=Math.max(0,Math.floor(num($("mfCalcMonths")?.value))),interest=p*rate*n,total=p+interest,payment=n?total/n:0;if($("mfCalcInterest"))$("mfCalcInterest").value=interest?money(interest):"";if($("mfCalcTotal"))$("mfCalcTotal").value=total?money(total):"";if($("mfCalcPayment"))$("mfCalcPayment").value=payment?money(payment):""}
 function mfCalcExpression(){const expr=$("mfCalcExpr")?.value||"";if(!/^[0-9+\-*/(). %]+$/.test(expr))return mfToast("العملية غير صالحة","bad");try{$("mfCalcResult").textContent=String(Function('"use strict";return ('+expr+')')())}catch(_){mfToast("تعذر حساب العملية","bad")}}
 
-function mfOpenAbout(){const out=$("mfAboutBody");out.innerHTML=`<div class="mfPanel"><div class="mfBrandName">NEXA-MF</div><div class="mfBrandDesc">MicroFinance Next-Generation Operations &amp; Intelligence</div></div><div class="mfPanel"><div class="mfPanelTitle">Microfinance Department</div><p>منصة تشغيل ومتابعة وتحصيل ذكية مبنية فوق النسخة الأصلية V6.42، وتحافظ على بيانات Late وDue وسير العمل القائم.</p><p><b>معًا نستطيع النجاح</b></p></div><div class="mfPanel"><b>Credits</b><p>الفكرة والمتطلبات والإشراف: Masha'al Dawud — مشعل داود</p><small>Build: ${MF_STAGE5_VERSION}</small></div>`;mfOpen("mfAboutModal")}
+function mfOpenAbout(){const out=$("mfAboutBody");out.innerHTML=`<div class="mfPanel"><div class="mfBrandName">Microfinance Department</div><div class="mfBrandDesc">دائرة التمويل الصغير • UNRWA</div></div><div class="mfPanel"><div class="mfPanelTitle">Microfinance Department</div><p>منصة تشغيل ومتابعة وتحصيل ذكية مبنية فوق النسخة الأصلية V6.42، وتحافظ على بيانات Late وDue وسير العمل القائم.</p><p><b>معًا نستطيع النجاح</b></p></div><div class="mfPanel"><b>Credits</b><p>الفكرة والمتطلبات والإشراف: Masha'al Dawud — مشعل داود</p><small>Build: ${MF_STAGE5_VERSION}</small></div>`;mfOpen("mfAboutModal")}
 function mfOpenSettings(){if(!["founder","cfmp","bm"].includes(mfRole()))return mfToast("الإعدادات الإدارية غير متاحة لهذه الصلاحية","bad");const s=mfState().settings;mfForm("إعدادات النظام",`<div class="mfForm"><div class="mfField"><label>طرق الدخول المتاحة</label><select id="mfSetLogin"><option value="both" ${s.loginMode==='both'?'selected':''}>Email + Phone</option><option value="email" ${s.loginMode==='email'?'selected':''}>Email only</option><option value="phone" ${s.loginMode==='phone'?'selected':''}>Phone only</option></select></div><div class="mfField"><label>حد التنبيه بالأولوية</label><input id="mfSetPriority" type="number" min="1" max="100" value="${num(s.followupThreshold)||50}"></div><div class="mfField full"><label><input id="mfSetNotifications" type="checkbox" ${s.notifications?'checked':''}> تفعيل تنبيهات الجهاز للمتابعات</label></div></div><button class="mfSubmit" onclick="mfSaveSettings()">حفظ الإعدادات</button>`)}
 function mfSaveSettings(){const s=mfState().settings;s.loginMode=$("mfSetLogin").value;s.followupThreshold=Math.max(1,Math.min(100,num($("mfSetPriority").value)||50));s.notifications=$("mfSetNotifications").checked;mfCommit("settings_updated",null,`login=${s.loginMode}; priority=${s.followupThreshold}`);if(s.notifications)mfEnableNotifications();mfFormClose();mfToast("تم حفظ الإعدادات")}
 async function mfEnableNotifications(){if(!("Notification" in window))return false;if(Notification.permission==="default")await Notification.requestPermission();return Notification.permission==="granted"}
@@ -3634,11 +3655,45 @@ window.mfOpenEscalateForm=function(i){
   const options=r==='lo'?`<option value="als">ALS</option><option value="bm">BM</option><option value="both">ALS + BM معًا</option>`:`<option value="bm">BM</option>`;
   mfForm('تصعيد متابعة دون نقل ملكية العميل',`<input id="mfEscIndex" type="hidden" value="${i}"><div class="mfPanel"><b>${safe(r.toUpperCase())} — ملكية العميل تبقى عند ${safe(c.employee||'Loan Officer')}</b></div><div class="mfForm"><div class="mfField"><label>التصعيد إلى</label><select id="mfEscTargetRole">${options}</select></div><div class="mfField full"><label>سبب التصعيد</label><textarea id="mfEscReason"></textarea></div><div class="mfField full"><label>آخر إجراء / ملاحظة</label><input id="mfEscLastAction"></div></div><button class="mfSubmit" onclick="mfSaveEscalationFinal()">تصعيد المتابعة</button>`);
 };
-window.mfSaveEscalationFinal=function(){
+async function mfResolveEscalationRecipient(client,targetRole){
+  const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+  const branch=client.branchCode||client.branch||CURRENT_PROFILE?.branch_code||null;
+  if(targetRole==='als'){
+    const supervisorId=client.supervisorEmployeeId||CURRENT_PROFILE?.supervisor_employee_id||null;
+    if(supervisorId){
+      const {data,error}=await db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').eq('id',supervisorId).eq('is_active',true).maybeSingle();
+      if(error)throw error;if(data?.id)return data;
+    }
+    let q=db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').in('role',['als','supervisor']).eq('is_active',true);
+    if(branch)q=q.eq('branch_code',branch);
+    const {data,error}=await q.limit(2);if(error)throw error;
+    if(data?.length===1)return data[0];
+    throw Error(data?.length?'يوجد أكثر من ALS/Supervisor صالح؛ يلزم تعيين المشرف للعميل':'لا يوجد حساب ALS/Supervisor فعّال لهذا الفرع');
+  }
+  if(targetRole==='bm'){
+    let q=db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').in('role',['branch_manager','bm']).eq('is_active',true);
+    if(branch)q=q.eq('branch_code',branch);
+    const {data,error}=await q.limit(2);if(error)throw error;
+    if(data?.length===1)return data[0];
+    throw Error(data?.length?'يوجد أكثر من Branch Manager صالح؛ يلزم تحديد مدير الفرع':'لا يوجد Branch Manager فعّال لهذا الفرع');
+  }
+  throw Error('جهة التصعيد غير صالحة');
+}
+window.mfSaveEscalationFinal=async function(){
   const i=Number($('mfEscIndex')?.value),c=clients?.[i],reason=$('mfEscReason')?.value.trim(),choice=$('mfEscTargetRole')?.value||'als';if(!c||!reason)return mfToast('سبب التصعيد مطلوب','bad');
-  const a=mfActor(),targets=choice==='both'?['als','bm']:[choice],groupId=mfId();
-  targets.forEach(targetRole=>{const entry={id:mfId(),linkedGroupId:groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toName:targetRole==='als'?(c.supervisorName||CURRENT_PROFILE?.supervisor_email||'ALS'):'Branch Manager / BM',reason,lastAction:$('mfEscLastAction')?.value.trim()||'',status:'open',result:'',createdAt:a.at,history:[{from:a.role,to:targetRole,at:a.at,by:a.name}]};mfCompletionState().escalations.push(entry)});
-  mfCommit('case_escalated',c,`${a.role} → ${targets.join('+')}; ${reason}; ownership unchanged: ${c.employee||'LO'}`);mfFormClose();mfUpdateHome();mfToast(choice==='both'?'تم التصعيد إلى ALS وBM دون نقل الملكية':'تم التصعيد دون نقل ملكية العميل');
+  const a=mfActor(),targets=choice==='both'?['als','bm']:[choice],groupId=mfId(),lastAction=$('mfEscLastAction')?.value.trim()||'';
+  try{
+    const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+    const staged=[];
+    for(const targetRole of targets){
+      const recipient=await mfResolveEscalationRecipient(c,targetRole);
+      const payload={client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:recipient.id,escalation_level:targetRole,reason,instructions:lastAction||null,status:'open',escalated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,linked_group_id:groupId,to_role:targetRole,last_action:lastAction||null,result:null};
+      const {data,error}=await db.from('escalated_cases').insert(payload).select().single();if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات التصعيد');
+      staged.push({id:String(data.id),dbId:data.id,linkedGroupId:data.linked_group_id||groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toEmployeeId:recipient.id,toName:recipient.full_name||targetRole,reason,lastAction,status:data.status||'open',result:data.result||'',createdAt:data.created_at||a.at,history:[{from:a.role,to:targetRole,at:data.created_at||a.at,by:a.name}]});
+    }
+    mfCompletionState().escalations.push(...staged);
+    mfCommit('case_escalated',c,`${a.role} → ${targets.join('+')}; ${reason}; ownership unchanged: ${c.employee||'LO'}`);mfFormClose();mfUpdateHome();mfToast(choice==='both'?'تم التصعيد إلى ALS وBM دون نقل الملكية':'تم التصعيد دون نقل ملكية العميل');
+  }catch(e){mfToast('تعذر حفظ التصعيد في قاعدة البيانات: '+(e?.message||e),'bad')}
 };
 
 window.mfOpenWriteOffHub=function(){
