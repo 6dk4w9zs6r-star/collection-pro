@@ -307,3 +307,12 @@
 - Smart assistant retains its explicit consent gate and protected admin activation flag.
 - app commit: `b32acd56129b653685cbf95059e99575cb2abb90`.
 - index synced commit: `6ca6e786dbb60544194761b83a7136bd7e81cb01`; content SHA `d4efcfd335f0af1022fbbe2ec36c5333cde56fc8`.
+
+
+## First-use consent enforcement — 2026-09-18
+- Persisted consent was already DB-first and restored across devices, but the generic consent guard still returned true and operational modals could be opened while consent was unresolved.
+- `mfEnsureConsent` now awaits the persisted-consent check and returns the actual accepted state.
+- The active modal opener now permits only the consent modal before acceptance; other operational modals are blocked until consent exists. The consent modal still cannot be dismissed before acceptance.
+- Smart assistant remains additionally protected by the founder-controlled `profiles.smart_assistant_enabled` flag and is labeled `الاسم الذكي`.
+- app commit: `b5e4a4033f2eb2b6e9513deea0db4454cdcf700e`.
+- index synced commit: `2f353a14eab415c2977be499990004ec4c1ca661`; content SHA `603e5d85b1779365dbee29a8caea96e289ef87f7`.
