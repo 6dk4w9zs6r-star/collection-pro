@@ -324,3 +324,11 @@
 - Removed the remaining base visible label `البحث الذكي` from the active smart assistant panel/home source and standardized the approved visible name to `الاسم الذكي`.
 - app commit: `0daa690f1876e881968084676fed3097222bf49d`.
 - index synced commit: `d76a829c993cd7b12fda19f8b7240d024983a95a`; content SHA `cc6a69e1288e008f5985d363a64ee4e84d6c24bc`.
+
+
+## Consent enforcement + approved smart name — 2026-09-18
+- Verified the final active override already blocks non-consent modal/form access, prevents closing the consent modal before acceptance, restores persisted consent, and gates the smart assistant behind the protected admin flag.
+- Verified visible smart-assistant labels are `الاسم الذكي`, including the Home tile and modal; disabled state is `لم يُفعل بعد` with `لا، فعّله لاحقًا`.
+- Hardened consent acceptance check so only the current policy version `phase5-20260918` unlocks operational access; stale/local consent objects no longer satisfy the final gate.
+- app commit: `006aa0b5c74d17de644e90131a54818fc9484369`.
+- index synced commit: `aefa4a599764d9459b0aa5683f7a948d72b16edc`; content SHA `4344a789133af15ca26fe999a9a25068cd802417`.
