@@ -2052,10 +2052,20 @@ async function roleAwareBootstrap(){
       clientNo:String(c.client_number||c.id||""),
       name:c.client_name||"",
       phone:c.phone||"",
-      clientAddress:c.location_status||"",
+      altPhone:c.alternate_phone||"",
+      clientAddress:c.client_address||c.location_status||"",
       guarantor:c.guarantor_name||"",
       guarantorPhone:c.guarantor_phone||"",
-      guarantorAddress:"",
+      guarantorAddress:c.guarantor_address||"",
+      reference1Name:c.reference_1_name||"",
+      reference1Phone:c.reference_1_phone||"",
+      reference2Name:c.reference_2_name||"",
+      reference2Phone:c.reference_2_phone||"",
+      company:c.company_name||"",
+      workLocation:c.work_location||"",
+      managerPhone:c.work_manager_phone||"",
+      workStatus:c.employment_status||"",
+      newWork:c.new_work||"",
       employee:c.assigned_employee||CURRENT_PROFILE.full_name||"",
       assignedUserId:c.assigned_user_id||"",
       branchCode:c.branch_code||"",
@@ -3661,7 +3671,7 @@ window.mfEmployeeCatalog=function(){
 
 window.secureUniversalSearch=function(q){
   q=String(q||'').trim();const out=$('universalSearchResults');if(!out)return;if(q.length<2){out.innerHTML='';return}
-  const needle=norm(q),data=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.employee].some(v=>norm(String(v||'')).includes(needle))).slice(0,100);
+  const needle=norm(q),data=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.company,c.company_name,c.workLocation,c.work_location,c.managerPhone,c.work_manager_phone,c.workStatus,c.employment_status,c.newWork,c.new_work,c.employee,c.assigned_employee,c.branchCode,c.branch].some(v=>norm(String(v||'')).includes(needle))).slice(0,100);
   out.innerHTML=data.map(({c,i})=>`<div class="searchResult"><b>${safe(c.name||'-')}</b><small>رقم العميل: ${safe(c.clientNo||'-')} | هاتف: ${safe(c.phone||'-')}<br>الكفيل: ${safe(c.guarantor||'-')} | هاتف الكفيل: ${safe(c.guarantorPhone||'-')}<br>الموظف المسؤول: ${safe(c.employee||'-')} | الفرع: ${safe(c.branchCode||c.branch||'-')}</small><div class="mfRowActions" style="margin-top:10px"><button class="mfSmallBtn" onclick="$('universalSearchModal').style.display='none';mfOpenClient(${i})">ملف العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('call',${i},'client')">اتصال العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('whatsapp',${i},'client')">WhatsApp العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('call',${i},'guarantor')">اتصال الكفيل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('whatsapp',${i},'guarantor')">WhatsApp الكفيل</button></div></div>`).join('')||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
 };
 
@@ -4513,7 +4523,7 @@ window.mfAskAi=async function(){
     if(q.includes('رسالة')||q.includes('واتس')||q.includes('sms')){const c=clients?.[mfActiveClientIndex]||high[0]?.c;answer=c?`رسالة مقترحة للعميل ${c.name}:\n\n${mfTemplateText(q.includes('قانون')?'legal':q.includes('قوي')||q.includes('انذار')?'firm':'normal',c.name)}`:'افتح ملف عميل أولًا أو اختر عميلًا عالي الأولوية.'}
     else if(q.includes('عميل')&&mfActiveClientIndex>=0){const c=window.clients[mfActiveClientIndex],p=mfPriority(c);answer=`ملخص ${c.name}\nرقم العميل: ${c.clientNo}\nالموظف: ${c.employee||'-'}\nLate: ${c.inLate?'نعم':'لا'} — Due: ${c.inDue?'نعم':'لا'}\nالمبلغ: ${money(Math.max(num(c.arrears),num(c.dueAmount)))}\nPriority Score: ${p.score} (${p.label})`}
     else if(q.includes('اداء')||q.includes('أداء')||q.includes('ترتيب'))answer=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score).slice(0,10).map((x,i)=>`${i+1}. ${x.e.name} — ${x.m.score} نقطة — تحصيل ${money(x.m.collected)}`).join('\n')||'لا توجد بيانات أداء متاحة.';
-    else if(clientMatch(prompt)){const matches=(clients||[]).filter(c=>(typeof mfInScope!=='function'||mfInScope(c))&&[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.employee].some(v=>nrm(v).includes(q))).slice(0,8);answer=matches.length?matches.map((c,i)=>`${i+1}. ${c.name} — ${c.clientNo||'-'} — ${c.phone||'-'} — ${c.employee||'-'}`).join('\n'):'لا توجد نتائج عملاء مطابقة ضمن صلاحيتك.'}
+    else if(clientMatch(prompt)){const matches=(clients||[]).filter(c=>(typeof mfInScope!=='function'||mfInScope(c))&&[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.company,c.company_name,c.workLocation,c.work_location,c.managerPhone,c.work_manager_phone,c.workStatus,c.employment_status,c.newWork,c.new_work,c.employee,c.assigned_employee,c.branchCode,c.branch].some(v=>nrm(v).includes(q))).slice(0,8);answer=matches.length?matches.map((c,i)=>`${i+1}. ${c.name} — ${c.clientNo||'-'} — ${c.phone||'-'} — ${c.employee||'-'}`).join('\n'):'لا توجد نتائج عملاء مطابقة ضمن صلاحيتك.'}
     else if(portfolioIntent(prompt))answer=`ملخص المحفظة ضمن صلاحيتك:• العملاء: ${scope.length}• Late: ${late.length}• Due: ${due.length}• أولوية عالية: ${high.length}`;
     else {
       out.textContent='جاري معالجة السؤال العام…';
