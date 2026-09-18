@@ -211,3 +211,12 @@
 - فشل قاعدة البيانات لا يسجل قراءة محلية وهمية.
 - app commit: `03a54ab0f1a5a4752819573963234f8e740e2376`.
 - index synced commit: `c91a2eff7aece172995735a307bccaab08a388ce`; content SHA متطابق `d70a26829a7abe4302b737366db3e59b186b167d`.
+
+
+## First-use consent durability — 2026-09-18
+- فحص مسار الموافقة كشف أن `mfAcceptConsent` كان يسجل الموافقة محليًا فقط رغم وجود جدول `usage_consents`.
+- تم تحويله إلى DB-first: INSERT موثق بـ `policy_version=phase5-20260918` و`accepted_text` ووقت قاعدة البيانات، ثم فقط بعد نجاح الحفظ تُفتح الجلسة محليًا.
+- سياسات RLS الحالية تسمح للمستخدم النشط بإنشاء موافقته وقراءتها، والمؤسس بالقراءة؛ لا توجد صلاحية تعديل تاريخ موافقة سابقة.
+- هذا يغطي consent الخاص بحفظ الرسائل/المحادثات/المكالمات الصوتية والمرئية والمرفقات بدل الاعتماد على localStorage وحده.
+- app commit: `af9071ab9dea8f6f1a3f55d52a77449901d1c441`.
+- index synced commit: `4d3b95f5071702cbbcd4b9f0cef090be77ac56b8`; content SHA متطابق `8962f78e5f4d25c1019e9bdc021911ad8c6ea306`.
