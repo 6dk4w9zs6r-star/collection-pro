@@ -194,3 +194,11 @@
 - Late داخل employee metrics أصبح يستخدم canonical `mfIsLate30to60` بدل flag قديم.
 - app commit: `2bc6ca7f0f8f3baf80339e5037fb8b14eb06be32`.
 - index synced commit: `f657f24282f53ffcff91aedc9afd21988c87c1f0`; content SHA متطابق `10013169d2d086f5a4f0c8856e6015568ec05ab3`.
+
+
+## Loan calculator / variable 3 correction — 2026-09-18
+- فحص الكود أكد أن معادلة القرض نفسها لا تحتوي الرقم 3 ثابتًا: `interest = principal × monthlyRate × months` و`payment = total / months`؛ عدد الأشهر متغير.
+- الرقم 3 الوحيد داخل واجهة الحاسبة كان في مثال الحاسبة السريعة `(250 + 40) * 3`، وهو مصدر الالتباس المتوافق مع الملاحظة السابقة «الفائدة ثابتة بس الرقم متغير 3».
+- تم إزالة 3 الثابت من المثال واستبداله بنص يوضح أن المضاعف «عدد الدفعات» متغير، بدون تغيير معادلة الفائدة الشهرية الثابتة.
+- app commit: `d402d26c05f64516066fa7c7186ca5533c1e1867`.
+- index synced commit: `6ecfd3e55cfa10a115158ebfdc848d4c05279a74`; content SHA متطابق `4e3dcf7612d321b6654cfcb0074d3cc52c60ba2a`.
