@@ -279,3 +279,12 @@
 - Employee-table title mapping uses official_title; profile-table mapping keeps job_title. Stored attachment path is retained for persisted avatars.
 - app commit: `78e07b40f06b06897f8aa733e428d3cfa076b816`.
 - index synced commit: `359c9dba195ad168e80fe2c8d5b386711be3a58a`; content SHA `af84d4cd8f712f3e27e9cee915486218d193f5f4`.
+
+
+## Final consent + smart-name entry gate — 2026-09-18
+- Added a final additive UI entry guard after all earlier overrides so the active assistant entry cannot bypass first-use consent.
+- The assistant entry now checks persisted/local accepted consent first; otherwise it opens the consent flow and does not open the assistant.
+- The active assistant then checks only the protected `profiles.smart_assistant_enabled === true` flag. Disabled users see `الاسم الذكي` + `لم يُفعل بعد` + `لا، فعّله لاحقًا`; no flag is enabled by the UI.
+- Visible home tile and active assistant modal use the approved name `الاسم الذكي`.
+- app commit: `3b954011f8cd47d9f8d87030c74c09162a669869`.
+- index synced commit: `ac58ad5da9e8916c744268d56539a41d05161da3`; content SHA `22539ae75ded49f989cc146abfb6c19cf4983699`.
