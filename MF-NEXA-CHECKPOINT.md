@@ -447,3 +447,9 @@
 - بعد مراجعة جميع التعريفات المتكررة للحاسبة، ظهر أن تعريفين legacy ما زالا يحملان مثالًا ثابتًا `* 3` رغم أن التعريف النهائي كان مصححًا سابقًا.
 - تم إزالة المثال الثابت من جميع النسخ المتبقية واستبداله بصياغة توضح أن المضاعف هو عدد الدفعات المتغير. معادلة الفائدة بقيت كما هي: principal × monthlyRate × months.
 - app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `f519934a33df6f993558c99ca0e4b0a78f510c1c`; content SHA `1acd0242866ad277c6614e3c4e6dfc622132275d`.
+
+
+## Late report active-state alignment — 2026-09-18
+- تم توحيد تقرير Late مع قاعدة الخروج التشغيلية: العميل لا يعود للتقرير إذا كانت inLate=false بعد استيفاء قاعدة الخروج، حتى لو بقي arrears/days يطابقان التصنيف الخام.
+- LateDays في التقرير أصبح يستخدم canonical mfLateDaysValue ليأخذ lateDays/dueLateDays بشكل موحد.
+- app commit `4cd9902501ddccc45cb6dbc8b2138c4d73dcab21`; index sync `74dd0ee81edba4b3dd12a7563d898c31fca0100c`; content SHA `7503103c5a03639878fcdfc6aad2a69510471bfd`.
