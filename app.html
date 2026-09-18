@@ -2711,6 +2711,8 @@ function mfAudit(action,c=null,details="",deferSave=false){
 }
 function mfCommit(action,c=null,details=""){
   mfAudit(action,c,details,true);save();mfUpdateHome();
+  const actor=mfActor(),uid=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,clientId=c?.id&&Number.isFinite(Number(c.id))?Number(c.id):null;
+  if(uid&&typeof getSecureClient==="function")Promise.resolve(getSecureClient()).then(db=>db?.from("audit_log").insert({actor_user_id:uid,action:String(action||"action"),entity_type:c?"client":"application",entity_id:c?String(c.id||c.clientNo||""):null,client_id:clientId,metadata:{details:String(details||""),client_no:c?.clientNo||null,client_name:c?.name||null,actor_name:actor.name||"",role:actor.role||"",branch:actor.branch||""}})).then(r=>{if(r?.error)console.warn("audit persist",r.error.message)}).catch(e=>console.warn("audit persist",e?.message||e));
   if(mfActiveClientIndex>=0&&$("mfClientModal")?.classList.contains("open"))mfRenderClient();
 }
 function mfInScope(c){
