@@ -122,3 +122,12 @@
 - التطبيق commit: `78c1156be60e00c2b3eabfa18f990b31f107867a`.
 - التحقق الساكن بعد commit يؤكد أن local push يأتي بعد DB confirmation.
 - بقي E2E الحقيقي للتصعيد مفتوحًا لأن قاعدة الإنتاج الحالية لا تحتوي حساب ALS مستقل معتمد.
+
+
+## إصلاح دوام حالات Promise to Pay — 2026-09-18
+- تم إلغاء التحويل local-only للوعد المنتهي من Pending إلى Broken.
+- `mfAutoStates` أصبح DB-first: لا يغيّر الحالة محليًا إلا بعد نجاح تحديث `promises_to_pay` المؤكد، ويتجاهل السجل غير المؤكد بدل خلق اختلاف بين الجهاز والقاعدة.
+- `mfUpdatePromise` أصبح async وDB-first للحالات Pending/Kept/Broken مع فحص الصلاحية؛ فشل DB لا يغيّر local state.
+- Schema الفعلي يدعم status/payment_date/paid_amount/updated_by/updated_at.
+- التطبيق commit: `3840bc6cc7a767c1b4033914ba19b075fc7011e9`.
+- بقي ربط Kept تلقائيًا بالدفعة الناجحة بحاجة إغلاق مستقل؛ مسار الدفع الحالي يحدّث الوعد محليًا فقط ولا يكفي كدليل دوام.
