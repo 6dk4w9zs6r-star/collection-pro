@@ -60,3 +60,14 @@
 - لا اعتبار mock/local مساويًا لـ production E2E.
 - لا اعتبار بيانات Supabase الحالية مصدر العملاء الكامل دون اعتماد المصدر الرسمي.
 - كل تغيير صغير، قابل للتتبع، ومحفوظ قبل الانتقال لما بعده.
+
+
+## تنفيذ أمني — 2026-09-18
+- تم فحص اعتماد سياسات RLS على الدوال الأربع قبل أي تغيير.
+- ثبت أن الدوال `can_access_client` و`can_legal_access_client` و`can_manage_announcement_scope` و`is_founder` مستخدمة كـRLS helpers، وأن المشكلة هي إمكانية استدعائها مباشرة كـRPC من authenticated.
+- طُبقت migration: `revoke_direct_rpc_execute_from_rls_helpers_20260918`.
+- تم سحب EXECUTE المباشر من authenticated للدوال الأربع مع إبقائها كـRLS helpers.
+- تحقق ما بعد التنفيذ: `authenticated_execute=false` للدوال الأربع.
+- Security Advisor بعد التنفيذ لم يعد يعرض تحذيرات SECURITY DEFINER الأربعة.
+- التحذير الأمني المتبقي: Leaked Password Protection Disabled، وهو إعداد Auth وليس تعديل بيانات تشغيل.
+- لم يتم حذف أو reset أو تعديل بيانات العملاء.
