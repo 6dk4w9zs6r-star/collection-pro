@@ -465,3 +465,9 @@
 - فحص fixed row caps كشف cap=200 في Notification Center؛ هذا كان يخفي الإشعارات الأقدم للحسابات طويلة الاستخدام.
 - استُبدل الاستعلام المحدود بـ mfReadOperationalRows paginated مع نفس recipient scope وترتيب created_at desc.
 - app commit `5b6bdb612ca91c8723b843b3a18f73f0220e15f2`; index `f6ae9237891e803fccfdad8938b1719ba2d735aa`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
+
+
+## Calculator stale-definition cleanup — 2026-09-18
+- مراجعة جميع التعريفات المتكررة للحاسبة كشفت نسختين قديمتين ما زال مثال placeholder فيهما يحتوي multiplier ثابت 3 رغم أن التعريف النهائي سبق تصحيحه.
+- تم تنظيف كل النسخ المتبقية إلى نص «× عدد الدفعات» مع إبقاء المعادلة المعتمدة كما هي: principal × monthlyRate × months، وعدد الأشهر متغير.
+- app commit `c6125b34658c5567c3fcba6a41361d47c06f1184`; index sync `5ddc56d3c440f7c9637f88f77c79587d1687164b`; content SHA `79d77e899171f3b843bc862e3a9cc6ebe790502d`.
