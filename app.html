@@ -1972,7 +1972,7 @@ async function secureGlobalSearch(q){
   // This removes the dependency on the missing global_client_search RPC and keeps LO isolation intact.
   const needle=norm(q);
   const data=(clients||[]).filter(c=>{
-    const hay=[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.employee]
+    const hay=[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference1Phone,c.reference2Name,c.reference2Phone,c.company,c.workLocation,c.managerPhone,c.workStatus,c.newWork,c.employee,c.branchCode,c.team]
       .map(v=>norm(String(v||"")));
     return hay.some(v=>v.includes(needle));
   }).slice(0,100);
@@ -2328,7 +2328,7 @@ async function secureUniversalSearch(q){
   // V6.34: same secure scoped search path as the menu search.
   const needle=norm(q);
   const data=(clients||[]).filter(c=>{
-    const hay=[c.name,c.clientNo,c.phone,c.guarantor,c.guarantorPhone,c.employee]
+    const hay=[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference1Phone,c.reference2Name,c.reference2Phone,c.company,c.workLocation,c.managerPhone,c.workStatus,c.newWork,c.employee,c.branchCode,c.team]
       .map(v=>norm(String(v||"")));
     return hay.some(v=>v.includes(needle));
   }).slice(0,100);
