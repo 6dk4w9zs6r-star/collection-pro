@@ -401,3 +401,11 @@
 - تم توسيع Legal mapping ليحفظ transferredToLawyerAt، attachment storage path، actorId، updatedById، updatedAt؛ وبذلك لا تختفي metadata القانونية بعد logout/login/reload.
 - فحص read-only الحالي: legal=0, messages=0, field_visits=0, escalations=0, writeoffs=0, deferrals=0, disbursements=0, locations=4. لم تُنشأ بيانات تشغيلية وهمية.
 - app commit `e2d5ef5cfaae75e41666d294df3020d3f3528587`; index sync `1350dcaa31d0762304deb9f6048e4e0641b96069`; content SHA `bfda595857124cac67f3a421bae1924436a138b3`.
+
+
+## Timeline/Audit semantic dedup + payment consistency — 2026-09-18
+- فحص Audit الفعلي أكد وجود نوعين مشروعين من الأحداث: operational records نفسها (payments/followups/etc.) وaudit records لنفس العمليات. عرض النوعين معًا داخل Customer Timeline كان يكرر الحدث بصريًا رغم أن Audit Log نفسه يجب أن يحتفظ بالتاريخ الكامل.
+- تم تعديل Customer Timeline فقط: الأحداث التشغيلية المعروفة تُعرض من مصدرها التشغيلي ولا يعاد عرض audit counterpart لها. Audit Log لم يُحذف أو يُختصر، وأحداث audit غير التشغيلية (login/client_view/AI وغيرها عند ارتباطها بعميل) تبقى قابلة للعرض وفق المنطق الحالي.
+- لم تُحذف أي سجلات تاريخية من Supabase.
+- فحص payment read-only الحالي: payments=1, successful=1, pending=0, successful_unposted=0, successful balance mismatch=0.
+- app commit `3d1f34b8d45bac847906a7e6d9ca14b76c05017a`; index sync `bc2e9095f65fbee4d42be8ed1c8fc1e605d570c8`; content SHA `8ef8cc6208b0be9bb3fa5cb8dda2732f8d15a0fc`.
