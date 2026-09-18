@@ -2790,7 +2790,7 @@ function mfInstallStage5Dom(){
     ${mfModalShell("mfEscalatedModal","Escalated Cases","mfEscalatedBody",true)}
     ${mfModalShell("mfDashboardModal","Supervisor Dashboard","mfDashboardBody",true)}
     ${mfModalShell("mfChatModal","المحادثات الداخلية","mfChatBody",true)}
-    ${mfModalShell("mfAiModal","البحث الذكي","mfAiBody",true)}
+    ${mfModalShell("mfAiModal","الاسم الذكي","mfAiBody",true)}
     ${mfModalShell("mfReportsModal","التقارير والكشوفات","mfReportsBody",true)}
     ${mfModalShell("mfAuditModal","Audit Log","mfAuditBody",true)}
     ${mfModalShell("mfOrgModal","الفروع والفرق والموظفين","mfOrgBody",true)}
@@ -4033,8 +4033,8 @@ window.mfApproveOperation=async function(kind,id,status){const list=s()[kind],en
 
 async function loadTable(c,table,cols='*'){return mfReadOperationalRows(c,table,cols)}
 window.mfLoadBackendState=async function(){
-  try{const actor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,c=await client();if(!c||!actor)throw Error('الاتصال والحساب مطلوبان لتحميل السجلات');const [prom,legal,wo,defs,dis,esc,loc,chat,anns,follow]=await Promise.all([
-    loadTable(c,'promises_to_pay'),loadTable(c,'legal_cases'),loadTable(c,'write_offs'),loadTable(c,'deferrals'),loadTable(c,'disbursements'),loadTable(c,'escalated_cases'),loadTable(c,'locations'),loadTable(c,'chat_messages'),loadTable(c,'announcements'),loadTable(c,'follow_ups')]);
+  try{const actor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,c=await client();if(!c||!actor)throw Error('الاتصال والحساب مطلوبان لتحميل السجلات');const [prom,legal,wo,defs,dis,esc,loc,vis,msg,chat,anns,follow]=await Promise.all([
+    loadTable(c,'promises_to_pay'),loadTable(c,'legal_cases'),loadTable(c,'write_offs'),loadTable(c,'deferrals'),loadTable(c,'disbursements'),loadTable(c,'escalated_cases'),loadTable(c,'locations'),loadTable(c,'field_visits'),loadTable(c,'messages'),loadTable(c,'chat_messages'),loadTable(c,'announcements'),loadTable(c,'follow_ups')]);
     if(actor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل العمليات');const st=s();
     st.followups=follow.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.follow_up_type,dueAt:x.next_follow_up_at,status:x.status,note:x.notes||x.result||'',actorId:x.created_by,createdAt:x.created_at,updatedAt:x.updated_at,completedAt:x.completed_at}));
     st.promises=prom.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),promiseDate:x.promise_date,paymentDate:x.payment_date,amount:num(x.promised_amount),note:x.notes||'',status:x.status,createdAt:x.created_at,updatedAt:x.updated_at}));
@@ -4045,6 +4045,8 @@ window.mfLoadBackendState=async function(){
     st.escalations=esc.map(x=>({id:String(x.id),dbId:x.id,linkedGroupId:x.linked_group_id,clientId:keyFromId(x.client_id),toRole:x.to_role||'',fromId:x.from_employee_id,toId:x.to_employee_id,reason:x.reason||'',lastAction:x.last_action||x.instructions||'',status:x.status,result:x.result||x.resolution_notes||'',createdAt:x.created_at,updatedAt:x.updated_at}));
     st.locations=loc.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.location_type,status:x.status,description:x.description||'',lat:x.latitude,lng:x.longitude,accuracy:Number(x.accuracy||0),actorId:x.created_by,createdAt:x.created_at,locked:x.locked!==false}));
     st.partyLocations=st.locations.filter(x=>['client','guarantor'].includes(x.type)).map(x=>({...x,party:x.type}));
+    st.visits=vis.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),type:x.visit_type,status:x.status,visitResult:x.outcome||'',amount:num(x.amount_collected),lat:x.latitude,lng:x.longitude,description:x.address_text||x.notes||'',actorId:x.created_by,createdAt:x.created_at,startedAt:x.started_at,completedAt:x.completed_at}));
+    st.messages=msg.map(x=>({id:String(x.id),dbId:x.id,clientId:keyFromId(x.client_id),channel:x.channel,recipientType:x.recipient_type,recipientName:x.recipient_name||'',phone:x.recipient_phone||'',text:x.message_text||'',template:x.template_key||'',status:x.status||'prepared',actorId:x.created_by,createdAt:x.created_at}));
     st.chat=chat.map(x=>({id:String(x.id),roomId:x.room_id,roomType:x.room_type,senderId:x.sender_id,senderName:x.sender_name||'موظف',targetId:x.target_user_id,text:x.message_text||'',attachment:x.attachment_url?{name:x.attachment_name||'مرفق',data:x.attachment_url}:null,createdAt:x.created_at}));
     st.announcements=anns.filter(x=>x.content_type==='announcement').map(x=>({id:String(x.id),title:x.title,text:x.body,audience:x.audience,branch:x.branch_code,team:x.team_key,authorId:x.created_by,authorName:'',mandatory:x.mandatory,createdAt:x.created_at}));
     st.morningContent=anns.filter(x=>x.content_type==='morning').map(x=>({id:String(x.id),title:x.title,text:x.body,audience:x.audience,branch:x.branch_code,team:x.team_key,authorId:x.created_by,authorName:'',mandatory:x.mandatory,readBy:[],createdAt:x.created_at}));
