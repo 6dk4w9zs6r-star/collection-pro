@@ -375,3 +375,13 @@
 - فحص اتساق read-only: pending duplicate groups=0, approved bad balance=0, approved amount mismatch=0.
 - app commit: `fd0e40022d623b0ad47fb9a146a0686efbcb4c43`.
 - index synced commit: `7b8e21c8591b9c64d5c01216143fed3918a2bbe2`; content SHA متطابق `9a41579f501c589e71d228991e775c03520e43f0`.
+
+
+## Payment → Promise single-match hardening — 2026-09-18
+- فحص trigger الفعلي `trg_link_successful_payment_to_promises` كشف أن helper السابق كان ينفذ UPDATE لكل الوعود Pending المؤهلة لنفس العميل؛ أي دفعة واحدة كان يمكن أن تحول أكثر من Promise إلى Kept.
+- طُبقت migration `link_each_successful_payment_to_single_promise_20260918` مع الحفاظ على trigger الحالي وتعديل helper فقط.
+- كل دفعة Successful/posted جديدة تختار Promise واحدًا فقط: أقرب `promise_date` مؤهل، ثم الأقدم إنشاءً كفاصل تعادل، مع row lock و`SKIP LOCKED` لتجنب المطابقة المتزامنة المزدوجة.
+- أضيف guard يمنع إعادة معالجة نفس الدفعة إذا كانت Successful ومُرحلة أصلًا ثم حصل UPDATE لاحق غير متعلق بالترحيل.
+- EXECUTE المباشر للـ SECURITY DEFINER helper ما زال مسحوبًا من public/anon/authenticated؛ يعمل من trigger فقط.
+- لم تُنشأ بيانات اختبار وهمية: promises=0 وقت الفحص؛ kept=0؛ kept_missing_payment_date=0.
+- هذا يغلق عيب «دفعة واحدة لا يجوز أن تجعل عدة وعود Kept» على مستوى قاعدة البيانات، ويبقى E2E ببيانات تشغيل معتمدة gate منفصلًا.
