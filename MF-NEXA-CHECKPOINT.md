@@ -366,3 +366,12 @@
 - The current UI intentionally requests full write-off equal to outstanding balance; this was preserved because the historical requirement has not yet been found explicitly enough to justify changing full vs partial behavior.
 - app/index content SHA: `b250cc2760feee446db81fb5c19d64360884fb03` and exact content equality verified: `true`.
 - latest index sync commit: `684c3d885b6497254315df348c9312a62d2fc23f`.
+
+
+## Write-off frontend/backend alignment — 2026-09-18
+- فحص قاعدة البيانات أثبت أن القرار الفعلي للشطب محمي بــ trigger `writeoff_atomic_decision` / `guard_writeoff_decision`، وهو يدعم مبلغ شطب موجبًا حتى قيمة الدين ويطبق الرصيد داخل نفس معاملة قرار `write_offs`؛ لذلك يدعم الشطب الجزئي أو الكامل ولا يفترض Full-only.
+- كان override الواجهة النهائي يفرض Full Write-off فقط رغم أن backend المعتمد يدعم partial/full؛ أزيل هذا التعارض. الطلب الآن يقبل أي مبلغ >0 لا يتجاوز الرصيد القائم، بينما قرار الموافقة وتحديث رصيد العميل يبقيان DB-atomic.
+- لم يتم إنشاء أو تعديل أي Write-off تشغيلي للاختبار؛ الجدول ما زال 0 rows وقت الفحص.
+- فحص اتساق read-only: pending duplicate groups=0, approved bad balance=0, approved amount mismatch=0.
+- app commit: `fd0e40022d623b0ad47fb9a146a0686efbcb4c43`.
+- index synced commit: `7b8e21c8591b9c64d5c01216143fed3918a2bbe2`; content SHA متطابق `9a41579f501c589e71d228991e775c03520e43f0`.
