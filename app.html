@@ -3655,6 +3655,30 @@ window.mfOpenEscalateForm=function(i){
   const options=r==='lo'?`<option value="als">ALS</option><option value="bm">BM</option><option value="both">ALS + BM معًا</option>`:`<option value="bm">BM</option>`;
   mfForm('تصعيد متابعة دون نقل ملكية العميل',`<input id="mfEscIndex" type="hidden" value="${i}"><div class="mfPanel"><b>${safe(r.toUpperCase())} — ملكية العميل تبقى عند ${safe(c.employee||'Loan Officer')}</b></div><div class="mfForm"><div class="mfField"><label>التصعيد إلى</label><select id="mfEscTargetRole">${options}</select></div><div class="mfField full"><label>سبب التصعيد</label><textarea id="mfEscReason"></textarea></div><div class="mfField full"><label>آخر إجراء / ملاحظة</label><input id="mfEscLastAction"></div></div><button class="mfSubmit" onclick="mfSaveEscalationFinal()">تصعيد المتابعة</button>`);
 };
+async function mfResolveEscalationRecipient(client,targetRole){
+  const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
+  const branch=client.branchCode||client.branch||CURRENT_PROFILE?.branch_code||null;
+  if(targetRole==='als'){
+    const supervisorId=client.supervisorEmployeeId||CURRENT_PROFILE?.supervisor_employee_id||null;
+    if(supervisorId){
+      const {data,error}=await db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').eq('id',supervisorId).eq('is_active',true).maybeSingle();
+      if(error)throw error;if(data?.id)return data;
+    }
+    let q=db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').in('role',['als','supervisor']).eq('is_active',true);
+    if(branch)q=q.eq('branch_code',branch);
+    const {data,error}=await q.limit(2);if(error)throw error;
+    if(data?.length===1)return data[0];
+    throw Error(data?.length?'يوجد أكثر من ALS/Supervisor صالح؛ يلزم تعيين المشرف للعميل':'لا يوجد حساب ALS/Supervisor فعّال لهذا الفرع');
+  }
+  if(targetRole==='bm'){
+    let q=db.from('employees').select('id,auth_user_id,full_name,role,branch_code,is_active').in('role',['branch_manager','bm']).eq('is_active',true);
+    if(branch)q=q.eq('branch_code',branch);
+    const {data,error}=await q.limit(2);if(error)throw error;
+    if(data?.length===1)return data[0];
+    throw Error(data?.length?'يوجد أكثر من Branch Manager صالح؛ يلزم تحديد مدير الفرع':'لا يوجد Branch Manager فعّال لهذا الفرع');
+  }
+  throw Error('جهة التصعيد غير صالحة');
+}
 window.mfSaveEscalationFinal=async function(){
   const i=Number($('mfEscIndex')?.value),c=clients?.[i],reason=$('mfEscReason')?.value.trim(),choice=$('mfEscTargetRole')?.value||'als';if(!c||!reason)return mfToast('سبب التصعيد مطلوب','bad');
   const a=mfActor(),targets=choice==='both'?['als','bm']:[choice],groupId=mfId(),lastAction=$('mfEscLastAction')?.value.trim()||'';
@@ -3662,9 +3686,10 @@ window.mfSaveEscalationFinal=async function(){
     const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');
     const staged=[];
     for(const targetRole of targets){
-      const payload={client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:null,escalation_level:targetRole,reason,instructions:lastAction||null,status:'open',escalated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,linked_group_id:groupId,to_role:targetRole,last_action:lastAction||null,result:null};
+      const recipient=await mfResolveEscalationRecipient(c,targetRole);
+      const payload={client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:recipient.id,escalation_level:targetRole,reason,instructions:lastAction||null,status:'open',escalated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,linked_group_id:groupId,to_role:targetRole,last_action:lastAction||null,result:null};
       const {data,error}=await db.from('escalated_cases').insert(payload).select().single();if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات التصعيد');
-      staged.push({id:String(data.id),dbId:data.id,linkedGroupId:data.linked_group_id||groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toName:targetRole==='als'?(c.supervisorName||CURRENT_PROFILE?.supervisor_email||'ALS'):'Branch Manager / BM',reason,lastAction,status:data.status||'open',result:data.result||'',createdAt:data.created_at||a.at,history:[{from:a.role,to:targetRole,at:data.created_at||a.at,by:a.name}]});
+      staged.push({id:String(data.id),dbId:data.id,linkedGroupId:data.linked_group_id||groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toEmployeeId:recipient.id,toName:recipient.full_name||targetRole,reason,lastAction,status:data.status||'open',result:data.result||'',createdAt:data.created_at||a.at,history:[{from:a.role,to:targetRole,at:data.created_at||a.at,by:a.name}]});
     }
     mfCompletionState().escalations.push(...staged);
     mfCommit('case_escalated',c,`${a.role} → ${targets.join('+')}; ${reason}; ownership unchanged: ${c.employee||'LO'}`);mfFormClose();mfUpdateHome();mfToast(choice==='both'?'تم التصعيد إلى ALS وBM دون نقل الملكية':'تم التصعيد دون نقل ملكية العميل');
