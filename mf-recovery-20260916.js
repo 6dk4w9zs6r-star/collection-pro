@@ -65,7 +65,7 @@ window.mfRefreshUsageConsent=async function(){
   const actor=uid();if(!actor)return false;
   if(consentRead?.actor===actor)return consentRead.promise;
   const request={actor,epoch:consentEpoch};request.promise=(async()=>{const db=await dbRequired(),{data,error}=await db.from('usage_consents').select('id,user_id,policy_version,accepted_at').eq('user_id',actor).eq('policy_version',VERSION).maybeSingle();if(actor!==uid())throw Error('تغير الحساب');if(request.epoch!==consentEpoch)return !!mfState().consents?.[actor]?.dbId;if(error)throw error;
-    const state=mfState();state.consents=state.consents||{};delete state.consents[actor];if(data?.id)state.consents[actor]={dbId:data.id,version:data.policy_version,acceptedAt:data.accepted_at};verifiedActor=actor;return !!data?.id;
+    const state=mfState();state.consents=state.consents||{};delete state.consents[actor];if(data?.id)state.consents[actor]={dbId:data.id,version:data.policy_version,policyVersion:data.policy_version,acceptedAt:data.accepted_at};verifiedActor=actor;return !!data?.id;
   })();consentRead=request;try{return await request.promise;}finally{if(consentRead===request)consentRead=null;}
 };
 const requireBefore=window.mfRequireConsent;
@@ -77,7 +77,7 @@ window.mfEnsureConsent=async function(){await mfRequireConsent();return verified
 window.mfAcceptConsent=async function(){
   if(window.mfConsentSaving)return;if(!el('mfConsentCheck')?.checked)return mfToast('يجب قراءة السياسة والموافقة عليها أولًا','bad');window.mfConsentSaving=true;let saved=false;
   try{const actor=uid(),db=await dbRequired(),{data,error}=await db.rpc('accept_usage_policy',{p_version:VERSION});if(error)throw error;const r=Array.isArray(data)?data[0]:data;
-    if(!r?.id||r.user_id!==actor||r.policy_version!==VERSION)throw Error('لم تؤكد قاعدة البيانات الموافقة');saved=true;if(actor!==uid())throw Error('تغير الحساب');consentEpoch++;mfState().consents=mfState().consents||{};mfState().consents[actor]={dbId:r.id,version:VERSION,acceptedAt:r.accepted_at};verifiedActor=actor;mfClose('mfConsentModal');mfToast('تم حفظ موافقة الاستخدام');
+    if(!r?.id||r.user_id!==actor||r.policy_version!==VERSION)throw Error('لم تؤكد قاعدة البيانات الموافقة');saved=true;if(actor!==uid())throw Error('تغير الحساب');consentEpoch++;mfState().consents=mfState().consents||{};mfState().consents[actor]={dbId:r.id,version:VERSION,policyVersion:VERSION,acceptedAt:r.accepted_at};verifiedActor=actor;const modal=el('mfConsentModal');if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}if(typeof mfFinishAuthenticatedEntry==='function')await mfFinishAuthenticatedEntry('consent');mfToast('تم حفظ موافقة الاستخدام');
   }catch(e){mfToast((saved?'تم حفظ الموافقة؛ تعذر تحديث العرض: ':'تعذر حفظ الموافقة: ')+e.message,'bad');}finally{window.mfConsentSaving=false;}
 };
 const loadBefore=window.mfLoadBackendState;
