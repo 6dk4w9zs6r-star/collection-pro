@@ -583,3 +583,10 @@
 - Verified current app.html and index.html are synchronized byte-for-byte at content SHA 390443adfc444419a75fb86d661961a0b5bcc078.
 - Reviewed chained backend hydration wrappers for payments, communications, client notes, consent, chat, and notification preferences; authoritative reads remain Supabase-backed with actor/session guards.
 - Remaining closure evidence is limited to real-device / multi-session Production E2E where physical permissions or two endpoints are required (GPS, WebRTC audio/video, iPhone/PC role/session checks). No claim of those physical tests is made here.
+
+
+## Phase 5 security closure gate — 2026-09-19
+- Inspected live RLS policy expressions for clients, payments, promises, follow-ups, legal, write-offs, deferrals, disbursements, locations, chat, notifications, audit and calls.
+- Verified client scope function behavior: founder/cfmp global; BM own branch; ALS own + directly supervised active users; LO own assigned clients. Legal access composes collection scope with lawyer branch scope.
+- Rechecked every SECURITY DEFINER function in public: anon EXECUTE=0 and authenticated EXECUTE=0 for all such functions; they remain internal policy/trigger helpers rather than client-callable privilege bypasses.
+- Supabase Security Advisor currently reports one warning only: Leaked Password Protection Disabled. No schema/RLS security lint was reported. This Auth setting was not changed automatically because it is an account-level authentication policy decision, not a Phase-5 data-path code fix.
