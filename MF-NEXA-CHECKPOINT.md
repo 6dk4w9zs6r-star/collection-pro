@@ -599,3 +599,11 @@
 - Session/loading harnesses cover account-switch invalidation, stale async reads, paginated hydration, failed-page rollback, and chat subscription replacement.
 - Field/cache harness covers atomic visit RPC outcomes, Late boundaries, service-worker privacy exclusions and offline shell behavior.
 - Physical-device/multi-endpoint evidence remains outside repository harness coverage and is not represented as completed: GPS permission on real phone, WebRTC audio/video between two sessions/devices, and visual responsive checks on target iPhone/PC.
+
+
+## Phase 5 PWA/device-readiness gate — 2026-09-19
+- Verified manifest is installable-style configured with standalone display, RTL Arabic, start_url ./index.html, scoped app shell and maskable SVG icon.
+- Verified service worker shell includes index/app plus all active phase-5 runtime modules; cache version is mf-nexa-shell-20260917-r11.
+- Service worker caches exact public shell URLs only, excludes Authorization-bearing requests and does not intercept Supabase/API/signed-media URLs; old MF-NEXA/NEXA-MF caches are removed on activation.
+- Push notification click is constrained to the service-worker origin/scope before navigation, preventing arbitrary external notification URLs.
+- GitHub connector does not expose the Pages deployment endpoint through its allowed fetch surface, so live Pages deployment status was not falsely marked verified in this gate.
