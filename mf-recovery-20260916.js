@@ -75,6 +75,58 @@ window.mfRequireConsent=async function(){
 };
 window.mfEnsureConsent=async function(){await mfRequireConsent();return verifiedActor===uid()&&!!mfState().consents?.[uid()]?.dbId;};
 window.mfAcceptConsent=async function(){
+  if(window.mfConsentSaving)return;
+  if(!el('mfConsentCheck')?.checked)return mfToast('يجب قراءة السياسة والموافقة عليها أولًا','bad');
+
+  window.mfConsentSaving=true;
+  let saved=false;
+
+  try{
+    const db=await dbRequired(),actor=uid();
+    if(!actor)throw Error('جلسة الدخول غير متاحة');
+
+    const {data,error}=await db.rpc('accept_usage_policy',{p_version:VERSION});
+    if(error)throw error;
+
+    const r=Array.isArray(data)?data[0]:data;
+    if(!r?.id||r.user_id!==actor||r.policy_version!==VERSION)
+      throw Error('لم تؤكد قاعدة البيانات الموافقة');
+
+    saved=true;
+    if(actor!==uid())throw Error('تغير الحساب');
+
+    /* Do not trust the RPC response alone.
+       Re-read the persisted consent from Supabase before unlocking. */
+    consentEpoch++;
+    consentRead=null;
+    verifiedActor=null;
+
+    const state=mfState();
+    state.consents=state.consents||{};
+    delete state.consents[actor];
+
+    const verified=await mfRefreshUsageConsent();
+
+    if(actor!==uid())throw Error('تغير الحساب');
+    if(!verified||verifiedActor!==actor||!mfState().consents?.[actor]?.dbId)
+      throw Error('تعذر التحقق من حفظ الموافقة في قاعدة البيانات');
+
+    const modal=el('mfConsentModal');
+    if(modal){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    if(typeof mfFinishAuthenticatedEntry==='function')
+      await mfFinishAuthenticatedEntry('consent');
+
+    mfToast('تم حفظ موافقة الاستخدام');
+  }catch(e){
+    mfToast((saved?'تم حفظ الموافقة؛ تعذر التحقق النهائي: ':'تعذر حفظ الموافقة: ')+e.message,'bad');
+  }finally{
+    window.mfConsentSaving=false;
+  }
+};
   if(window.mfConsentSaving)return;if(!el('mfConsentCheck')?.checked)return mfToast('يجب قراءة السياسة والموافقة عليها أولًا','bad');window.mfConsentSaving=true;let saved=false;
   try{const db=await dbRequired(),actor=uid();if(!actor)throw Error('جلسة الدخول غير متاحة');const {data,error}=await db.rpc('accept_usage_policy',{p_version:VERSION});if(error)throw error;const r=Array.isArray(data)?data[0]:data;
     if(!r?.id||r.user_id!==actor||r.policy_version!==VERSION)throw Error('لم تؤكد قاعدة البيانات الموافقة');saved=true;if(actor!==uid())throw Error('تغير الحساب');consentEpoch++;mfState().consents=mfState().consents||{};mfState().consents[actor]={dbId:r.id,version:VERSION,policyVersion:VERSION,acceptedAt:r.accepted_at};verifiedActor=actor;const modal=el('mfConsentModal');if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}if(typeof mfFinishAuthenticatedEntry==='function')await mfFinishAuthenticatedEntry('consent');mfToast('تم حفظ موافقة الاستخدام');
@@ -87,9 +139,29 @@ const logoutBefore=window.mfSecureLogout;
 async function recordLoginIfEntered(){if(uid()&&!document.body.classList.contains('secureLocked')){try{await mfRecordSessionEvent('login');}catch(e){mfToast('تم الدخول؛ تعذر حفظ سجل الجلسة: '+e.message,'bad');}}}
 if(typeof window.mfFinishAuthenticatedEntry==='function'){
   const finishBeforeRecovery=window.mfFinishAuthenticatedEntry;
-  window.mfFinishAuthenticatedEntry=async function(){const out=await finishBeforeRecovery.apply(this,arguments);await recordLoginIfEntered();return out;};
+
+  window.mfFinishAuthenticatedEntry=async function(){
+    const actor=uid();
+    if(!actor)throw Error('جلسة الدخول غير متاحة');
+
+    const consentOk=
+      verifiedActor===actor&&!!mfState().consents?.[actor]?.dbId
+        ? true
+        : await window.mfEnsureConsent();
+
+    if(!consentOk){
+      document.body.classList.add('secureLocked');
+      const gate=el('authGate');
+      if(gate)gate.style.display='none';
+      return false;
+    }
+
+    const out=await finishBeforeRecovery.apply(this,arguments);
+    await recordLoginIfEntered();
+    return out;
+  };
 }
 window.mfSecureLogout=async function(){try{if(uid())await mfRecordSessionEvent('logout');}catch(e){console.warn('Session logout audit unavailable');}finally{consentEpoch++;verifiedActor=null;await logoutBefore.apply(this,arguments);}};
 window.secureLogout=window.mfSecureLogout;
-window.MF_NEXA_RELEASE='2026-09-16-r4';
+window.MF_NEXA_RELEASE='2026-09-19-r19';
 })();
