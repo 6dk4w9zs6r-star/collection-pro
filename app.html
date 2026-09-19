@@ -2992,7 +2992,7 @@ document.addEventListener("DOMContentLoaded",()=>{mfInstallStage5Dom();mfState()
 const mfOriginalRender=window.render;window.render=function(){const v=mfOriginalRender?.apply(this,arguments);try{mfUpdateHome();if($("mfAllocationModal")?.classList.contains("open"))mfRenderAllocation()}catch(e){console.warn("NEXA-MF render",e)}return v};
 const mfOriginalApplySnapshot=window.applySnapshot;window.applySnapshot=function(d){const v=mfOriginalApplySnapshot?.apply(this,arguments);try{mfState();mfUpdateHome()}catch(e){}return v};
 const mfOriginalLoadSecureProfile=window.loadSecureProfile;window.loadSecureProfile=async function(){const ok=await mfOriginalLoadSecureProfile?.apply(this,arguments);if(ok&&CURRENT_PROFILE){const effectiveRole=mfRole();currentRole=["founder","cfmp","bm","als"].includes(effectiveRole)?"supervisor":"viewer";applyRoleUI();setFounderControls();applyRoleHomeSecurity();applySecureMenuVisibility()}return ok};
-const mfOriginalRoleBootstrap=window.roleAwareBootstrap;window.roleAwareBootstrap=async function(){const v=await mfOriginalRoleBootstrap?.apply(this,arguments);if(CURRENT_PROFILE)await mfStage5AfterAuth();return v};
+const mfOriginalRoleBootstrap=window.roleAwareBootstrap;window.roleAwareBootstrap=async function(){const v=await mfOriginalRoleBootstrap?.apply(this,arguments);if(CURRENT_PROFILE){mfState();if(typeof mfEnrichOperationalClients==="function")mfEnrichOperationalClients();mfAutoStates();mfUpdateHome();mfApplyMenuPermissions()}return v};
 </script>
 <script id="mfNexaPhase5Actions">
 function mfForm(title,html){const modal=$("mfFormModal"),head=modal?.querySelector(".mfModalTitle");if(head)head.textContent=title;$("mfFormBody").innerHTML=html;mfOpen("mfFormModal")}
