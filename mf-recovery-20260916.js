@@ -159,5 +159,5 @@ if(typeof window.mfFinishAuthenticatedEntry==='function'){
 }
 window.mfSecureLogout=async function(){try{if(uid())await mfRecordSessionEvent('logout');}catch(e){console.warn('Session logout audit unavailable');}finally{consentEpoch++;verifiedActor=null;await logoutBefore.apply(this,arguments);}};
 window.secureLogout=window.mfSecureLogout;
-window.MF_NEXA_RELEASE='2026-09-19-r21';
+window.MF_NEXA_RELEASE='2026-09-19-r22';
 })();
