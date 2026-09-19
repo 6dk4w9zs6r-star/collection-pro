@@ -1768,9 +1768,36 @@ function setFounderControls(){
 }
 async function loadSecureProfile(){
   sb=await getSecureClient();
-  if(!sb||!CURRENT_AUTH_USER)return false;
-  let {data,error}=await sb.from("profiles").select("id,full_name,role,is_active,email,branch_code,supervisor_email").eq("id",CURRENT_AUTH_USER.id).maybeSingle();
-  if(error||!data||data.is_active===false){
+  if(!sb)return false;
+
+  // Phase 5 login hardening: resolve the authoritative Supabase session first.
+  // This is generic for every active approved account; it is not tied to a
+  // specific email, user id, or role. Safari/iOS can expose the sign-in result
+  // just before the client has finished persisting/restoring its session.
+  let authUser=CURRENT_AUTH_USER||null;
+  for(let attempt=0;attempt<4;attempt++){
+    try{
+      const {data:sessionData,error:sessionError}=await sb.auth.getSession();
+      if(!sessionError&&sessionData?.session?.user){
+        authUser=sessionData.session.user;
+        CURRENT_AUTH_USER=authUser;
+        break;
+      }
+    }catch(_){}
+    if(attempt<3) await new Promise(resolve=>setTimeout(resolve,200*(attempt+1)));
+  }
+  if(!authUser)return false;
+
+  let data=null,error=null;
+  for(let attempt=0;attempt<4;attempt++){
+    const result=await sb.from("profiles")
+      .select("id,full_name,role,is_active,email,branch_code,supervisor_email")
+      .eq("id",authUser.id).maybeSingle();
+    data=result.data; error=result.error;
+    if(!error&&data)break;
+    if(attempt<3) await new Promise(resolve=>setTimeout(resolve,200*(attempt+1)));
+  }
+  if(error||!data||data.is_active!==true){
     CURRENT_PROFILE=null;return false;
   }
   data.role=String(data.role||"").trim().toLowerCase();
