@@ -607,3 +607,10 @@
 - Service worker caches exact public shell URLs only, excludes Authorization-bearing requests and does not intercept Supabase/API/signed-media URLs; old MF-NEXA/NEXA-MF caches are removed on activation.
 - Push notification click is constrained to the service-worker origin/scope before navigation, preventing arbitrary external notification URLs.
 - GitHub connector does not expose the Pages deployment endpoint through its allowed fetch surface, so live Pages deployment status was not falsely marked verified in this gate.
+
+
+## Phase 5 GitHub Pages deployment verification — 2026-09-19
+- Verified main head at the time of deployment check: 4b5ad0416f177f12d42e67555c9db85e0cf07022.
+- GitHub Actions Pages run 35426321104 targeted that exact head SHA and completed successfully (conclusion=success) on 2026-09-19.
+- This closes the previously unverified Pages build/deployment-status item for that application/checkpoint head. Later checkpoint-only commits do not change app runtime content.
+- Runtime app/index content remains the previously verified synchronized SHA 390443adfc444419a75fb86d661961a0b5bcc078; subsequent commits in this closure sequence only append verification evidence to MF-NEXA-CHECKPOINT.md.
