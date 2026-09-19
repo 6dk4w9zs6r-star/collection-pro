@@ -1,9 +1,9 @@
 (function(){
 'use strict';
-const el=id=>document.getElementById(id),uid=()=>CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,VERSION='2026-09-14';
+const el=id=>document.getElementById(id),uid=()=>CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,VERSION='phase5-20260918';
 const FORMAT='mf-nexa-encrypted-archive-v1',SOURCE='thfnitjiiwdsbwcunlbs',ITERATIONS=310000,MAX_FILE=40*1024*1024;
 const tables=['activities','announcement_reads','announcements','approved_accounts','attachments','audit_log','branches','call_invitations','chat_messages','client_notes','clients','deferrals','disbursements','employees','escalated_cases','field_visits','follow_ups','late_due','legal_cases','loan_requests','locations','messages','notification_preferences','notifications','payments','portfolios','profiles','promises_to_pay','promotions','teams','usage_consents','write_offs'];
-async function dbRequired(){const db=await getSecureClient();if(!db||!uid())throw Error('يلزم تسجيل الدخول والاتصال بقاعدة البيانات');return db;}
+async function dbRequired(){const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');let actor=uid();if(!actor){try{const {data,error}=await db.auth.getSession();if(!error&&data?.session?.user){CURRENT_AUTH_USER=data.session.user;actor=uid()||data.session.user.id}}catch(_){}}if(!actor)throw Error('جلسة الدخول غير متاحة');return db;}
 function founder(){if(mfRole()!=='founder'){mfToast('هذه العملية متاحة للمؤسس فقط','bad');return false;}return true;}
 const encode=new TextEncoder(),decode=new TextDecoder('utf-8',{fatal:true});
 function base64(bytes){let text='';for(let i=0;i<bytes.length;i+=8192)text+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(text);}
