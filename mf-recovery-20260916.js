@@ -70,8 +70,21 @@ window.mfRefreshUsageConsent=async function(){
 };
 const requireBefore=window.mfRequireConsent;
 window.mfRequireConsent=async function(){
-  const actor=uid();if(!actor)return;try{await mfRefreshUsageConsent();if(actor!==uid())return;requireBefore();}
-  catch(e){if(actor!==uid())return;verifiedActor=null;const state=mfState();if(state.consents)delete state.consents[actor];requireBefore();mfToast('تعذر التحقق من موافقة الاستخدام: '+e.message,'bad');}
+  const actor=uid();if(!actor)return false;
+  try{
+    const accepted=await mfRefreshUsageConsent();
+    if(actor!==uid())return false;
+    if(accepted)return true;
+    await requireBefore();
+    return false;
+  }catch(e){
+    if(actor!==uid())return false;
+    verifiedActor=null;
+    const state=mfState();if(state.consents)delete state.consents[actor];
+    await requireBefore();
+    mfToast('تعذر التحقق من موافقة الاستخدام: '+e.message,'bad');
+    return false;
+  }
 };
 window.mfEnsureConsent=async function(){await mfRequireConsent();return verifiedActor===uid()&&!!mfState().consents?.[uid()]?.dbId;};
 window.mfAcceptConsent=async function(){
@@ -159,5 +172,5 @@ if(typeof window.mfFinishAuthenticatedEntry==='function'){
 }
 window.mfSecureLogout=async function(){try{if(uid())await mfRecordSessionEvent('logout');}catch(e){console.warn('Session logout audit unavailable');}finally{consentEpoch++;verifiedActor=null;await logoutBefore.apply(this,arguments);}};
 window.secureLogout=window.mfSecureLogout;
-window.MF_NEXA_RELEASE='2026-09-19-r22';
+window.MF_NEXA_RELEASE='2026-09-19-r24';
 })();
