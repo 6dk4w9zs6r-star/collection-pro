@@ -631,3 +631,13 @@
 - GitHub Pages build/deployment for head 2dd42a02a3fa246d4f339fcbf3d858dcdda848a8 completed successfully: Actions run 35426516025, conclusion=success.
 - Automated/code/backend/deployment portion of Phase 5 is closed. The only remaining acceptance evidence is inherently physical/multi-device: real-phone GPS permission/capture, two-device/session WebRTC audio/video, and final iPhone/PC visual interaction pass. These cannot be truthfully marked passed without running them on those endpoints.
 - Data-preservation rule remains in force: no destructive production-data operation is required for those acceptance checks.
+
+
+## Phase 5 active-account login acceptance fix — 2026-09-19
+- Real iPhone acceptance test exposed a false “account not authorized” result after successful authentication/profile linkage.
+- Root-path review confirmed the issue was in client login readiness handling, not missing production accounts: every currently active profile is linked to an Auth user (7/7: founder=1, BM=1, LO=5).
+- Hardened loadSecureProfile generically for every active approved account: it resolves the authoritative Supabase session first, retries session readiness and profile retrieval for transient Safari/iOS timing, and still fails closed unless profile.is_active === true.
+- No email, user id, or role is hard-coded into the fix; inactive/unreadable profiles remain rejected.
+- app.html and index.html synchronized at content SHA 0511ffa1aba400776c69b0bb1cdc5f7e5a7ffa13.
+- GitHub Pages deployment for commit 55251cd4e88c895644406f796b154507a984d87b completed successfully (run 35426968525, conclusion=success).
+- No production customer/account rows were mutated by this application-code fix.
