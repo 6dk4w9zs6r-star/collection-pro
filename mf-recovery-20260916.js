@@ -83,8 +83,12 @@ window.mfAcceptConsent=async function(){
 const loadBefore=window.mfLoadBackendState;
 window.mfLoadBackendState=async function(){await loadBefore();await mfRefreshUsageConsent();};
 window.mfRecordSessionEvent=async function(action){const db=await dbRequired(),{data,error}=await db.rpc('record_session_event',{p_action:action});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(!row?.id||row.action!=='session_'+action||row.actor_user_id!==uid())throw Error('لم يؤكد الخادم حفظ سجل الجلسة');return row;};
-const loginBefore=window.secureLogin,logoutBefore=window.mfSecureLogout;
-window.secureLogin=async function(){await loginBefore.apply(this,arguments);if(uid()&&!document.body.classList.contains('secureLocked')){try{await mfRecordSessionEvent('login');}catch(e){mfToast('تم الدخول؛ تعذر حفظ سجل الجلسة: '+e.message,'bad');}}};
+const logoutBefore=window.mfSecureLogout;
+async function recordLoginIfEntered(){if(uid()&&!document.body.classList.contains('secureLocked')){try{await mfRecordSessionEvent('login');}catch(e){mfToast('تم الدخول؛ تعذر حفظ سجل الجلسة: '+e.message,'bad');}}}
+if(typeof window.mfFinishAuthenticatedEntry==='function'){
+  const finishBeforeRecovery=window.mfFinishAuthenticatedEntry;
+  window.mfFinishAuthenticatedEntry=async function(){const out=await finishBeforeRecovery.apply(this,arguments);await recordLoginIfEntered();return out;};
+}
 window.mfSecureLogout=async function(){try{if(uid())await mfRecordSessionEvent('logout');}catch(e){console.warn('Session logout audit unavailable');}finally{consentEpoch++;verifiedActor=null;await logoutBefore.apply(this,arguments);}};
 window.secureLogout=window.mfSecureLogout;
 window.MF_NEXA_RELEASE='2026-09-16-r4';
