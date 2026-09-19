@@ -1,4 +1,4 @@
-const CACHE='mf-nexa-shell-20260919-r23';
+const CACHE='mf-nexa-shell-20260919-r24';
 const APP=['./','./index.html','./manifest.webmanifest','./nexa-mf-icon.svg','./app.html','./mf-update-20260916.js','./mf-collaboration-20260916.js','./mf-recovery-20260916.js','./mf-messaging-20260916.js','./mf-loading-20260916.js','./mf-session-20260916.js'];
 const SHELL=new Set(APP.map(p=>new URL(p,self.registration.scope).href));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
