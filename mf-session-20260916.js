@@ -27,7 +27,8 @@ window.secureLogin=async function(){if(loginRunning||logoutRunning)return;loginR
        while the consent modal owns the screen. Do not invalidate the freshly
        authenticated Supabase user/profile in that valid intermediate state. */
     const consentOpen=!!el('mfConsentModal')?.classList.contains('open');
-    if(document.body.classList.contains('secureLocked')&&!consentOpen)mfInvalidateSessionView();
+    const authenticatedPendingConsent=!!(CURRENT_AUTH_USER?.id&&CURRENT_PROFILE?.id===CURRENT_AUTH_USER.id);
+    if(document.body.classList.contains('secureLocked')&&!consentOpen&&!authenticatedPendingConsent)mfInvalidateSessionView();
     if(el('loginPassword'))el('loginPassword').value='';
   }
 };
@@ -47,5 +48,5 @@ window.mfObserveSession=async function(){const db=await getSecureClient();if(!db
   db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(CURRENT_AUTH_USER?.id&&session?.user?.id&&CURRENT_AUTH_USER.id!==session.user.id))mfInvalidateSessionView();});
 };
 mfObserveSession().catch(()=>{});
-window.MF_NEXA_RELEASE='2026-09-19-r16';
+window.MF_NEXA_RELEASE='2026-09-19-r24';
 })();
