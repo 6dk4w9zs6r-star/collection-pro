@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260919-1053-consent-r13";</script>
+<head><script>window.MF_NEXA_BUILD="20260919-1111-consent-r14";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4066,7 +4066,7 @@ window.mfSaveCommunicationFinal=async function(){
 };
 
 // Register PWA service worker and keep session untouched by share/install operations.
-async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20260919-r13',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
+async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20260919-r14',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
 
 const afterAuthOld=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){await afterAuthOld();await registerPwa();await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350)};
@@ -4723,7 +4723,7 @@ window.mfSaveDeferral=async function(){
 </script>
 <script src="mf-update-20260916.js"></script>
 <script src="./mf-collaboration-20260916.js"></script>
-<script src="./mf-recovery-20260916.js"></script>
+<script src="./mf-recovery-20260916.js?v=20260919-r14"></script>
 <script src="./mf-messaging-20260916.js"></script>
 <script src="./mf-loading-20260916.js"></script>
 <script src="./mf-session-20260916.js"></script>
