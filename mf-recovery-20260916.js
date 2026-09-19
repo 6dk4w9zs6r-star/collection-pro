@@ -127,11 +127,7 @@ window.mfAcceptConsent=async function(){
     window.mfConsentSaving=false;
   }
 };
-  if(window.mfConsentSaving)return;if(!el('mfConsentCheck')?.checked)return mfToast('يجب قراءة السياسة والموافقة عليها أولًا','bad');window.mfConsentSaving=true;let saved=false;
-  try{const db=await dbRequired(),actor=uid();if(!actor)throw Error('جلسة الدخول غير متاحة');const {data,error}=await db.rpc('accept_usage_policy',{p_version:VERSION});if(error)throw error;const r=Array.isArray(data)?data[0]:data;
-    if(!r?.id||r.user_id!==actor||r.policy_version!==VERSION)throw Error('لم تؤكد قاعدة البيانات الموافقة');saved=true;if(actor!==uid())throw Error('تغير الحساب');consentEpoch++;mfState().consents=mfState().consents||{};mfState().consents[actor]={dbId:r.id,version:VERSION,policyVersion:VERSION,acceptedAt:r.accepted_at};verifiedActor=actor;const modal=el('mfConsentModal');if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}if(typeof mfFinishAuthenticatedEntry==='function')await mfFinishAuthenticatedEntry('consent');mfToast('تم حفظ موافقة الاستخدام');
-  }catch(e){mfToast((saved?'تم حفظ الموافقة؛ تعذر تحديث العرض: ':'تعذر حفظ الموافقة: ')+e.message,'bad');}finally{window.mfConsentSaving=false;}
-};
+  
 const loadBefore=window.mfLoadBackendState;
 window.mfLoadBackendState=async function(){await loadBefore();await mfRefreshUsageConsent();};
 window.mfRecordSessionEvent=async function(action){const db=await dbRequired(),{data,error}=await db.rpc('record_session_event',{p_action:action});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(!row?.id||row.action!=='session_'+action||row.actor_user_id!==uid())throw Error('لم يؤكد الخادم حفظ سجل الجلسة');return row;};
