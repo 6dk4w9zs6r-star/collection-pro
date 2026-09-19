@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260919-consent-r19";</script>
+<head><script>window.MF_NEXA_BUILD="20260919-consent-r21";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1936,9 +1936,9 @@ async function secureLogin(){
       $("authGate").style.display="none";
       return;
     }
-    document.body.classList.remove("secureLocked");
-    $("authGate").style.display="none";
-    loadCfmpName();
+    // Use the single hardened authenticated-entry path. It re-verifies
+    // persisted consent before any code is allowed to unlock the application.
+    await mfFinishAuthenticatedEntry("login");
   }catch(e){
     $("authMsg").textContent="خطأ تقني: "+(e&&e.message?e.message:String(e));
   }
@@ -2984,7 +2984,7 @@ function mfTimelineRows(c){
 function mfRenderClientTimeline(c){const rows=mfTimelineRows(c);return `<div class="mfPanel"><div class="mfPanelTitle">Customer Timeline <small>${rows.length} إجراء</small></div><div class="mfTimeline">${rows.map(x=>`<div class="mfTimelineItem"><b>${safe(x.title)}</b><small>${mfDate(x.date)}${x.actorName?` • ${safe(x.actorName)}`:""}${x.actorRole?` • ${safe(String(x.actorRole).toUpperCase())}`:""}</small><div>${safe(x.text||"")}</div></div>`).join("")||'<div class="mfEmpty">لا يوجد سجل زمني بعد</div>'}</div></div>`}
 function mfRenderClientMessages(c){const rows=mfClientRecords("messages",c).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return `<div class="mfPanel"><div class="mfPanelTitle">Messages</div><div class="mfRowActions"><button class="mfSmallBtn" onclick="mfOpenMessageAction('whatsapp',${mfActiveClientIndex})">WhatsApp</button><button class="mfSmallBtn" onclick="mfOpenMessageAction('sms',${mfActiveClientIndex})">SMS</button></div>${rows.map(x=>`<div class="mfListRow"><div class="mfListRowTop"><b>${safe(x.channel)} → ${safe(x.recipientLabel)}</b><span class="mfBadge">${safe(x.template||"رسالة")}</span></div><small>${mfDate(x.createdAt)} • ${safe(x.actorName||"")}</small><div style="margin-top:7px;line-height:1.7">${safe(x.text||"")}</div></div>`).join("")||'<div class="mfEmpty">لا توجد رسائل محفوظة</div>'}</div>`}
 
-async function mfStage5AfterAuth(){mfState();if(typeof mfEnrichOperationalClients==="function")mfEnrichOperationalClients();mfAutoStates();mfUpdateHome();mfApplyMenuPermissions();await mfRequireConsent();mfStartPaymentSync();mfStartChatRealtime();if(typeof mfStartReminderLoop==="function")mfStartReminderLoop();mfCheckDailyContent()}
+async function mfStage5AfterAuth(){mfState();const consentOk=await mfEnsureConsent();if(!consentOk){document.body.classList.add("secureLocked");if($("authGate"))$("authGate").style.display="none";return false;}if(typeof mfEnrichOperationalClients==="function")mfEnrichOperationalClients();mfAutoStates();mfUpdateHome();mfApplyMenuPermissions();mfStartPaymentSync();mfStartChatRealtime();if(typeof mfStartReminderLoop==="function")mfStartReminderLoop();mfCheckDailyContent();return true}
 function mfApplyMenuPermissions(){const audit=$("mfMenuAudit");if(audit)audit.style.display=mfCan("audit")?"block":"none";const settings=$("mfMenuSettings");if(settings)settings.style.display=["founder","cfmp","bm"].includes(mfRole())?"block":"none";const central=document.querySelector('button[onclick*="openSupervisorMessages"]');if(central)central.style.display=mfCan("centralChat")?"block":"none"}
 async function mfRequireConsent(){const s=mfState(),id=CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;if(!id)return;const policyVersion="phase5-20260918";if(s.consents[id]?.policyVersion===policyVersion)return;try{const db=await getSecureClient();if(db){const {data,error}=await db.from("usage_consents").select("id,policy_version,accepted_at").eq("user_id",id).eq("policy_version",policyVersion).order("accepted_at",{ascending:false}).limit(1);if(!error&&data?.[0]?.id){s.consents[id]={acceptedAt:data[0].accepted_at,dbId:data[0].id,policyVersion:data[0].policy_version};return}}}catch(_){};const consentModal=$("mfConsentModal"),consentBody=$("mfConsentBody");if(!consentModal||!consentBody)return;consentBody.innerHTML=`<div class="mfConsentText"><b>سياسة استخدام النظام</b><br>أوافق على استخدام بيانات العمل ضمن الصلاحيات الممنوحة، وعلى حفظ سجل الإجراءات والرسائل والمحادثات والمكالمات الصوتية والمرئية والمرفقات لأغراض التشغيل والمتابعة والتدقيق. وأفهم أن الاطلاع الإداري على السجلات المحفوظة يتم فقط حسب السياسة والصلاحيات المعتمدة، وأن مشاركة بيانات العملاء خارج نطاق العمل غير مسموحة.</div><label class="rememberRow"><input id="mfConsentCheck" type="checkbox"><span>قرأت السياسة وأوافق عليها</span></label><button class="mfSubmit" onclick="mfAcceptConsent()">موافق والمتابعة</button>`;consentModal.classList.add("open");consentModal.setAttribute("aria-hidden","false")}
 async function mfFinishAuthenticatedEntry(loginKind="session"){await roleAwareBootstrap();try{if(typeof window.mfLoadBackendState==="function")await window.mfLoadBackendState()}catch(e){console.warn("post-consent backend refresh",e?.message||e)}document.body.classList.remove("secureLocked");if($("authGate"))$("authGate").style.display="none";loadCfmpName();if(typeof window.mfStage5AfterAuth==="function")window.mfStage5AfterAuth();if(typeof window.mfRefreshIdentityFinal==="function")window.mfRefreshIdentityFinal();mfAudit("login",null,loginKind);await mfMaybeForcePasswordChange();mfSchedulePaymentSync();mfSubscribeChat();mfCheckReminders()}
@@ -4728,10 +4728,10 @@ window.mfSaveDeferral=async function(){
 </script>
 <script src="mf-update-20260916.js"></script>
 <script src="./mf-collaboration-20260916.js"></script>
-<script src="./mf-recovery-20260916.js?v=20260919-r18"></script>
+<script src="./mf-recovery-20260916.js?v=20260919-r21"></script>
 <script src="./mf-messaging-20260916.js"></script>
 <script src="./mf-loading-20260916.js"></script>
-<script src="./mf-session-20260916.js?v=20260919-r18"></script>
+<script src="./mf-session-20260916.js?v=20260919-r21"></script>
 <script id="mfNexaConsentAndSmartNameGate_20260918">
 (function(){
 'use strict';
