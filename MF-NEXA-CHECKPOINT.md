@@ -574,3 +574,12 @@
 - أكملت فجوات التقارير التشغيلية بإضافة تقارير scoped للصلاحيات: Write-Off requests، Legal follow-up، Field Visits، مع بقاء Pending Payments والتقارير السابقة.
 - جميعها تستخدم state المحمّل من Supabase وتطبق mfInScope عند وجود عميل مطابق؛ لا تغيير على البيانات التشغيلية.
 - app commit `6b6bf14091d1f21e67bf7e726643bf27c5a7f7d9`; index sync `96001dbbc0308c9f0a361f8802376cd8bc5050e8`; content SHA `390443adfc444419a75fb86d661961a0b5bcc078`.
+
+
+## Phase 5 final verification — 2026-09-19
+- Re-ran production read-only integrity checks against Supabase: all public tables have RLS enabled; duplicate Pending promises=0; successful payments without posted_at=0.
+- Current operational counts at verification: follow-ups=2, audit rows=110, pending promises=0, pending write-offs=0, active escalations=0; no synthetic financial/operational rows were inserted.
+- Verified required atomic RPCs exist for promise creation and field visits, plus payment import/matching paths.
+- Verified current app.html and index.html are synchronized byte-for-byte at content SHA 390443adfc444419a75fb86d661961a0b5bcc078.
+- Reviewed chained backend hydration wrappers for payments, communications, client notes, consent, chat, and notification preferences; authoritative reads remain Supabase-backed with actor/session guards.
+- Remaining closure evidence is limited to real-device / multi-session Production E2E where physical permissions or two endpoints are required (GPS, WebRTC audio/video, iPhone/PC role/session checks). No claim of those physical tests is made here.
