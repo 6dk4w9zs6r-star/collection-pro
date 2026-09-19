@@ -590,3 +590,12 @@
 - Verified client scope function behavior: founder/cfmp global; BM own branch; ALS own + directly supervised active users; LO own assigned clients. Legal access composes collection scope with lawyer branch scope.
 - Rechecked every SECURITY DEFINER function in public: anon EXECUTE=0 and authenticated EXECUTE=0 for all such functions; they remain internal policy/trigger helpers rather than client-callable privilege bypasses.
 - Supabase Security Advisor currently reports one warning only: Leaked Password Protection Disabled. No schema/RLS security lint was reported. This Auth setting was not changed automatically because it is an account-level authentication policy decision, not a Phase-5 data-path code fix.
+
+
+## Phase 5 executable-test inventory closure — 2026-09-19
+- Audited the repository's executable test inventory: AI scope, anonymous access, approved/browser update paths, collaboration, collection persistence, field/late/cache, loading, messaging, public-shell privacy, R8 continuation, recovery, report reconciliation, and session isolation.
+- Collection persistence harness explicitly covers DB-first failure/success behavior and double-submit protection for follow-ups and promises; failure paths preserve local/client state and success commits only after confirmed DB response.
+- Report harness covers successful-only collection totals, repeat payers, employee identity collisions, Late 30–60 boundaries, and scope preservation.
+- Session/loading harnesses cover account-switch invalidation, stale async reads, paginated hydration, failed-page rollback, and chat subscription replacement.
+- Field/cache harness covers atomic visit RPC outcomes, Late boundaries, service-worker privacy exclusions and offline shell behavior.
+- Physical-device/multi-endpoint evidence remains outside repository harness coverage and is not represented as completed: GPS permission on real phone, WebRTC audio/video between two sessions/devices, and visual responsive checks on target iPhone/PC.
