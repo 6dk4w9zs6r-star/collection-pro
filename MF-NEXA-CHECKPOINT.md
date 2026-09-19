@@ -614,3 +614,11 @@
 - GitHub Actions Pages run 35426321104 targeted that exact head SHA and completed successfully (conclusion=success) on 2026-09-19.
 - This closes the previously unverified Pages build/deployment-status item for that application/checkpoint head. Later checkpoint-only commits do not change app runtime content.
 - Runtime app/index content remains the previously verified synchronized SHA 390443adfc444419a75fb86d661961a0b5bcc078; subsequent commits in this closure sequence only append verification evidence to MF-NEXA-CHECKPOINT.md.
+
+
+## Phase 5 agreed branding + non-destructive closure — 2026-09-19
+- Branding decision closed per approved agreement: NEXA-MF remains the external/PWA product identity (browser title, home-screen/PWA manifest); the authenticated internal UI keeps the approved Microfinance Department/UNRWA identity and the assistant label الاسم الذكي. No branding rewrite was applied to production data or operational logic.
+- Reverified app.html and index.html are byte-identical at content SHA 390443adfc444419a75fb86d661961a0b5bcc078 before closure documentation.
+- Reverified production row counts without mutation: clients=2, profiles=7, payments=1, follow_ups=2, audit_log=110, pending promises=0, pending write-offs=0, active escalations=0.
+- No production row was inserted, updated or deleted during this closure gate. Existing customer, payment, follow-up, audit and profile data were preserved.
+- Phase-5 code/configuration closure is accepted on the approved scope. Remaining physical evidence (real-phone GPS permission, two-session/device WebRTC audio/video, and final iPhone/PC visual pass) is explicitly a device acceptance check and does not justify altering stored production data.
