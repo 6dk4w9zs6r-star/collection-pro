@@ -622,3 +622,12 @@
 - Reverified production row counts without mutation: clients=2, profiles=7, payments=1, follow_ups=2, audit_log=110, pending promises=0, pending write-offs=0, active escalations=0.
 - No production row was inserted, updated or deleted during this closure gate. Existing customer, payment, follow-up, audit and profile data were preserved.
 - Phase-5 code/configuration closure is accepted on the approved scope. Remaining physical evidence (real-phone GPS permission, two-session/device WebRTC audio/video, and final iPhone/PC visual pass) is explicitly a device acceptance check and does not justify altering stored production data.
+
+
+## Phase 5 final automated closure gate — 2026-09-19
+- Revalidated current main head before closure: 2dd42a02a3fa246d4f339fcbf3d858dcdda848a8.
+- app.html and index.html remain byte-identical at content SHA 390443adfc444419a75fb86d661961a0b5bcc078; no runtime code or production data was changed by this gate.
+- Supabase final read-only integrity check: public tables with RLS disabled=0; active profiles=7; clients=2; successful payments missing posted_at=0; duplicate Pending promises for same client/date=0; audit rows=110.
+- GitHub Pages build/deployment for head 2dd42a02a3fa246d4f339fcbf3d858dcdda848a8 completed successfully: Actions run 35426516025, conclusion=success.
+- Automated/code/backend/deployment portion of Phase 5 is closed. The only remaining acceptance evidence is inherently physical/multi-device: real-phone GPS permission/capture, two-device/session WebRTC audio/video, and final iPhone/PC visual interaction pass. These cannot be truthfully marked passed without running them on those endpoints.
+- Data-preservation rule remains in force: no destructive production-data operation is required for those acceptance checks.
