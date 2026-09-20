@@ -5034,5 +5034,21 @@ if(document.readyState!=='loading')enforce();else document.addEventListener('DOM
 })();
 </script>
 
+
+<script id="mfNexaPersonalNotificationMenu_20260920">
+(function(){
+'use strict';
+function install(){
+ const d=document.querySelector('.mainMenuDrawer');if(!d||document.getElementById('mfPersonalNotificationsMenu'))return;
+ const b=document.createElement('button');b.id='mfPersonalNotificationsMenu';b.className='menuItem';b.type='button';b.innerHTML='🔔 إعدادات الإشعارات الشخصية';b.onclick=()=>{closeMainMenu();mfOpenNotificationSettings()};
+ const settings=[...d.querySelectorAll('button.menuItem')].find(x=>String(x.getAttribute('onclick')||'').includes('mfOpenSettings'));
+ if(settings)d.insertBefore(b,settings);else{const logout=document.getElementById('mfLogoutMenu');logout?d.insertBefore(b,logout):d.appendChild(b)}
+}
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);install();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,800),{once:true});else setTimeout(install,800);
+})();
+</script>
+
 </body>
 </html>
