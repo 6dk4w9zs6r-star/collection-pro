@@ -5065,5 +5065,42 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaNotificationInbox_20260920">
+(function(){
+'use strict';
+async function rows(){
+ try{const c=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!c||!uid)return[];const {data,error}=await c.from('notifications').select('id,notification_type,title,body,client_id,deep_link,is_read,created_at').eq('recipient_id',uid).order('created_at',{ascending:false}).limit(200);if(error)throw error;return data||[]}catch(e){mfToast('تعذر تحميل صندوق الإشعارات','bad');return[]}
+}
+window.mfOpenNotificationInbox=async function(){
+ const list=await rows(),unread=list.filter(x=>!x.is_read).length;
+ mfForm('صندوق الإشعارات',`<div class="mfPanel"><b>الإشعارات الشخصية</b><small>غير مقروء: ${unread} • لا تظهر إلا إشعارات حسابك.</small></div><div class="mfList">${list.map(n=>`<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(n.title||'إشعار')}</b><small>${safe(n.body||'')}<br>${mfDate(n.created_at)}</small></div><span class="mfBadge ${n.is_read?'':'pending'}">${n.is_read?'مقروء':'جديد'}</span></div><div class="mfRowActions">${n.client_id?`<button class="mfSmallBtn" onclick="mfOpenNotificationClient('${mfAttr(String(n.id))}','${mfAttr(String(n.client_id))}')">فتح العميل</button>`:''}${!n.is_read?`<button class="mfSmallBtn" onclick="mfMarkNotificationRead('${mfAttr(String(n.id))}')">تمت القراءة</button>`:''}</div></div>`).join('')||'<div class="mfEmpty">لا توجد إشعارات</div>'}</div>`);
+};
+window.mfMarkNotificationRead=async function(id){
+ try{const c=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;const {data,error}=await c.from('notifications').update({is_read:true}).eq('id',id).eq('recipient_id',uid).select('id').maybeSingle();if(error||!data?.id)throw error||Error('not allowed');await mfOpenNotificationInbox()}catch(e){mfToast('تعذر تحديث الإشعار','bad')}
+};
+window.mfOpenNotificationClient=async function(notificationId,clientId){
+ const idx=(clients||[]).findIndex(c=>String(c.id)===String(clientId)||String(c.clientNo)===String(clientId));
+ if(idx<0||!mfInScope(clients[idx]))return mfToast('هذا العميل خارج نطاق صلاحيتك','bad');
+ try{const c=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;await c.from('notifications').update({is_read:true}).eq('id',notificationId).eq('recipient_id',uid)}catch(_){}
+ mfFormClose();mfOpenClient(idx,'overview');
+};
+window.mfHandleDeepLink=function(){
+ const raw=String(location.hash||'').replace(/^#/,'');if(!raw)return;const p=new URLSearchParams(raw),cid=p.get('client'),tab=p.get('tab')||'overview';if(!cid)return;
+ const idx=(clients||[]).findIndex(c=>String(c.id)===String(cid)||String(c.clientNo)===String(cid));
+ if(idx<0||!mfInScope(clients[idx])){mfToast('الرابط لا يملك صلاحية فتح هذا العميل','bad');return}
+ setTimeout(()=>mfOpenClient(idx,tab==='payments'?'payments':tab),250);
+};
+function install(){
+ const d=document.querySelector('.mainMenuDrawer');if(!d||document.getElementById('mfNotificationInboxMenu'))return;
+ const b=document.createElement('button');b.id='mfNotificationInboxMenu';b.className='menuItem';b.type='button';b.innerHTML='🔔 صندوق الإشعارات';b.onclick=()=>{closeMainMenu();mfOpenNotificationInbox()};
+ const prefs=document.getElementById('mfPersonalNotificationsMenu')||document.getElementById('mfMenuNotificationSettings'),logout=document.getElementById('mfLogoutMenu');prefs?d.insertBefore(b,prefs):logout?d.insertBefore(b,logout):d.appendChild(b);
+}
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);install();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,900),{once:true});else setTimeout(install,900);
+})();
+</script>
+
 </body>
 </html>
