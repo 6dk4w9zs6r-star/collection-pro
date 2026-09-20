@@ -5175,5 +5175,44 @@ window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfT
 })();
 </script>
 
+
+<script id="mfNexaSmsCenterScoped_20260920">
+(function(){
+'use strict';
+let smsCtx={client:null,recipient:'client',templates:[]};
+function phones(c){
+ const out=[];if(c?.phone)out.push({type:'client',label:'العميل — '+(c.name||''),phone:c.phone});
+ const gs=[
+  [c?.guarantor,c?.guarantorPhone],
+  [c?.guarantor_name,c?.guarantor_phone],
+  [c?.guarantor2||c?.guarantor_2_name,c?.guarantor2Phone||c?.guarantor_2_phone],
+  [c?.guarantor3||c?.guarantor_3_name,c?.guarantor3Phone||c?.guarantor_3_phone]
+ ];
+ const seen=new Set(out.map(x=>clean(x.phone)));for(const [name,phone] of gs){if(phone&&!seen.has(clean(phone))){seen.add(clean(phone));out.push({type:'guarantor',label:'الكفيل'+(name?' — '+name:''),phone})}}
+ return out;
+}
+async function loadTemplates(){try{const c=await getSecureClient();const {data,error}=await c.from('sms_templates').select('id,name,body,is_active').order('name');if(error)throw error;smsCtx.templates=data||[]}catch(_){smsCtx.templates=[]}return smsCtx.templates}
+window.openSmsCenter=async function(i=null){
+ if(i!==null){const c=clients?.[i];if(!c||!mfInScope(c))return mfToast('العميل خارج نطاق صلاحيتك','bad');smsCtx.client=c}else smsCtx.client=null;
+ await loadTemplates();
+ const modal=$('smsModal');if(!modal)return;
+ const phone=$('smsPhone'),text=$('smsText');
+ if(smsCtx.client){const ps=phones(smsCtx.client);if(phone)phone.value=ps[0]?.phone||'';if(text)text.value=`السلام عليكم ${smsCtx.client.name||''}، نرجو التواصل بخصوص الالتزام المالي المستحق وتسوية الدفعة في أقرب وقت.`}
+ let box=$('mfSmsScopedControls');if(!box){box=document.createElement('div');box.id='mfSmsScopedControls';box.className='note';modal.querySelector('.modal-box')?.insertBefore(box,phone)}
+ const ps=phones(smsCtx.client);
+ box.innerHTML=`${smsCtx.client?`<label>المستلم</label><select id="mfSmsRecipient">${ps.map((p,k)=>`<option value="${mfAttr(p.phone)}">${safe(p.label)} — ${safe(p.phone)}</option>`).join('')}</select>`:''}<label>القالب</label><select id="mfSmsTemplate"><option value="">— بدون قالب —</option>${smsCtx.templates.filter(t=>t.is_active||mfRole()==='founder').map(t=>`<option value="${mfAttr(String(t.id))}">${safe(t.name)}</option>`).join('')}</select>${mfRole()==='founder'?'<button class="secondary" type="button" onclick="mfManageSmsTemplates()">إدارة القوالب الأساسية</button>':''}`;
+ $('mfSmsRecipient')?.addEventListener('change',e=>{if(phone)phone.value=e.target.value});
+ $('mfSmsTemplate')?.addEventListener('change',e=>{const t=smsCtx.templates.find(x=>String(x.id)===String(e.target.value));if(t&&text)text.value=t.body});
+ modal.style.display='flex';
+};
+window.mfManageSmsTemplates=async function(){
+ if(mfRole()!=='founder')return mfToast('إدارة القوالب للمؤسس فقط','bad');await loadTemplates();
+ mfForm('قوالب SMS الأساسية',`<div class="mfList">${smsCtx.templates.map(t=>`<div class="mfListRow"><b>${safe(t.name)}</b><small>${safe(t.body)}</small><div class="mfRowActions"><button class="mfSmallBtn bad" onclick="mfDeleteSmsTemplate('${mfAttr(String(t.id))}')">حذف</button></div></div>`).join('')||'<div class="mfEmpty">لا توجد قوالب</div>'}</div><div class="mfField"><label>اسم القالب</label><input id="mfSmsTplName"></div><div class="mfField"><label>النص</label><textarea id="mfSmsTplBody"></textarea></div><button class="mfSubmit" onclick="mfSaveSmsTemplate()">حفظ قالب جديد</button>`);
+};
+window.mfSaveSmsTemplate=async function(){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const name=$('mfSmsTplName')?.value.trim(),body=$('mfSmsTplBody')?.value.trim();if(!name||!body)return mfToast('أدخل اسم القالب والنص','bad');try{const c=await getSecureClient();const {error}=await c.from('sms_templates').insert({name,body,created_by:CURRENT_PROFILE.id});if(error)throw error;mfAudit('sms_template_created',null,name);mfFormClose();await mfManageSmsTemplates()}catch(e){mfToast('تعذر حفظ القالب','bad')}};
+window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');try{const c=await getSecureClient();const {error}=await c.from('sms_templates').delete().eq('id',id);if(error)throw error;mfAudit('sms_template_deleted',null,id);mfFormClose();await mfManageSmsTemplates()}catch(e){mfToast('تعذر حذف القالب','bad')}};
+})();
+</script>
+
 </body>
 </html>
