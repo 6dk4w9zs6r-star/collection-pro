@@ -5050,5 +5050,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaInstallAllRoles_20260920">
+(function(){
+'use strict';
+function installMenu(){
+ const b=document.getElementById('installAppMenuItem');
+ if(b){b.style.display='block';b.onclick=()=>{closeMainMenu();showInstallHelp()}}
+}
+const oldSecure=window.applySecureMenuVisibility;window.applySecureMenuVisibility=function(){const r=oldSecure?.apply(this,arguments);installMenu();return r};
+const oldApply=window.mfApplyMenuPermissions;window.mfApplyMenuPermissions=function(){const r=oldApply?.apply(this,arguments);installMenu();return r};
+const oldAfter=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await oldAfter?.apply(this,arguments);installMenu();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(installMenu,800),{once:true});else setTimeout(installMenu,800);
+})();
+</script>
+
 </body>
 </html>
