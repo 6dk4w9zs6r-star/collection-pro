@@ -4923,5 +4923,25 @@ window.mfShowMorning=async function(){
 })();
 </script>
 
+
+<script id="mfNexaLoanCalculatorFixedRate_20260920">
+(function(){
+'use strict';
+const E=id=>document.getElementById(id);
+const FIXED_RATE=3;
+window.mfOpenCalculator=function(){
+ mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة الثابتة %</label><input id="mfCalcRate" type="number" value="${FIXED_RATE}" readonly aria-readonly="true"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div><small class="mfPartyHint">نسبة الفائدة مثبتة على ${FIXED_RATE}% ولا يمكن تعديلها من الحاسبة.</small></div><div class="mfPanel"><div class="mfPanelTitle">حاسبة سريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × عدد الدفعات"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`);
+};
+window.mfCalcLoan=function(){
+ const p=Number(E('mfCalcPrincipal')?.value)||0,n=Math.max(0,Math.floor(Number(E('mfCalcMonths')?.value)||0)),rate=FIXED_RATE/100;
+ const interest=p*rate*n,total=p+interest,payment=n?total/n:0;
+ if(E('mfCalcRate'))E('mfCalcRate').value=String(FIXED_RATE);
+ if(E('mfCalcInterest'))E('mfCalcInterest').value=interest?money(interest):'';
+ if(E('mfCalcTotal'))E('mfCalcTotal').value=total?money(total):'';
+ if(E('mfCalcPayment'))E('mfCalcPayment').value=payment?money(payment):'';
+};
+})();
+</script>
+
 </body>
 </html>
