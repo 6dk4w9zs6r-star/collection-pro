@@ -5426,5 +5426,38 @@ window.mfHandleDeepLink=function(){
 };
 })();
 </script>
-</body>
+
+<script id="mfNexaFinalRoleScopeGuard_20260920">
+(function(){
+'use strict';
+const prevInScope=window.mfInScope||mfInScope;
+window.mfInScope=function(c){
+ const r=mfRole();if(!c)return false;
+ if(['founder','cfmp'].includes(r))return true;
+ const branch=String(c.branchCode||c.branch||'').toUpperCase(),myBranch=String(CURRENT_PROFILE?.branch_code||'').toUpperCase();
+ if(r==='bm')return !!myBranch&&branch===myBranch;
+ if(r==='als'){
+  if(c.supervisorId)return String(c.supervisorId)===String(CURRENT_PROFILE?.id||'');
+  if(c.supervisorEmail)return norm(c.supervisorEmail)===norm(CURRENT_PROFILE?.email);
+  return !!myBranch&&branch===myBranch;
+ }
+ if(r==='lo')return String(c.assignedUserId||'')===String(CURRENT_PROFILE?.id||'')||norm(c.employee)===norm(CURRENT_PROFILE?.full_name);
+ return false;
+};
+const prevCan=window.mfCan||mfCan;
+window.mfCan=function(action,c){
+ const r=mfRole(),inside=window.mfInScope(c);
+ if(action==='centralChat')return r==='founder';
+ if(action==='audit')return ['founder','cfmp','bm','als'].includes(r);
+ if(action==='manageOrg')return r==='founder';
+ if(['view','contact'].includes(action))return !!inside;
+ if(action==='promise')return inside&&['founder','cfmp','bm','als','lo'].includes(r);
+ if(!inside)return false;
+ if(action==='approveWriteOff'||action==='approveOperations')return ['founder','cfmp','bm'].includes(r);
+ if(action==='legal')return ['founder','cfmp','bm','als'].includes(r);
+ if(action==='escalate')return ['lo','als','bm'].includes(r);
+ return ['founder','cfmp','bm','als','lo'].includes(r);
+};
+})();
+</script></body>
 </html>
