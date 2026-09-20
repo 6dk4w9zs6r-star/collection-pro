@@ -4950,7 +4950,7 @@ window.mfCalcLoan=function(){
 window.mfCalcExpression=function(){
  const raw=String(E('mfCalcExpr')?.value||'').trim();
  if(!raw)return;
- const expr=raw.replace(/×/g,'*').replace(/÷/g,'/').replace(/٪/g,'%').replace(/,/g,'.').replace(/s+/g,'');
+ const expr=raw.replace(/×/g,'*').replace(/÷/g,'/').replace(/٪/g,'%').replace(/,/g,'.').replace(/\\s+/g,'');
  if(!/^[0-9+\-*/().%]+$/.test(expr)){if(typeof mfToast==='function')mfToast('العملية غير صالحة','bad');return;}
  try{
    const v=Function('"use strict";return ('+expr+')')();
