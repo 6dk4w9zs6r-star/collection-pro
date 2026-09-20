@@ -4867,5 +4867,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaMenuPreferences_20260920">
+(function(){
+'use strict';
+const key=b=>b.id||String(b.getAttribute('onclick')||'').match(/(?:mf|open)[A-Za-z0-9_]+/)?.[0]||'';
+function buttons(){const d=document.querySelector('.mainMenuDrawer');return d?[...d.querySelectorAll('button.menuItem')].filter(b=>key(b)&&!b.classList.contains('danger')):[]}
+async function load(){
+ try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!db||!uid)return;const {data,error}=await db.from('user_menu_preferences').select('menu_order').eq('user_id',uid).maybeSingle();if(error)throw error;const order=Array.isArray(data?.menu_order)?data.menu_order:[];if(!order.length)return;const d=document.querySelector('.mainMenuDrawer');if(!d)return;const map=new Map(buttons().map(b=>[key(b),b]));order.forEach(k=>{const b=map.get(k);if(b)d.appendChild(b)});const logout=document.getElementById('mfLogoutMenu');if(logout)d.appendChild(logout)}catch(_){}
+}
+async function save(){
+ try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!db||!uid)return;const menu_order=buttons().map(key);const {error}=await db.from('user_menu_preferences').upsert({user_id:uid,menu_order,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;mfToast?.('تم حفظ ترتيب القائمة')}catch(e){mfToast?.('تعذر حفظ ترتيب القائمة','bad')}
+}
+function install(){
+ const d=document.querySelector('.mainMenuDrawer');if(!d||document.getElementById('mfMenuOrderControls'))return;
+ const box=document.createElement('div');box.id='mfMenuOrderControls';box.innerHTML='<div class="menuDivider"></div><button class="menuItem" type="button" onclick="mfToggleMenuArrange()">↕ ترتيب قائمتي</button><button id="mfSaveMenuOrderBtn" class="menuItem" type="button" style="display:none" onclick="mfSaveMenuOrder()">💾 حفظ ترتيب القائمة</button>';const logout=document.getElementById('mfLogoutMenu');d.insertBefore(box,logout||null);
+}
+window.mfToggleMenuArrange=function(){
+ const on=!document.body.classList.contains('mfMenuArrange');document.body.classList.toggle('mfMenuArrange',on);const bs=buttons();bs.forEach(b=>{b.draggable=on;b.ondragstart=on?(ev=>{ev.dataTransfer.setData('text/plain',key(b));b.classList.add('mfDragging')}):null;b.ondragend=on?(()=>b.classList.remove('mfDragging')):null;b.ondragover=on?(ev=>ev.preventDefault()):null;b.ondrop=on?(ev=>{ev.preventDefault();const from=bs.find(x=>key(x)===ev.dataTransfer.getData('text/plain'));if(from&&from!==b)b.parentNode.insertBefore(from,b)}):null});const sv=document.getElementById('mfSaveMenuOrderBtn');if(sv)sv.style.display=on?'block':'none';mfToast?.(on?'اسحب عناصر القائمة لترتيبها ثم اضغط حفظ':'تم إلغاء وضع الترتيب')};
+window.mfSaveMenuOrder=async function(){await save();document.body.classList.remove('mfMenuArrange');const sv=document.getElementById('mfSaveMenuOrderBtn');if(sv)sv.style.display='none'};
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();await load();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);install();if(CURRENT_PROFILE)await load();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,1000),{once:true});else setTimeout(install,1000);
+})();
+</script>
+
 </body>
 </html>
