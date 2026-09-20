@@ -2098,6 +2098,7 @@ async function roleAwareBootstrap(){
       guarantor:c.guarantor_name||"",
       guarantorPhone:c.guarantor_phone||"",
       guarantorAddress:c.guarantor_address||"",
+      guarantors:Array.isArray(c.guarantors)?c.guarantors:[],
       reference1Name:c.reference_1_name||"",
       reference1Phone:c.reference_1_phone||"",
       reference2Name:c.reference_2_name||"",
@@ -5246,6 +5247,102 @@ window.mfManageSmsTemplates=async function(){
 };
 window.mfSaveSmsTemplate=async function(){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const name=$('mfSmsTplName')?.value.trim(),body=$('mfSmsTplBody')?.value.trim();if(!name||!body)return mfToast('أدخل اسم القالب والنص','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').insert({name,body,created_by:CURRENT_PROFILE.id});if(error)return mfToast('تعذر حفظ القالب','bad');mfAudit('sms_template_created',null,name);mfManageSmsTemplates()};
 window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').delete().eq('id',id);if(error)return mfToast('تعذر حذف القالب','bad');mfAudit('sms_template_deleted',null,id);mfManageSmsTemplates()};
+})();
+</script>
+
+
+<script id="mfNexaSmsTemplates_20260920">
+(function(){
+'use strict';
+const E=id=>document.getElementById(id), H=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
+const isFounder=()=>String(CURRENT_PROFILE?.role||'').toLowerCase()==='founder';
+let smsClientIndex=null,smsTemplates=[];
+function allGuarantors(c){
+ const out=[],seen=new Set();
+ const add=(name,phone,address)=>{
+  name=String(name||'').trim();phone=String(phone||'').trim();address=String(address||'').trim();
+  const key=(name+'|'+phone).toLowerCase();if((name||phone)&&!seen.has(key)){seen.add(key);out.push({name,phone,address})}
+ };
+ add(c?.guarantor,c?.guarantorPhone,c?.guarantorAddress);
+ (Array.isArray(c?.guarantors)?c.guarantors:[]).forEach(g=>add(g?.name||g?.guarantor_name,g?.phone||g?.guarantor_phone,g?.address||g?.guarantor_address));
+ return out;
+}
+window.mfAllGuarantors=allGuarantors;
+function ensureUi(){
+ const modal=E('smsModal'),box=modal?.querySelector('.modal-box'),phone=E('smsPhone'),text=E('smsText');if(!box||!phone||!text)return;
+ phone.readOnly=true;text.readOnly=!isFounder();
+ if(!E('mfSmsScopeBox')){
+  const wrap=document.createElement('div');wrap.id='mfSmsScopeBox';
+  wrap.innerHTML='<label>العميل ضمن نطاق صلاحيتك</label><select id="mfSmsClient"></select><label>المستلم</label><select id="mfSmsRecipient"></select><label>القالب المعتمد</label><select id="mfSmsTemplate"></select><div id="mfSmsFounderTools" style="display:none;margin:8px 0"><div class="row"><button class="primary" type="button" onclick="mfSmsAddTemplate()">إضافة قالب</button><button class="secondary" type="button" onclick="mfSmsEditTemplate()">تعديل القالب</button></div><button class="danger" style="width:100%;margin-top:7px" type="button" onclick="mfSmsDeleteTemplate()">حذف القالب</button></div>';
+  const h=box.querySelector('h2');h.insertAdjacentElement('afterend',wrap);
+  E('mfSmsClient').onchange=()=>{smsClientIndex=Number(E('mfSmsClient').value);renderRecipients();};
+  E('mfSmsRecipient').onchange=applyRecipient;
+  E('mfSmsTemplate').onchange=applyTemplate;
+ }
+ E('mfSmsFounderTools').style.display=isFounder()?'block':'none';
+}
+function scopedClients(){return Array.isArray(window.clients)?window.clients:[]}
+function renderClients(preferred){
+ const sel=E('mfSmsClient'),arr=scopedClients();if(!sel)return;
+ sel.innerHTML=arr.map((c,i)=>'<option value="'+i+'">'+H(c.name||'-')+' — '+H(c.clientNo||'-')+'</option>').join('');
+ if(!arr.length){sel.innerHTML='<option value="">لا يوجد عملاء ضمن نطاقك</option>';smsClientIndex=null;return false}
+ smsClientIndex=Number.isInteger(preferred)&&arr[preferred]?preferred:0;sel.value=String(smsClientIndex);return true;
+}
+function renderRecipients(){
+ const c=scopedClients()[smsClientIndex],sel=E('mfSmsRecipient');if(!sel||!c)return;
+ const gs=allGuarantors(c),opts=[{id:'client',label:'العميل — '+(c.name||''),phone:c.phone||''},...gs.map((g,n)=>({id:'g'+n,label:'الكفيل '+(n+1)+' — '+(g.name||''),phone:g.phone||''}))];
+ sel.innerHTML=opts.map(x=>'<option value="'+H(x.id)+'" data-phone="'+H(x.phone)+'">'+H(x.label)+'</option>').join('');applyRecipient();
+}
+function applyRecipient(){const o=E('mfSmsRecipient')?.selectedOptions?.[0];if(E('smsPhone'))E('smsPhone').value=o?.dataset?.phone||''}
+async function loadTemplates(){
+ const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+ let q=db.from('sms_templates').select('id,name,body,is_active,created_by,created_at,updated_at').order('created_at',{ascending:true});
+ if(!isFounder())q=q.eq('is_active',true);
+ const {data,error}=await q;if(error)throw error;smsTemplates=data||[];
+ const sel=E('mfSmsTemplate');if(sel){sel.innerHTML=smsTemplates.map(x=>'<option value="'+H(x.id)+'">'+H(x.name)+'</option>').join('')||'<option value="">لا توجد قوالب معتمدة</option>';applyTemplate()}
+}
+function applyTemplate(){const id=E('mfSmsTemplate')?.value,t=smsTemplates.find(x=>String(x.id)===String(id));if(E('smsText'))E('smsText').value=t?.body||''}
+const oldOpen=window.openSmsCenter;
+window.openSmsCenter=async function(i=null){
+ ensureUi();
+ if(!renderClients(i)){if(E('smsPhone'))E('smsPhone').value='';if(E('smsText'))E('smsText').value='';E('smsModal').style.display='flex';return}
+ renderRecipients();E('smsModal').style.display='flex';
+ try{await loadTemplates()}catch(e){if(typeof mfToast==='function')mfToast('تعذر تحميل قوالب SMS: '+(e?.message||e),'bad')}
+};
+window.mfSmsAddTemplate=async function(){
+ if(!isFounder())return mfToast?.('إدارة القوالب متاحة لـ Founder فقط','bad');
+ const name=prompt('اسم القالب:');if(!name)return;const body=prompt('نص القالب:');if(!body)return;
+ const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;const {error}=await db.from('sms_templates').insert({name:name.trim(),body:body.trim(),is_active:true,created_by:uid});if(error)return mfToast?.('تعذر إضافة القالب: '+error.message,'bad');await loadTemplates();mfToast?.('تمت إضافة القالب');
+};
+window.mfSmsEditTemplate=async function(){
+ if(!isFounder())return mfToast?.('إدارة القوالب متاحة لـ Founder فقط','bad');
+ const t=smsTemplates.find(x=>String(x.id)===String(E('mfSmsTemplate')?.value));if(!t)return;
+ const name=prompt('اسم القالب:',t.name);if(name===null)return;const body=prompt('نص القالب:',t.body);if(body===null)return;
+ const db=await getSecureClient();const {error}=await db.from('sms_templates').update({name:name.trim(),body:body.trim(),updated_at:new Date().toISOString()}).eq('id',t.id);if(error)return mfToast?.('تعذر تعديل القالب: '+error.message,'bad');await loadTemplates();mfToast?.('تم تعديل القالب');
+};
+window.mfSmsDeleteTemplate=async function(){
+ if(!isFounder())return mfToast?.('إدارة القوالب متاحة لـ Founder فقط','bad');
+ const t=smsTemplates.find(x=>String(x.id)===String(E('mfSmsTemplate')?.value));if(!t||!confirm('حذف القالب "'+t.name+'"?'))return;
+ const db=await getSecureClient();const {error}=await db.from('sms_templates').delete().eq('id',t.id);if(error)return mfToast?.('تعذر حذف القالب: '+error.message,'bad');await loadTemplates();mfToast?.('تم حذف القالب');
+};
+const oldProvider=window.openSmsProvider;
+window.openSmsProvider=function(){
+ const c=scopedClients()[smsClientIndex],phone=E('smsPhone')?.value.trim(),body=E('smsText')?.value.trim();
+ if(!c)return mfToast?.('اختر عميلاً ضمن نطاق صلاحيتك','bad');
+ const allowed=[c.phone,...allGuarantors(c).map(g=>g.phone)].map(x=>String(x||'').replace(/\D/g,'')).filter(Boolean);
+ if(!phone||!allowed.includes(String(phone).replace(/\D/g,'')))return mfToast?.('رقم المستلم ليس ضمن بيانات العميل المسموح لك','bad');
+ if(!body||(!isFounder()&&!smsTemplates.some(t=>t.is_active&&t.body===body)))return mfToast?.('استخدم قالب SMS معتمد','bad');
+ return oldProvider?.apply(this,arguments);
+};
+const baseOverview=window.mfRenderClientOverview;
+window.mfRenderClientOverview=function(c){
+ let html=baseOverview?.apply(this,arguments)||'',gs=allGuarantors(c);
+ if(gs.length>1){
+  const extra=gs.slice(1).map((g,n)=>'<div class="mfPanel mfPartyPanel"><div class="mfPanelTitle">بيانات الكفيل '+(n+2)+' <small>'+H(g.name)+'</small></div><div class="mfDataGrid">'+mfData('اسم الكفيل',g.name)+mfData('هاتف الكفيل',g.phone)+mfData('عنوان الكفيل',g.address)+'</div></div>').join('');
+  const anchor='<div class="mfPanel"><div class="mfPanelTitle">المعرّفون</div>';html=html.replace(anchor,extra+anchor);
+ }
+ return html;
+};
 })();
 </script>
 
