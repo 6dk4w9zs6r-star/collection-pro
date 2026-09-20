@@ -5126,5 +5126,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaChatPrivacyFix_20260920">
+(function(){
+'use strict';
+const oldSend=window.mfSendChat;
+window.mfSendChat=async function(){
+ const input=$('mfChatText'),text=input?.value.trim(),file=$('mfChatFile'),actor=mfActor();let attachment=null;
+ try{attachment=await mfFileData(file,5*1024*1024)}catch(e){return mfToast(e.message,'bad')}
+ if(!text&&!attachment)return;
+ const room=mfChatRooms().find(r=>r.id===mfCurrentChatRoom)||{id:'general',type:'general'};
+ const targetId=room.type==='private'?room.target?.id:null;
+ if(room.type==='private'&&!targetId)return mfToast('تعذر تحديد الطرف الآخر في المحادثة الخاصة','bad');
+ const teamKey=room.type==='team'?String(room.id).slice(5):null;
+ const branch=room.type==='team'?(CURRENT_PROFILE?.branch_code||null):null;
+ const m={id:mfId(),roomId:room.id,roomType:room.type,senderId:actor.id,senderName:actor.name,senderRole:actor.role,targetId:targetId||null,text:text||'مرفق',attachment,createdAt:mfNow()};
+ const saved=await mfTryInsert('chat_messages',{room_id:m.roomId,room_type:m.roomType,sender_id:CURRENT_PROFILE?.id||null,sender_name:actor.name,target_user_id:targetId||null,branch_code:branch,team_key:teamKey,message_text:m.text,attachment_name:attachment?.name||null,created_at:m.createdAt});
+ if(!saved?.id)return mfToast('تعذر تثبيت الرسالة في قاعدة البيانات','bad');
+ m.id=String(saved.id);mfState().chat.push(m);meta.chatMessages.push(m);mfAudit('chat_message',null,`${room.type} • ${room.id}`);if(input)input.value='';if(file)file.value='';mfRenderChat();mfToast('تم إرسال الرسالة');
+};
+})();
+</script>
+
 </body>
 </html>
