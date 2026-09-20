@@ -4818,5 +4818,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaFounderAccessConsolidation_20260920">
+(function(){
+'use strict';
+function role(){try{return String(mfRole?.()||CURRENT_PROFILE?.role||'').toLowerCase()}catch(_){return ''}}
+function enforce(){
+  const founder=role()==='founder';
+  const drawer=document.querySelector('.mainMenuDrawer');
+  if(drawer){
+    const access=[...drawer.querySelectorAll('button.menuItem')].filter(b=>String(b.getAttribute('onclick')||'').includes('openAccessAdmin'));
+    access.forEach((b,i)=>{b.style.display=founder&&i===0?'block':'none';if(i===0)b.innerHTML='⚙️ إدارة الموظفين والصلاحيات'});
+  }
+  document.querySelectorAll('button[onclick*="openAccessAdmin"]').forEach(b=>{
+    if(!b.closest('.mainMenuDrawer'))b.style.display=founder?'block':'none';
+  });
+}
+const old=window.openAccessAdmin;
+window.openAccessAdmin=function(){
+  if(role()!=='founder'){try{mfToast?.('إدارة الموظفين والصلاحيات متاحة لـ Founder فقط','bad')}catch(_){};return}
+  return old?.apply(this,arguments);
+};
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);enforce();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);enforce();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(enforce,950),{once:true});else setTimeout(enforce,950);
+})();
+</script>
+
 </body>
 </html>
