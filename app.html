@@ -5102,5 +5102,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaFounderCloudShareGuard_20260920">
+(function(){
+'use strict';
+function founderOnly(){return String(CURRENT_PROFILE?.role||'').toLowerCase()==='founder'}
+const oldOpen=window.openCloud;window.openCloud=function(){if(!founderOnly())return mfToast('إعدادات Cloud متاحة للمؤسس فقط','bad');return oldOpen?.apply(this,arguments)};
+const oldLogin=window.cloudLogin;window.cloudLogin=async function(){if(!founderOnly())return mfToast('ربط Cloud متاح للمؤسس فقط','bad');return oldLogin?.apply(this,arguments)};
+window.shareApp=async function(){
+ if(!founderOnly())return mfToast('مشاركة التطبيق متاحة للمؤسس فقط','bad');
+ const data={title:'NEXA-MF',text:'NEXA-MF — MicroFinance Next-Generation Operations & Intelligence',url:location.origin+location.pathname};
+ mfAudit('app_shared',null,data.url);
+ try{if(navigator.share){await navigator.share(data);return}if(navigator.clipboard){await navigator.clipboard.writeText(data.url);mfToast('تم نسخ رابط NEXA-MF');return}prompt('انسخ رابط NEXA-MF:',data.url)}catch(e){if(e?.name!=='AbortError')mfToast('تعذر فتح المشاركة','bad')}
+};
+function enforce(){
+ const share=document.getElementById('shareAppMenuItem');if(share)share.style.display=founderOnly()?'block':'none';
+ document.querySelectorAll('.mainMenuDrawer .menuItem').forEach(btn=>{const oc=String(btn.getAttribute('onclick')||'');if(oc.includes('openCloud'))btn.style.display=founderOnly()?'block':'none'});
+}
+const a=window.applySecureMenuVisibility;window.applySecureMenuVisibility=function(){const r=a?.apply(this,arguments);enforce();return r};
+const b=window.mfApplyMenuPermissions;window.mfApplyMenuPermissions=function(){const r=b?.apply(this,arguments);enforce();return r};
+const c=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await c?.apply(this,arguments);enforce();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(enforce,900),{once:true});else setTimeout(enforce,900);
+})();
+</script>
+
 </body>
 </html>
