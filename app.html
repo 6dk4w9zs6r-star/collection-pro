@@ -4943,5 +4943,31 @@ window.mfCalcLoan=function(){
 })();
 </script>
 
+
+<script id="mfNexaSummaryReadOnly_20260920">
+(function(){
+'use strict';
+const E=id=>document.getElementById(id),H=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
+function summaryRows(){
+ const scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>typeof mfIsLate30to60==='function'?mfIsLate30to60(c):c.inLate),due=scope.filter(c=>(Number(c.dueAmount)||0)>0);
+ const promises=mfState().promises.filter(p=>!mfRecordClient(p)||mfInScope(mfRecordClient(p)));
+ return {scope,late,due,pending:promises.filter(p=>p.status==='pending'),kept:promises.filter(p=>p.status==='kept'),broken:promises.filter(p=>p.status==='broken')};
+}
+window.mfOpenSummary=function(){
+ const x=summaryRows(),high=x.scope.filter(c=>mfPriority(c).score>=65),amount=x.scope.reduce((n,c)=>n+Math.max(Number(c.arrears)||0,Number(c.dueAmount)||0),0);
+ mfForm('Summary — ملخص للقراءة فقط',`<div class="mfPanel"><div class="mfPanelTitle">Summary <small>قراءة فقط • حسب نطاق صلاحيتك</small></div><div class="mfKpis"><div class="mfKpi"><span>العملاء</span><b>${x.scope.length}</b></div><div class="mfKpi"><span>Late 30–60</span><b>${x.late.length}</b></div><div class="mfKpi"><span>Due</span><b>${x.due.length}</b></div><div class="mfKpi"><span>أولوية عالية</span><b>${high.length}</b></div><div class="mfKpi"><span>PTP Pending</span><b>${x.pending.length}</b></div><div class="mfKpi"><span>PTP Kept</span><b>${x.kept.length}</b></div><div class="mfKpi"><span>PTP Broken</span><b>${x.broken.length}</b></div><div class="mfKpi"><span>إجمالي المبلغ الظاهر</span><b>${H(typeof money==='function'?money(amount):amount)}</b></div></div><div class="mfSearchMeta">هذه الشاشة لا تحتوي على تعديل أو استيراد أو مزامنة أو تغيير حالة. أي إجراء تشغيلي يتم من الشاشة المختصة ووفق الصلاحيات.</div></div>`);
+};
+function install(){
+ const d=document.querySelector('.mainMenuDrawer');if(!d||E('mfMenuSummary'))return;
+ const b=document.createElement('button');b.id='mfMenuSummary';b.className='menuItem';b.type='button';b.innerHTML='📋 Summary — ملخص';b.onclick=()=>{closeMainMenu();mfOpenSummary()};
+ const reports=[...d.querySelectorAll('button.menuItem')].find(x=>String(x.getAttribute('onclick')||'').includes('mfOpenReports'));
+ if(reports)d.insertBefore(b,reports);else d.appendChild(b);
+}
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);install();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,1000),{once:true});else setTimeout(install,1000);
+})();
+</script>
+
 </body>
 </html>
