@@ -4761,5 +4761,62 @@ function labels(){document.querySelectorAll('.mfPrimaryTile.ai .mfTileTitle').fo
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',labels,{once:true});else labels();
 })();
 </script>
+
+<script id="mfNexaBranchMessages_20260920">
+(function(){
+'use strict';
+const el=id=>document.getElementById(id);
+const esc=v=>typeof safe==='function'?safe(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const role=()=>{try{return String(mfRole?.()||'').toLowerCase()}catch(_){return ''}};
+const scopedClients=()=>Array.isArray(window.clients)?window.clients.filter(c=>{try{return mfInScope(c)}catch(_){return true}}):[];
+const ckey=c=>String(c?.id??c?.clientId??'');
+const cphone=c=>String(c?.phone||c?.mobile||c?.client_phone||'').trim();
+const gphones=c=>[c?.guarantorPhone,c?.guarantor_phone,c?.guarantor2Phone,c?.guarantor_2_phone].map(x=>String(x||'').trim()).filter((x,i,a)=>x&&a.indexOf(x)===i);
+window.mfOpenBranchMessages=async function(){
+  if(role()==='founder') return mfOpenBranchMessageInbox();
+  const rows=scopedClients().map(c=>`<label class="mfListRow" style="display:block"><input class="mfBranchMsgClient" type="checkbox" value="${esc(ckey(c))}"> <b>${esc(c.name||c.client_name||c.clientName||'عميل')}</b><small>${esc(c.clientNo||c.client_number||'')} • ${esc(c.branchCode||c.branch_code||c.branch||'')}</small></label>`).join('')||'<div class="mfEmpty">لا يوجد عملاء ضمن نطاقك الحالي.</div>';
+  mfForm('رسائل محوّلة من الفروع',`<div class="mfPanel"><small>اختر عميلاً أو أكثر من نطاقك لإرسال طلب الرسالة إلى Founder. ملكية العميل وصلاحياته لا تتغير.</small></div><div class="mfForm"><div class="mfField"><label>المصدر</label><select id="mfBranchMsgSource"><option value="late">Late</option><option value="due">Due</option><option value="followup">Follow-up</option><option value="other">Other</option></select></div><div class="mfField"><label>الأولوية</label><select id="mfBranchMsgSeverity"><option value="normal">عادي</option><option value="high">عالي</option><option value="urgent">عاجل</option></select></div><div class="mfField full"><label>ملاحظة</label><textarea id="mfBranchMsgNotes"></textarea></div></div><div class="mfPanel"><div class="mfPanelTitle">العملاء</div>${rows}</div><button class="mfSubmit" onclick="mfSubmitBranchMessages()">إرسال إلى Founder</button>`);
+};
+window.mfSubmitBranchMessages=async function(){
+  if(role()==='founder')return;
+  const ids=[...document.querySelectorAll('.mfBranchMsgClient:checked')].map(x=>x.value);
+  if(!ids.length)return mfToast('اختر عميلاً واحداً على الأقل','bad');
+  const source=el('mfBranchMsgSource')?.value||'other',severity=el('mfBranchMsgSeverity')?.value||'normal',notes=el('mfBranchMsgNotes')?.value.trim()||null;
+  try{
+    const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+    const uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!uid)throw Error('الجلسة غير صالحة');
+    const payload=ids.map(id=>{const c=scopedClients().find(x=>ckey(x)===id);if(!c)return null;const gs=gphones(c);return {created_by:uid,branch_code:c.branchCode||c.branch_code||c.branch||CURRENT_PROFILE?.branch_code||null,client_id:Number(c.id),source,severity,status:'pending',client_phone:cphone(c)||null,guarantor_phone:gs[0]||null,guarantor_phones:gs,notes};}).filter(Boolean);
+    if(payload.length!==ids.length||payload.some(x=>!Number.isFinite(x.client_id)))throw Error('تعذر تحديد بعض العملاء في قاعدة البيانات');
+    const {data,error}=await db.from('branch_message_requests').insert(payload).select('id');if(error)throw error;
+    if(!Array.isArray(data)||data.length!==payload.length)throw Error('لم تؤكد قاعدة البيانات جميع الطلبات');
+    try{mfAudit?.('branch_message_requested',null,`${payload.length} request(s)`)}catch(_){}
+    mfFormClose();mfToast('تم إرسال '+payload.length+' طلب إلى Founder');
+  }catch(e){mfToast('تعذر إرسال الطلبات: '+(e?.message||e),'bad')}
+};
+window.mfOpenBranchMessageInbox=async function(){
+  if(role()!=='founder')return mfToast('هذه الشاشة للمؤسس فقط','bad');
+  try{
+    const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+    const {data,error}=await db.from('branch_message_requests').select('id,created_at,created_by,branch_code,client_id,source,severity,status,client_phone,guarantor_phone,guarantor_phones,notes,processed_by,processed_at').order('created_at',{ascending:false}).limit(300);
+    if(error)throw error;
+    const rows=(data||[]).map(r=>{const c=(window.clients||[]).find(x=>String(x.id)===String(r.client_id));const phones=[r.client_phone,...(Array.isArray(r.guarantor_phones)?r.guarantor_phones:[r.guarantor_phone])].filter(Boolean);return `<div class="mfListRow"><div class="mfListRowTop"><b>${esc(c?.name||c?.client_name||('Client #'+r.client_id))}</b><span class="mfBadge ${r.status==='pending'?'pending':''}">${esc(r.status)}</span></div><small>${esc(r.branch_code||'-')} • ${esc(r.source)} • ${esc(r.severity)} • ${esc(typeof mfDate==='function'?mfDate(r.created_at):r.created_at)}</small><div>${phones.map(p=>esc(p)).join(' • ')||'لا يوجد هاتف محفوظ'}</div>${r.notes?`<small>${esc(r.notes)}</small>`:''}<div class="mfRowActions">${r.status==='pending'?`<button class="mfSmallBtn" onclick="mfSetBranchMessageStatus('${esc(r.id)}','sent')">تم الإرسال</button>`:''}${r.status!=='completed'?`<button class="mfSmallBtn" onclick="mfSetBranchMessageStatus('${esc(r.id)}','completed')">إكمال</button>`:''}</div></div>`}).join('')||'<div class="mfEmpty">لا توجد طلبات حالياً.</div>';
+    mfForm('رسائل محوّلة من الفروع',`<div class="mfPanel"><div class="mfPanelTitle">صندوق Founder <small>${(data||[]).length}</small></div>${rows}</div>`);
+  }catch(e){mfToast('تعذر تحميل الطلبات: '+(e?.message||e),'bad')}
+};
+window.mfSetBranchMessageStatus=async function(id,status){
+  if(role()!=='founder')return;
+  if(!['sent','completed'].includes(status))return;
+  try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!db||!uid)throw Error('الجلسة غير متاحة');const {error}=await db.from('branch_message_requests').update({status,processed_by:uid,processed_at:new Date().toISOString()}).eq('id',id);if(error)throw error;try{mfAudit?.('branch_message_'+status,null,String(id))}catch(_){}await mfOpenBranchMessageInbox();mfToast(status==='sent'?'تم اعتماد الإرسال':'تم إكمال الطلب')}catch(e){mfToast('تعذر تحديث الطلب: '+(e?.message||e),'bad')}
+};
+function install(){
+  const drawer=document.querySelector('.mainMenuDrawer');if(!drawer||el('mfMenuBranchMessages'))return;
+  const btn=document.createElement('button');btn.id='mfMenuBranchMessages';btn.className='menuItem';btn.innerHTML='✉️ رسائل محوّلة من الفروع';btn.onclick=()=>{try{closeMainMenu()}catch(_){};mfOpenBranchMessages()};drawer.appendChild(btn);
+}
+const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();return r};
+const b=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await b?.apply(this,arguments);install();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,900),{once:true});else setTimeout(install,900);
+})();
+</script>
+
 </body>
 </html>
