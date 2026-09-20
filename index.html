@@ -5214,5 +5214,40 @@ window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfT
 })();
 </script>
 
+
+<script id="mfNexaSmsCenter20260920">
+(function(){
+'use strict';
+let mfSmsClientIndex=null;
+function smsClient(i){return Number.isInteger(i)&&clients?.[i]?clients[i]:null}
+function smsGuarantors(c){
+ const out=[];if(!c)return out;
+ const add=(name,phone,label)=>{phone=String(phone||'').trim();if(phone&&!out.some(x=>clean(x.phone)===clean(phone)))out.push({name:name||label,phone,label})};
+ add(c.guarantor,c.guarantorPhone,'الكفيل');
+ add(c.guarantor_name,c.guarantor_phone,'الكفيل');
+ const gs=Array.isArray(c.guarantors)?c.guarantors:[];gs.forEach((g,k)=>add(g.name||g.guarantor_name,g.phone||g.guarantor_phone,'الكفيل '+(k+1)));
+ return out;
+}
+async function templates(){
+ try{const c=await getSecureClient();const {data,error}=await c.from('sms_templates').select('id,name,body,is_active').order('created_at',{ascending:true});if(error)throw error;return data||[]}catch(_){return[]}
+}
+window.openSmsCenter=async function(i=null){
+ mfSmsClientIndex=Number.isInteger(i)?i:null;const c=smsClient(mfSmsClientIndex),gs=smsGuarantors(c),ts=await templates();
+ const phone=$('smsPhone'),text=$('smsText');if(phone)phone.value=c?.phone||'';if(text&&c)text.value=`السلام عليكم ${c.name||''}، نرجو التواصل بخصوص الالتزام المالي المستحق وتسوية الدفعة في أقرب وقت.`;
+ let extra=document.getElementById('mfSmsControls');if(!extra){extra=document.createElement('div');extra.id='mfSmsControls';text?.parentNode?.insertBefore(extra,text)}
+ extra.innerHTML=`<label>المستلم</label><select id="mfSmsRecipient">${c?`<option value="${mfAttr(c.phone||'')}">العميل — ${safe(c.name||'')} — ${safe(c.phone||'-')}</option>`:''}${gs.map(g=>`<option value="${mfAttr(g.phone)}">${safe(g.label)} — ${safe(g.name||'')} — ${safe(g.phone)}</option>`).join('')}</select><label>القالب</label><select id="mfSmsTemplate"><option value="">بدون قالب</option>${ts.map(t=>`<option value="${mfAttr(t.id)}">${safe(t.name)}</option>`).join('')}</select>${mfRole()==='founder'?'<button type="button" class="secondary" style="width:100%;margin-top:8px" onclick="mfManageSmsTemplates()">⚙️ إدارة القوالب الأساسية</button>':''}`;
+ document.getElementById('mfSmsRecipient')?.addEventListener('change',e=>{if(phone)phone.value=e.target.value});
+ document.getElementById('mfSmsTemplate')?.addEventListener('change',e=>{const t=ts.find(x=>String(x.id)===String(e.target.value));if(t&&text)text.value=t.body||''});
+ $('smsModal').style.display='flex';
+};
+window.mfManageSmsTemplates=async function(){
+ if(mfRole()!=='founder')return mfToast('إدارة القوالب الأساسية للمؤسس فقط','bad');const ts=await templates();
+ mfForm('قوالب SMS الأساسية',`<div class="mfList">${ts.map(t=>`<div class="mfListRow"><b>${safe(t.name)}</b><small>${safe(t.body)}</small><div class="mfRowActions"><button class="mfSmallBtn bad" onclick="mfDeleteSmsTemplate('${mfAttr(t.id)}')">حذف</button></div></div>`).join('')||'<div class="mfEmpty">لا توجد قوالب</div>'}</div><div class="mfForm"><div class="mfField"><label>اسم القالب</label><input id="mfSmsTplName"></div><div class="mfField"><label>النص</label><textarea id="mfSmsTplBody"></textarea></div></div><button class="mfSubmit" onclick="mfSaveSmsTemplate()">إضافة القالب</button>`);
+};
+window.mfSaveSmsTemplate=async function(){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const name=$('mfSmsTplName')?.value.trim(),body=$('mfSmsTplBody')?.value.trim();if(!name||!body)return mfToast('أدخل اسم القالب والنص','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').insert({name,body,created_by:CURRENT_PROFILE.id});if(error)return mfToast('تعذر حفظ القالب','bad');mfAudit('sms_template_created',null,name);mfManageSmsTemplates()};
+window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').delete().eq('id',id);if(error)return mfToast('تعذر حذف القالب','bad');mfAudit('sms_template_deleted',null,id);mfManageSmsTemplates()};
+})();
+</script>
+
 </body>
 </html>
