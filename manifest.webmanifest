@@ -11,7 +11,7 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "./nexa-mf-icon.svg",
+      "src": "./nexa-mf-icon.svg?v=20260921",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
