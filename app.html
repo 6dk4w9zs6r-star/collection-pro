@@ -4845,5 +4845,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaLimitedGlobalSearch_20260920">
+(function(){
+'use strict';
+const e=id=>document.getElementById(id);
+const h=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
+window.secureUniversalSearch=async function(q){
+  q=String(q||'').trim();const out=e('universalSearchResults');if(!out)return;
+  if(q.length<2){out.innerHTML='';return}
+  try{
+    const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+    const {data,error}=await db.rpc('search_clients_limited',{p_query:q,p_limit:100});if(error)throw error;
+    out.innerHTML=(data||[]).map(r=>`<div class="searchResult"><b>${h(r.client_name||'-')}</b><small>رقم العميل: ${h(r.client_number||'-')} | هاتف: ${h(r.phone||'-')}<br>الكفيل: ${h(r.guarantor_name||'-')} | هاتف الكفيل: ${h(r.guarantor_phone||'-')}<br>الفرع: ${h(r.branch_code||'-')} | الموظف المسؤول: ${h(r.assigned_employee||'-')}</small><div class="note">${r.in_scope?'ضمن صلاحيتك: افتح العميل من البحث الداخلي لعرض الملف الكامل.':'خارج نطاقك: تظهر بيانات التعريف والاتصال فقط، ولا تُعرض البيانات المالية أو سجل العميل.'}</div></div>`).join('')||'<div class="empty">لا توجد نتائج</div>';
+  }catch(err){out.innerHTML='<div class="empty">تعذر تنفيذ البحث العام: '+h(err?.message||err)+'</div>'}
+};
+function installVoice(){
+ const input=e('universalSearchInput');if(!input||e('mfUniversalVoiceBtn'))return;
+ const b=document.createElement('button');b.id='mfUniversalVoiceBtn';b.className='mfIconButton';b.type='button';b.textContent='🎙️';b.setAttribute('aria-label','بحث صوتي عام');b.onclick=()=>mfVoiceSearch('universalSearchInput',()=>secureUniversalSearch(input.value));input.insertAdjacentElement('afterend',b);
+}
+const old=window.openUniversalSearch;window.openUniversalSearch=function(){const r=old?.apply(this,arguments);setTimeout(installVoice,0);return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installVoice,{once:true});else installVoice();
+})();
+</script>
+
 </body>
 </html>
