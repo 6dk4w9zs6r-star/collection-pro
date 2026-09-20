@@ -1797,6 +1797,13 @@ async function loadSecureProfile(){
     if(!error&&data)break;
     if(attempt<3) await new Promise(resolve=>setTimeout(resolve,200*(attempt+1)));
   }
+  if(error||!data){
+    const m=authUser.app_metadata||{};
+    if(m.mf_role&&m.mf_active===true){
+      data={id:authUser.id,email:authUser.email||'',full_name:m.mf_full_name||authUser.email||'',role:m.mf_role,is_active:true,branch_code:m.mf_branch_code||'',supervisor_email:null};
+      error=null;
+    }
+  }
   if(error||!data||data.is_active!==true){
     CURRENT_PROFILE=null;return false;
   }
