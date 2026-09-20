@@ -3533,7 +3533,7 @@ const mfRoleBeforeCompletion=window.mfRole;
 window.mfRole=function(){
   const raw=mfRawProfileRole();
   if(raw==='founder'){
-    const mode=String(mfCompletionState().settings.activeRoleMode||'founder').toLowerCase();
+    const mode='founder';
     return mode==='als'?'als':'founder';
   }
   return raw||(typeof mfRoleBeforeCompletion==='function'?mfRoleBeforeCompletion():'');
@@ -3566,7 +3566,6 @@ function mfRoleLabelFinal(role){
 
 window.mfSwitchFounderRole=function(mode){
   if(mfRawProfileRole()!=='founder')return;
-  mfCompletionState().settings.activeRoleMode=mode==='als'?'als':'founder';
   save();
   mfRefreshIdentityFinal();
   mfApplyMenuPermissions();
@@ -3591,7 +3590,6 @@ function mfRefreshIdentityFinal(){
   if(!card){card=document.createElement('section');card.id='mfAccountCardFinal';card.className='mfAccountCardFinal';header.insertAdjacentElement('afterend',card)}
   const name=CURRENT_PROFILE?.full_name_en||CURRENT_PROFILE?.english_name||CURRENT_AUTH_USER?.user_metadata?.full_name_en||CURRENT_AUTH_USER?.user_metadata?.english_name||CURRENT_PROFILE?.full_name||CURRENT_AUTH_USER?.user_metadata?.full_name||CURRENT_AUTH_USER?.email||'';
   const role=mfRole(),branch=CURRENT_PROFILE?.branch_code||CURRENT_PROFILE?.branch||'الفرع غير محدد';
-  const switcher=mfRawProfileRole()==='founder'?`<div class="mfRoleSwitchBlock"><span class="mfRoleSwitchLabel">Founder ⇄ ALS</span><div class="mfRoleSwitcher"><button class="${role==='founder'?'active':''}" onclick="mfSwitchFounderRole('founder')">Founder</button><button class="${role==='als'?'active':''}" onclick="mfSwitchFounderRole('als')">ALS</button></div></div>`:'';
   card.innerHTML=`<div class="mfAccountAvatar">${safe((name||'U').trim().charAt(0).toUpperCase())}</div><div class="mfAccountInfo"><b>${safe(name)}</b><span>${safe(mfRoleLabelFinal(role))}</span>${switcher}</div><div class="mfAccountBranch">${safe(branch)}</div>`;
 }
 window.mfRefreshIdentityFinal=mfRefreshIdentityFinal;
