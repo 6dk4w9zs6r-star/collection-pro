@@ -5148,5 +5148,32 @@ window.mfSendChat=async function(){
 })();
 </script>
 
+
+<script id="mfNexaSmsCenterPhase5_20260920">
+(function(){
+'use strict';
+let mfSmsClientIndex=null;
+function smsNumbers(c){const out=[];if(c?.phone)out.push({label:'العميل — '+(c.name||''),phone:c.phone});if(c?.guarantorPhone)out.push({label:'الكفيل — '+(c.guarantor||''),phone:c.guarantorPhone});const gs=Array.isArray(c?.guarantors)?c.guarantors:[];gs.forEach((g,k)=>{const p=g?.phone||g?.guarantor_phone;if(p)out.push({label:'الكفيل '+(k+1)+' — '+(g.name||g.guarantor_name||''),phone:p})});return out.filter((x,i,a)=>a.findIndex(y=>clean(y.phone)===clean(x.phone))===i)}
+async function templates(){try{const c=await getSecureClient();const {data,error}=await c.from('sms_templates').select('id,name,body').eq('is_active',true).order('name');if(error)throw error;return data||[]}catch(_){return[]}}
+window.openSmsCenter=async function(i=null){
+ if(i!==null&&(!clients[i]||!mfInScope(clients[i])))return mfToast('العميل خارج نطاق صلاحيتك','bad');
+ mfSmsClientIndex=i;
+ const c=i!==null?clients[i]:null,nums=smsNumbers(c),ts=await templates();
+ const phone=$('smsPhone'),text=$('smsText');if(phone)phone.value=nums[0]?.phone||c?.phone||'';if(text&&c)text.value=`السلام عليكم ${c.name||''}، نرجو التواصل بخصوص الالتزام المالي المستحق وتسوية الدفعة في أقرب وقت.`;
+ let box=document.getElementById('mfSmsPhase5Controls');if(!box){box=document.createElement('div');box.id='mfSmsPhase5Controls';box.className='note';const modal=$('smsModal')?.querySelector('.modal-box');modal?.insertBefore(box,phone||modal.firstChild)}
+ if(box)box.innerHTML=`<b>اختيار المستلم</b><select id="mfSmsRecipient">${nums.map(n=>`<option value="${mfAttr(n.phone)}">${safe(n.label)} — ${safe(n.phone)}</option>`).join('')||'<option value="">أدخل الرقم يدويًا</option>'}</select><b>القوالب الأساسية</b><select id="mfSmsTemplate"><option value="">بدون قالب</option>${ts.map(t=>`<option value="${mfAttr(t.id)}">${safe(t.name)}</option>`).join('')}</select>${mfRole()==='founder'?'<button class="secondary" type="button" onclick="mfManageSmsTemplates()">إدارة القوالب — Founder</button>':''}`;
+ document.getElementById('mfSmsRecipient')?.addEventListener('change',e=>{if(phone)phone.value=e.target.value});
+ document.getElementById('mfSmsTemplate')?.addEventListener('change',e=>{const t=ts.find(x=>String(x.id)===String(e.target.value));if(t&&text)text.value=String(t.body||'').replaceAll('{client}',c?.name||'').replaceAll('{guarantor}',c?.guarantor||'')});
+ $('smsModal').style.display='flex';
+};
+window.mfManageSmsTemplates=async function(){
+ if(mfRole()!=='founder')return mfToast('إدارة قوالب SMS للمؤسس فقط','bad');const ts=await templates();
+ mfForm('قوالب SMS الأساسية',`<div class="mfList">${ts.map(t=>`<div class="mfListRow"><b>${safe(t.name)}</b><small>${safe(t.body)}</small><button class="mfSmallBtn bad" onclick="mfDeleteSmsTemplate('${mfAttr(t.id)}')">حذف</button></div>`).join('')||'<div class="mfEmpty">لا توجد قوالب</div>'}</div><div class="mfForm"><div class="mfField"><label>اسم القالب</label><input id="mfSmsTplName"></div><div class="mfField"><label>النص</label><textarea id="mfSmsTplBody" placeholder="يمكن استخدام {client} و {guarantor}"></textarea></div></div><button class="mfSubmit" onclick="mfSaveSmsTemplate()">إضافة القالب</button>`);
+};
+window.mfSaveSmsTemplate=async function(){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const name=$('mfSmsTplName')?.value.trim(),body=$('mfSmsTplBody')?.value.trim();if(!name||!body)return mfToast('أدخل اسم القالب والنص','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').insert({name,body,created_by:CURRENT_PROFILE.id});if(error)return mfToast('تعذر حفظ القالب','bad');mfFormClose();mfToast('تم حفظ القالب')};
+window.mfDeleteSmsTemplate=async function(id){if(mfRole()!=='founder')return mfToast('غير مصرح','bad');const c=await getSecureClient();const {error}=await c.from('sms_templates').delete().eq('id',id);if(error)return mfToast('تعذر حذف القالب','bad');mfManageSmsTemplates()};
+})();
+</script>
+
 </body>
 </html>
