@@ -4969,5 +4969,39 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaPaidRepeatScoped_20260920">
+(function(){
+'use strict';
+function scopedPayments(){
+ const rows=typeof mfCollectedPayments==='function'?mfCollectedPayments():[];
+ return rows.filter(p=>{const c=typeof mfRecordClient==='function'?mfRecordClient(p):null;return c?mfInScope(c):false});
+}
+window.mfPaidReportRows=function(){
+ const groups=new Map();
+ for(const p of scopedPayments()){
+  const c=mfRecordClient(p),key=c?('id:'+mfClientKey(c)):('payment:'+p.id);
+  let row=groups.get(key);if(!row){row={clientNo:c?.clientNo||p.clientNo||'',name:c?.name||p.name||'',employee:c?.employee||p.employee||'',paymentCount:0,totalPaid:0,balance:c?.netToPay??p.balanceAfter??null,lastPaymentDate:''};groups.set(key,row)}
+  row.paymentCount++;row.totalPaid+=num(p.amount);if(String(p.date||'')>row.lastPaymentDate)row.lastPaymentDate=String(p.date||'');
+ }
+ return [...groups.values()];
+};
+window.renderPaid=function(tab=currentPaidTab){
+ currentPaidTab=tab;['One','Two','All'].forEach(x=>document.getElementById('tab'+x)?.classList.remove('active'));document.getElementById('tab'+(tab==='one'?'One':tab==='two'?'Two':'All'))?.classList.add('active');
+ let rows=mfPaidReportRows();const one=rows.filter(x=>x.paymentCount===1),two=rows.filter(x=>x.paymentCount>=2),pays=scopedPayments();
+ if(document.getElementById('onePayCount'))document.getElementById('onePayCount').textContent=one.length;if(document.getElementById('twoPayCount'))document.getElementById('twoPayCount').textContent=two.length;if(document.getElementById('paymentsCount'))document.getElementById('paymentsCount').textContent=pays.length;if(document.getElementById('paidTotal'))document.getElementById('paidTotal').textContent=money(pays.reduce((n,p)=>n+num(p.amount),0));
+ let filtered=tab==='all'?rows:(tab==='one'?one:two);filtered.sort((a,b)=>String(b.lastPaymentDate||'').localeCompare(String(a.lastPaymentDate||'')));
+ const out=document.getElementById('paidList');if(out)out.innerHTML=filtered.map(x=>`<div class="paidRow"><b>${safe(x.name||'-')}</b><small>رقم العميل: ${safe(x.clientNo||'-')} | ${x.paymentCount>=2?'دفعتان فأكثر':'دفعة واحدة'} | عدد الدفعات: ${x.paymentCount} | آخر سداد: ${safe(x.lastPaymentDate||'-')} | إجمالي المسدد: ${money(x.totalPaid||0)} | الرصيد: ${x.balance===null?'—':money(x.balance)} | الموظف: ${safe(x.employee||'-')}</small></div>`).join('')||'<div class="empty">لا يوجد مسددون ضمن نطاق صلاحيتك</div>';
+};
+window.renderRepeat=function(){
+ const visible=(clients||[]).filter(mfInScope),visibleNos=new Set(visible.map(c=>String(c.clientNo||''))),ids=Object.entries(meta.monthAppearances||{}).filter(([id,months])=>visibleNos.has(String(id))&&Array.isArray(months)&&months.length>=2).map(([id])=>id),moves=(meta.transitions||[]).filter(t=>visibleNos.has(String(t.clientNo||'')));
+ if(document.getElementById('repeatCount'))document.getElementById('repeatCount').textContent=ids.length;if(document.getElementById('moveCount'))document.getElementById('moveCount').textContent=moves.length;
+ const rows=ids.map(id=>{const c=visible.find(x=>String(x.clientNo)===String(id))||{};return `<div class="paidRow"><b>🔄 ${safe(c.name||id)}</b><small>رقم العميل: ${safe(id)} | عدد الأشهر: ${(meta.monthAppearances[id]||[]).length} | الأشهر: ${(meta.monthAppearances[id]||[]).join('، ')}</small></div>`}).join('');
+ const trs=moves.slice().reverse().slice(0,100).map(t=>`<div class="paidRow"><b>⏱️ ${safe(t.name||t.clientNo)}</b><small>انتقل من ${safe(t.from)} يوم إلى ${safe(t.to)} يوم | ${safe(t.date)} | الموظف: ${safe(t.employee||'-')}</small></div>`).join('');
+ const out=document.getElementById('repeatList');if(out)out.innerHTML=(rows+trs)||'<div class="empty">لا توجد حالات متكررة أو انتقالات ضمن نطاق صلاحيتك</div>';
+};
+})();
+</script>
+
 </body>
 </html>
