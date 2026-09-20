@@ -5413,5 +5413,18 @@ const d=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(enforce,1000),{once:true});else setTimeout(enforce,1000);
 })();
 </script>
+
+<script id="mfNexaFinalDeepLinkGuard_20260920">
+(function(){
+'use strict';
+window.mfHandleDeepLink=function(){
+ const raw=String(location.hash||'').replace(/^#/,'');if(!raw)return;
+ const p=new URLSearchParams(raw),cid=p.get('client'),tab=p.get('tab')||'overview';if(!cid)return;
+ const idx=(clients||[]).findIndex(c=>String(c.id)===String(cid)||String(c.clientNo)===String(cid));
+ if(idx<0||!mfInScope(clients[idx])){mfToast('الرابط لا يملك صلاحية فتح هذا العميل','bad');return}
+ setTimeout(()=>mfOpenClient(idx,tab==='payments'?'payments':tab),250);
+};
+})();
+</script>
 </body>
 </html>
