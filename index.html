@@ -4892,5 +4892,36 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script id="mfNexaFounderCommunications_20260920">
+(function(){
+'use strict';
+const role=()=>{try{return String(mfRole?.()||'').toLowerCase()}catch(_){return ''}},E=id=>document.getElementById(id),H=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
+async function rows(type){
+ const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
+ const {data,error}=await db.from('announcements').select('id,content_type,title,body,audience,branch_code,team_key,mandatory,created_by,created_at,is_published,starts_at,ends_at,published_at').eq('content_type',type).order('created_at',{ascending:false}).limit(200);if(error)throw error;return data||[];
+}
+function card(a){return `<div class="mfListRow"><div class="mfListRowTop"><b>${H(a.title)}</b>${a.mandatory?'<span class="mfBadge pending">إلزامي</span>':''}</div><small>${H(typeof mfDate==='function'?mfDate(a.created_at):a.created_at)} • ${H(a.audience)}${a.branch_code?' • '+H(a.branch_code):''}${a.team_key?' • '+H(a.team_key):''}</small><div>${H(a.body).replaceAll('\n','<br>')}</div></div>`}
+window.mfRenderCommunications=async function(){
+ const out=E('mfCommsBody');if(!out)return;out.innerHTML='<div class="mfEmpty">جاري تحميل الإعلانات…</div>';
+ try{const data=await rows('announcement'),founder=role()==='founder';out.innerHTML=`<div class="mfTabs"><button class="mfTab active">الإعلانات</button><button class="mfTab" onclick="mfShowMorning()">محتوى صباحي</button><button class="mfTab" onclick="mfShowTeamSpirit()">Team Spirit</button></div>${founder?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm()">إضافة إعلان</button>':''}<div class="mfPanel"><div class="mfPanelTitle">الإعلانات ضمن نطاقك <small>${data.length}</small></div>${data.map(card).join('')||'<div class="mfEmpty">لا توجد إعلانات منشورة</div>'}</div>`;}catch(e){out.innerHTML='<div class="mfEmpty">تعذر تحميل الإعلانات: '+H(e?.message||e)+'</div>'}
+};
+window.mfOpenAnnouncementForm=function(kind='announcement'){
+ if(role()!=='founder')return mfToast?.('النشر متاح لـ Founder فقط','bad');
+ mfForm(kind==='morning'?'محتوى صباحي':'إعلان داخلي',`<input id="mfCommKind" type="hidden" value="${H(kind)}"><div class="mfForm"><div class="mfField"><label>العنوان</label><input id="mfCommTitle"></div><div class="mfField"><label>الجمهور</label><select id="mfCommAudience"><option value="all">جميع الموظفين</option><option value="branch">الفرع</option><option value="team">الفريق</option></select></div><div class="mfField"><label>رمز الفرع (عند اختيار الفرع)</label><input id="mfCommBranch"></div><div class="mfField"><label>الفريق (عند اختيار الفريق)</label><input id="mfCommTeam"></div><div class="mfField full"><label>النص</label><textarea id="mfCommText"></textarea></div>${kind==='morning'?'<div class="mfField"><label><input id="mfCommMandatory" type="checkbox"> إلزامي القراءة</label></div>':''}</div><button class="mfSubmit" onclick="mfSaveCommunication()">نشر</button>`);
+};
+window.mfSaveCommunication=async function(){
+ if(role()!=='founder')return mfToast?.('النشر متاح لـ Founder فقط','bad');
+ const kind=E('mfCommKind')?.value||'announcement',title=E('mfCommTitle')?.value.trim(),body=E('mfCommText')?.value.trim(),audience=E('mfCommAudience')?.value||'all';if(!title||!body)return mfToast?.('العنوان والنص مطلوبان','bad');
+ const branch_code=audience==='branch'?(E('mfCommBranch')?.value.trim()||null):null,team_key=audience==='team'?(E('mfCommTeam')?.value.trim()||null):null;if(audience==='branch'&&!branch_code)return mfToast?.('حدد الفرع','bad');if(audience==='team'&&!team_key)return mfToast?.('حدد الفريق','bad');
+ try{const db=await getSecureClient(),uid=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;if(!db||!uid)throw Error('الجلسة غير متاحة');const {error}=await db.from('announcements').insert({content_type:kind,title,body,audience,branch_code,team_key,mandatory:!!E('mfCommMandatory')?.checked,created_by:uid,is_published:true,published_at:new Date().toISOString()});if(error)throw error;mfFormClose();await mfRenderCommunications();mfToast?.('تم النشر')}catch(e){mfToast?.('تعذر النشر: '+(e?.message||e),'bad')}
+};
+window.mfShowMorning=async function(){
+ const out=E('mfCommsBody');if(!out)return;out.innerHTML='<div class="mfEmpty">جاري التحميل…</div>';
+ try{const data=await rows('morning'),founder=role()==='founder';out.innerHTML=`<button class="mfSecondary" onclick="mfRenderCommunications()">← الإعلانات</button>${founder?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm(\'morning\')">إضافة محتوى صباحي</button>':''}<div class="mfPanel">${data.map(card).join('')||'<div class="mfEmpty">لا يوجد محتوى صباحي</div>'}</div>`;}catch(e){out.innerHTML='<div class="mfEmpty">تعذر التحميل: '+H(e?.message||e)+'</div>'}
+};
+})();
+</script>
+
 </body>
 </html>
