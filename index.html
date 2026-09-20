@@ -5003,5 +5003,36 @@ window.renderRepeat=function(){
 })();
 </script>
 
+
+<script id="mfNexaFounderSystemOrgGuard_20260920">
+(function(){
+'use strict';
+const canBefore=window.mfCan;
+window.mfCan=function(action,c){
+ if(action==='manageOrg')return mfRole()==='founder';
+ return canBefore(action,c);
+};
+window.mfOpenSettings=function(){
+ if(mfRole()!=='founder')return mfToast('إعدادات النظام متاحة للمؤسس فقط','bad');
+ const s=mfState().settings;
+ mfForm('إعدادات النظام',`<div class="mfForm"><div class="mfField"><label>طرق الدخول المتاحة</label><select id="mfSetLogin"><option value="both" ${s.loginMode==='both'?'selected':''}>Email + Phone</option><option value="email" ${s.loginMode==='email'?'selected':''}>Email only</option><option value="phone" ${s.loginMode==='phone'?'selected':''}>Phone only</option></select></div><div class="mfField"><label>حد التنبيه بالأولوية</label><input id="mfSetPriority" type="number" min="1" max="100" value="${num(s.followupThreshold)||50}"></div></div><button class="mfSubmit" onclick="mfSaveSettings()">حفظ إعدادات النظام</button>`);
+};
+window.mfSaveSettings=function(){
+ if(mfRole()!=='founder')return mfToast('غير مصرح بتعديل إعدادات النظام','bad');
+ const s=mfState().settings;s.loginMode=document.getElementById('mfSetLogin').value;s.followupThreshold=Math.max(1,Math.min(100,num(document.getElementById('mfSetPriority').value)||50));
+ mfCommit('settings_updated',null,`login=${s.loginMode}; priority=${s.followupThreshold}`);mfFormClose();mfToast('تم حفظ إعدادات النظام');
+};
+function enforce(){
+ document.querySelectorAll('.mainMenuDrawer .menuItem').forEach(btn=>{
+  const oc=String(btn.getAttribute('onclick')||'');
+  if(oc.includes('mfOpenSettings'))btn.style.display=mfRole()==='founder'?'block':'none';
+ });
+}
+const oldApply=window.mfApplyMenuPermissions;window.mfApplyMenuPermissions=function(){const r=oldApply?.apply(this,arguments);enforce();return r};
+const oldSecure=window.applySecureMenuVisibility;window.applySecureMenuVisibility=function(){const r=oldSecure?.apply(this,arguments);enforce();return r};
+if(document.readyState!=='loading')enforce();else document.addEventListener('DOMContentLoaded',enforce);
+})();
+</script>
+
 </body>
 </html>
