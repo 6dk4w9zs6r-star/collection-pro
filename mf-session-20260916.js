@@ -18,7 +18,7 @@ window.mfInvalidateSessionView=function(){sessionEpoch++;lock();actor=null;CURRE
   try{mfCallState?.stream?.getTracks().forEach(t=>t.stop());mfCallState?.pc?.close();mfCallState?.channel?.unsubscribe();}catch(_){}mfCallState=null;
 };
 const bootstrapBefore=window.roleAwareBootstrap;
-window.roleAwareBootstrap=async function(){let id=CURRENT_PROFILE?.id,epoch=sessionEpoch;if(!id||CURRENT_AUTH_USER?.id!==id){try{const db=await getSecureClient();const {data,error}=await db.auth.getSession();if(error)throw error;const user=data?.session?.user;if(user){CURRENT_AUTH_USER=user;if(!CURRENT_PROFILE||CURRENT_PROFILE.id!==user.id){await loadSecureProfile(user);id=CURRENT_PROFILE?.id}}}catch(_){}}if(!id||CURRENT_AUTH_USER?.id!==id)throw Error('يلزم حساب معتمد لتحميل البيانات');if(actor!==id){clearView();actor=id;}try{await bootstrapBefore.apply(this,arguments);if(epoch!==sessionEpoch||CURRENT_PROFILE?.id!==id||CURRENT_AUTH_USER?.id!==id)throw Error('تغير الحساب أثناء تحميل البيانات');}catch(e){if(epoch===sessionEpoch&&CURRENT_PROFILE?.id===id)mfInvalidateSessionView();throw e;}};
+window.roleAwareBootstrap=async function(){let id=CURRENT_PROFILE?.id,epoch=sessionEpoch;if(!id||CURRENT_AUTH_USER?.id!==id){try{const db=await getSecureClient();const {data,error}=await db.auth.getSession();if(error)throw error;const user=data?.session?.user;if(user){CURRENT_AUTH_USER=user;if(!CURRENT_PROFILE||CURRENT_PROFILE.id!==user.id){await loadSecureProfile();id=CURRENT_PROFILE?.id}}}catch(_){}}if(!id||CURRENT_AUTH_USER?.id!==id)throw Error('يلزم حساب معتمد لتحميل البيانات');if(actor!==id){clearView();actor=id;}try{await bootstrapBefore.apply(this,arguments);if(epoch!==sessionEpoch||CURRENT_PROFILE?.id!==id||CURRENT_AUTH_USER?.id!==id)throw Error('تغير الحساب أثناء تحميل البيانات');}catch(e){if(epoch===sessionEpoch&&CURRENT_PROFILE?.id===id)mfInvalidateSessionView();throw e;}};
 const loginBefore=window.secureLogin;
 window.secureLogin=async function(){if(loginRunning||logoutRunning)return;loginRunning=true;mfInvalidateSessionView();
   try{await loginBefore.apply(this,arguments);}finally{
@@ -48,5 +48,5 @@ window.mfObserveSession=async function(){const db=await getSecureClient();if(!db
   db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(CURRENT_AUTH_USER?.id&&session?.user?.id&&CURRENT_AUTH_USER.id!==session.user.id))mfInvalidateSessionView();});
 };
 mfObserveSession().catch(()=>{});
-window.MF_NEXA_RELEASE='2026-09-19-r24';
+window.MF_NEXA_RELEASE='2026-09-20-r25';
 })();
