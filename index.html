@@ -5386,5 +5386,32 @@ window.mfSaveEscalationFinal=async function(){
 })();
 </script>
 
+
+<script id="mfNexaFinalSettingsGuard_20260920">
+(function(){
+'use strict';
+function founder(){return String(CURRENT_PROFILE?.role||'').toLowerCase()==='founder'}
+const prevOpen=window.mfOpenSettings;
+window.mfOpenSettings=function(){
+ if(!founder())return mfToast('إعدادات النظام متاحة للمؤسس فقط','bad');
+ return prevOpen?.apply(this,arguments);
+};
+const prevSave=window.mfSaveSettingsFinal;
+window.mfSaveSettingsFinal=async function(){
+ if(!founder())return mfToast('غير مصرح بتعديل إعدادات النظام','bad');
+ return prevSave?.apply(this,arguments);
+};
+function enforce(){
+ document.querySelectorAll('.mainMenuDrawer button.menuItem').forEach(b=>{
+  const oc=String(b.getAttribute('onclick')||'');
+  if(oc.includes('mfOpenSettings')&&!oc.includes('Notification'))b.style.display=founder()?'block':'none';
+ });
+}
+const a=window.mfApplyMenuPermissions;window.mfApplyMenuPermissions=function(){const r=a?.apply(this,arguments);enforce();return r};
+const b=window.applySecureMenuVisibility;window.applySecureMenuVisibility=function(){const r=b?.apply(this,arguments);enforce();return r};
+const d=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await d?.apply(this,arguments);enforce();return r};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(enforce,1000),{once:true});else setTimeout(enforce,1000);
+})();
+</script>
 </body>
 </html>
