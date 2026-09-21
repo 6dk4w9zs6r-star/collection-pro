@@ -5500,5 +5500,28 @@ window.mfCan=function(action,c){
  return ['founder','cfmp','bm','als','lo'].includes(r);
 };
 })();
-</script></body>
+</script>
+<script id="mfNexaDirectEntryGuards_20260921">
+(function(){
+'use strict';
+const role=()=>{try{return String(mfRole?.()||CURRENT_PROFILE?.role||'').toLowerCase()}catch(_){return String(CURRENT_PROFILE?.role||'').toLowerCase()}};
+const canManageClients=()=>['founder','cfmp','bm','als'].includes(role());
+const oldOpenModal=window.openModal;
+window.openModal=function(){if(!canManageClients())return mfToast?.('إضافة العملاء غير متاحة لهذا الدور','bad');return oldOpenModal?.apply(this,arguments)};
+const oldSaveClient=window.saveClient;
+window.saveClient=function(){if(!canManageClients())return mfToast?.('غير مصرح بإضافة عميل','bad');return oldSaveClient?.apply(this,arguments)};
+const oldSms=window.openSmsCenter;
+window.openSmsCenter=function(i=null){
+ if(i!==null){const c=clients?.[Number(i)];if(!c||!window.mfInScope?.(c))return mfToast?.('العميل خارج نطاق صلاحيتك','bad')}
+ return oldSms?.apply(this,arguments);
+};
+const oldProvider=window.openSmsProvider;
+window.openSmsProvider=function(){
+ const idx=Number(document.getElementById('mfSmsClient')?.value);const c=clients?.[Number.isFinite(idx)?idx:-1];
+ if(!c||!window.mfInScope?.(c))return mfToast?.('لا يمكن إرسال رسالة خارج نطاق صلاحيتك','bad');
+ return oldProvider?.apply(this,arguments);
+};
+})();
+</script>
+</body>
 </html>
