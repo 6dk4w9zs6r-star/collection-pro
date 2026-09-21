@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260921-bootstrap-chain-r28";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-comms-permissions-r29";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3865,7 +3865,7 @@ function mfCommAttachmentHtml(a){
 }
 const mfRenderCommunicationsBeforeCompletion=window.mfRenderCommunications;
 window.mfRenderCommunications=function(){
-  const out=$('mfCommsBody'),s=mfCompletionState(),anns=s.announcements.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),morning=s.morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=['founder','cfmp','bm','als'].includes(mfRole());
+  const out=$('mfCommsBody'),s=mfCompletionState(),anns=s.announcements.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),morning=s.morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=mfRole()==='founder';
   out.innerHTML=`<div class="mfTabs"><button class="mfTab active">الإعلانات</button><button class="mfTab" onclick="mfShowMorningFinal()">محتوى صباحي</button><button class="mfTab" onclick="mfShowTeamSpirit()">Team Spirit</button></div>${can?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm()">إضافة إعلان</button>':''}<div class="mfPanel"><div class="mfPanelTitle">الإعلانات ضمن نطاقك <small>${anns.length}</small></div>${anns.map(a=>`<div class="mfListRow"><b>${safe(a.title)}</b><small>${safe(a.authorName)} • ${mfDate(a.createdAt)} • ${safe(a.audience)}</small><div>${safe(a.text).replaceAll('\n','<br>')}</div>${mfCommAttachmentHtml(a)}</div>`).join('')||'<div class="mfEmpty">لا توجد إعلانات منشورة</div>'}</div>${morning.some(x=>x.mandatory&&!x.readBy?.includes(mfActor().id))?'<div class="mfPanel"><b>يوجد محتوى صباحي إلزامي غير مقروء</b><button class="mfSubmit" onclick="mfShowMorningFinal()">عرضه الآن</button></div>':''}`;
 };
 window.mfMarkMorningRead=async function(id){
@@ -3881,7 +3881,7 @@ window.mfMarkMorningRead=async function(id){
 };
 
 window.mfShowMorningFinal=function(){
-  const out=$('mfCommsBody'),rows=mfCompletionState().morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=['founder','cfmp','bm','als'].includes(mfRole());
+  const out=$('mfCommsBody'),rows=mfCompletionState().morningContent.filter(mfAnnouncementVisible).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))),can=mfRole()==='founder';
   out.innerHTML=`<button class="mfSecondary" onclick="mfRenderCommunications()">← الإعلانات</button>${can?'<button class="mfSubmit" onclick="mfOpenAnnouncementForm(\'morning\')">إضافة محتوى صباحي</button>':''}<div class="mfPanel">${rows.map(a=>`<div class="mfListRow"><div class="mfListRowTop"><b>${safe(a.title)}</b>${a.mandatory?'<span class="mfBadge pending">إلزامي</span>':''}</div><small>${mfDate(a.createdAt)} • ${safe(a.authorName)}</small><div>${safe(a.text).replaceAll('\n','<br>')}</div>${mfCommAttachmentHtml(a)}${a.mandatory&&!mfArray(a.readBy).includes(mfActor().id)?`<button class="mfSubmit" onclick="mfMarkMorningRead('${mfAttr(a.id)}')">قرأت المحتوى</button>`:''}</div>`).join('')||'<div class="mfEmpty">لا يوجد محتوى صباحي</div>'}</div>`;
 };
 
