@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260921-auth-chain-r27";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-bootstrap-chain-r28";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3947,7 +3947,7 @@ const mfStage5AfterAuthBeforeCompletion=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){const prior=await mfStage5AfterAuthBeforeCompletion?.apply(this,arguments);if(prior===false)return false;mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfApplyMenuPermissions();mfSubscribePaymentNotifications();mfPatchLabelsFinal();return true};
 
 const mfPhase5AfterBootstrapBeforeCompletion=window.mfPhase5AfterBootstrap;
-window.mfPhase5AfterBootstrap=function(){mfPhase5AfterBootstrapBeforeCompletion();mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfPatchLabelsFinal()};
+window.mfPhase5AfterBootstrap=async function(){const r=await mfPhase5AfterBootstrapBeforeCompletion?.apply(this,arguments);if(r===false)return false;mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfPatchLabelsFinal();return true};
 
 function mfCompletionInit(){
   try{mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfPatchLabelsFinal();if(CURRENT_PROFILE)mfApplyMenuPermissions()}catch(e){console.error('NEXA-MF completion patch',e)}
@@ -4099,7 +4099,7 @@ async function registerPwa(){if(!('serviceWorker' in navigator)||location.protoc
 const afterAuthOld=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){const r=await afterAuthOld?.apply(this,arguments);if(r===false)return false;await registerPwa();await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350);return true};
 const afterBootOld=window.mfPhase5AfterBootstrap;
-window.mfPhase5AfterBootstrap=async function(){await afterBootOld();await registerPwa();if(CURRENT_PROFILE){await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350)}};
+window.mfPhase5AfterBootstrap=async function(){const r=await afterBootOld?.apply(this,arguments);if(r===false)return false;await registerPwa();if(CURRENT_PROFILE){await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350)}return true};
 
 window.addEventListener('hashchange',()=>mfHandleDeepLink());
 window.MF_NEXA_RUNTIME_HARDENING_VERSION=VERSION;
@@ -4176,7 +4176,7 @@ window.mfOpenChat=async function(){await mfLoadBackendState();openChatOld()};
 const authOld=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){const r=await authOld?.apply(this,arguments);if(r===false)return false;await mfLoadBackendState();return true};
 const bootOld=window.mfPhase5AfterBootstrap;
-window.mfPhase5AfterBootstrap=async function(){await bootOld();if(CURRENT_PROFILE)await mfLoadBackendState()};
+window.mfPhase5AfterBootstrap=async function(){const r=await bootOld?.apply(this,arguments);if(r===false)return false;if(CURRENT_PROFILE)await mfLoadBackendState();return true};
 window.MF_NEXA_BACKEND_SYNC_VERSION=VERSION;
 })();
 </script>
@@ -4364,7 +4364,7 @@ window.mfLoadBackendState=async function(){await loadBefore();try{const db=await
 
 /* 8) Install additive menu entries after authentication/bootstrap. */
 const afterAuth=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await afterAuth?.apply(this,arguments);if(r===false)return false;installNotificationMenu();installTrainingMenu();return true};
-const afterBoot=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){await afterBoot();installNotificationMenu();installTrainingMenu()};
+const afterBoot=window.mfPhase5AfterBootstrap;window.mfPhase5AfterBootstrap=async function(){const r=await afterBoot?.apply(this,arguments);if(r===false)return false;installNotificationMenu();installTrainingMenu();return true};
 setTimeout(()=>{installNotificationMenu();installTrainingMenu()},700);
 window.MF_NEXA_EXECUTION_PATCH_VERSION=V;
 })();
