@@ -1,5 +1,4 @@
 {
-  "id": "./",
   "name": "NEXA-MF — MicroFinance Next-Generation Operations & Intelligence",
   "short_name": "NEXA-MF",
   "description": "MicroFinance Next-Generation Operations & Intelligence",
@@ -11,12 +10,6 @@
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    {
-      "src": "./apple-touch-icon-180.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "./nexa-mf-icon.svg",
       "sizes": "any",
