@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260919-consent-r24";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-auth-chain-r25";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -549,6 +549,23 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   }
 }
 </style>
+
+<style id="mfNexaIosSafeAreaFix_20260921">
+/* MF_NEXA_IOS_SAFE_AREA_FIX_20260921 */
+@supports (padding-top: env(safe-area-inset-top)){
+  @media (max-width:700px){
+    header{padding-top:calc(18px + env(safe-area-inset-top))!important;}
+    .menuBtn{top:calc(14px + env(safe-area-inset-top))!important;}
+  }
+}
+</style>
+
+<style id="mfNexaUnrwaHeaderLower_20260921">
+/* MF_NEXA_UNRWA_HEADER_LOWER_20260921 */
+@media (max-width:700px){
+  #nexaHeaderIdentity{position:relative!important;top:32px!important;margin-bottom:32px!important;}
+}
+</style>
 </head>
 <!-- NEXA-MF V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
@@ -1051,7 +1068,7 @@ const $=id=>document.getElementById(id),safe=v=>String(v??"").replaceAll("&","&a
 function today(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function monthKey(){return today().slice(0,7)}
 function num(v){return Number(String(v??"").replace(/,/g,"").replace(/[^\d.-]/g,""))||0}
-function money(v){return num(v).toLocaleString("ar-JO",{maximumFractionDigits:2})+" \u062f.\u0623"}
+function money(v){return num(v).toLocaleString("en-JO",{maximumFractionDigits:2})+" \u062f.\u0623"}
 function norm(v){return String(v??"").toLowerCase().replace(/\s+/g," ").trim()}
 function clean(v){return String(v??"").replace(/\.0$/,"").trim()}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
@@ -3460,7 +3477,7 @@ function mfShowMorning(){const out=$("mfCommsBody"),rows=mfState().morningConten
 function mfMarkMorningRead(id){const x=mfState().morningContent.find(a=>a.id===id);if(!x)return;x.readBy=mfArray(x.readBy);if(!x.readBy.includes(mfActor().id))x.readBy.push(mfActor().id);mfCommit("morning_content_read",null,id);mfShowMorning()}
 function mfShowTeamSpirit(){const out=$("mfCommsBody"),wins=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score).slice(0,3);out.innerHTML=`<button class="mfSecondary" onclick="mfRenderCommunications()">← الإعلانات</button><div class="mfPanel"><div class="mfPanelTitle">Team Spirit</div><div class="mfKpis">${wins.map((x,i)=>`<div class="mfKpi"><span>#${i+1}</span><b>${safe(x.e.name)}</b><small>${x.m.score} نقطة</small></div>`).join("")}</div><div class="mfListRow"><b>رسالة الفريق</b><small>كل متابعة موثقة، وكل وعد محفوظ، وكل تعاون بين أعضاء الفريق يقربنا من هدفنا.</small></div><div class="mfListRow"><b>الهوية المشتركة</b><small>معًا نستطيع النجاح</small></div></div>`}
 
-function mfOpenCalculator(){mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة شهرية ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة الشهرية %</label><input id="mfCalcRate" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div></div><div class="mfPanel"><div class="mfPanelTitle">حاسبة سريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × عدد الدفعات"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`)}
+function mfOpenCalculator(){mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة شهرية ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" lang="en" dir="ltr" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة الشهرية %</label><input id="mfCalcRate" lang="en" dir="ltr" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" lang="en" dir="ltr" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" lang="en" dir="ltr" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" lang="en" dir="ltr" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" lang="en" dir="ltr" readonly></div></div></div><div class="mfPanel"><div class="mfPanelTitle">حاسبة سريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" lang="en" dir="ltr" class="mfSearchInput" placeholder="مثال: (250 + 40) × عدد الدفعات"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`)}
 function mfCalcLoan(){const p=num($("mfCalcPrincipal")?.value),rate=num($("mfCalcRate")?.value)/100,n=Math.max(0,Math.floor(num($("mfCalcMonths")?.value))),interest=p*rate*n,total=p+interest,payment=n?total/n:0;if($("mfCalcInterest"))$("mfCalcInterest").value=interest?money(interest):"";if($("mfCalcTotal"))$("mfCalcTotal").value=total?money(total):"";if($("mfCalcPayment"))$("mfCalcPayment").value=payment?money(payment):""}
 function mfCalcExpression(){const expr=$("mfCalcExpr")?.value||"";if(!/^[0-9+\-*/(). %]+$/.test(expr))return mfToast("العملية غير صالحة","bad");try{$("mfCalcResult").textContent=String(Function('"use strict";return ('+expr+')')())}catch(_){mfToast("تعذر حساب العملية","bad")}}
 
@@ -3533,7 +3550,7 @@ const mfRoleBeforeCompletion=window.mfRole;
 window.mfRole=function(){
   const raw=mfRawProfileRole();
   if(raw==='founder'){
-    const mode=String(mfCompletionState().settings.activeRoleMode||'founder').toLowerCase();
+    const mode='founder';
     return mode==='als'?'als':'founder';
   }
   return raw||(typeof mfRoleBeforeCompletion==='function'?mfRoleBeforeCompletion():'');
@@ -3566,7 +3583,6 @@ function mfRoleLabelFinal(role){
 
 window.mfSwitchFounderRole=function(mode){
   if(mfRawProfileRole()!=='founder')return;
-  mfCompletionState().settings.activeRoleMode=mode==='als'?'als':'founder';
   save();
   mfRefreshIdentityFinal();
   mfApplyMenuPermissions();
@@ -3591,8 +3607,7 @@ function mfRefreshIdentityFinal(){
   if(!card){card=document.createElement('section');card.id='mfAccountCardFinal';card.className='mfAccountCardFinal';header.insertAdjacentElement('afterend',card)}
   const name=CURRENT_PROFILE?.full_name_en||CURRENT_PROFILE?.english_name||CURRENT_AUTH_USER?.user_metadata?.full_name_en||CURRENT_AUTH_USER?.user_metadata?.english_name||CURRENT_PROFILE?.full_name||CURRENT_AUTH_USER?.user_metadata?.full_name||CURRENT_AUTH_USER?.email||'';
   const role=mfRole(),branch=CURRENT_PROFILE?.branch_code||CURRENT_PROFILE?.branch||'الفرع غير محدد';
-  const switcher=mfRawProfileRole()==='founder'?`<div class="mfRoleSwitchBlock"><span class="mfRoleSwitchLabel">Founder ⇄ ALS</span><div class="mfRoleSwitcher"><button class="${role==='founder'?'active':''}" onclick="mfSwitchFounderRole('founder')">Founder</button><button class="${role==='als'?'active':''}" onclick="mfSwitchFounderRole('als')">ALS</button></div></div>`:'';
-  card.innerHTML=`<div class="mfAccountAvatar">${safe((name||'U').trim().charAt(0).toUpperCase())}</div><div class="mfAccountInfo"><b>${safe(name)}</b><span>${safe(mfRoleLabelFinal(role))}</span>${switcher}</div><div class="mfAccountBranch">${safe(branch)}</div>`;
+  card.innerHTML=`<div class="mfAccountAvatar">${safe((name||'U').trim().charAt(0).toUpperCase())}</div><div class="mfAccountInfo"><b>${safe(name)}</b><span>${safe(mfRoleLabelFinal(role))}</span>${}</div><div class="mfAccountBranch">${safe(branch)}</div>`;
 }
 window.mfRefreshIdentityFinal=mfRefreshIdentityFinal;
 
@@ -3929,7 +3944,7 @@ function mfPatchLabelsFinal(){
 }
 
 const mfStage5AfterAuthBeforeCompletion=window.mfStage5AfterAuth;
-window.mfStage5AfterAuth=function(){mfStage5AfterAuthBeforeCompletion();mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfApplyMenuPermissions();mfSubscribePaymentNotifications();mfPatchLabelsFinal()};
+window.mfStage5AfterAuth=async function(){const prior=await mfStage5AfterAuthBeforeCompletion?.apply(this,arguments);if(prior===false)return false;mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfApplyMenuPermissions();mfSubscribePaymentNotifications();mfPatchLabelsFinal();return true};
 
 const mfPhase5AfterBootstrapBeforeCompletion=window.mfPhase5AfterBootstrap;
 window.mfPhase5AfterBootstrap=function(){mfPhase5AfterBootstrapBeforeCompletion();mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfPatchLabelsFinal()};
@@ -4936,17 +4951,29 @@ window.mfShowMorning=async function(){
 (function(){
 'use strict';
 const E=id=>document.getElementById(id);
-const FIXED_RATE=3;
+const DEFAULT_RATE=3;
 window.mfOpenCalculator=function(){
- mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة الثابتة %</label><input id="mfCalcRate" type="number" value="${FIXED_RATE}" readonly aria-readonly="true"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div><small class="mfPartyHint">نسبة الفائدة مثبتة على ${FIXED_RATE}% ولا يمكن تعديلها من الحاسبة.</small></div><div class="mfPanel"><div class="mfPanelTitle">حاسبة سريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × عدد الدفعات"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`);
+ mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة %</label><input id="mfCalcRate" type="number" min="0" step="0.01" placeholder="أدخل نسبة الفائدة" value="" oninput="mfCalcLoan()"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div><small class="mfPartyHint">أدخل نسبة الفائدة المطلوبة ثم أكمل الحساب.</small></div><div class="mfPanel"><div class="mfPanelTitle">الحاسبة السريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × 3"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`);
 };
 window.mfCalcLoan=function(){
- const p=Number(E('mfCalcPrincipal')?.value)||0,n=Math.max(0,Math.floor(Number(E('mfCalcMonths')?.value)||0)),rate=FIXED_RATE/100;
+ const p=Number(E('mfCalcPrincipal')?.value)||0;
+ const n=Math.max(0,Math.floor(Number(E('mfCalcMonths')?.value)||0));
+ const rate=Math.max(0,Number(E('mfCalcRate')?.value)||0)/100;
  const interest=p*rate*n,total=p+interest,payment=n?total/n:0;
- if(E('mfCalcRate'))E('mfCalcRate').value=String(FIXED_RATE);
  if(E('mfCalcInterest'))E('mfCalcInterest').value=interest?money(interest):'';
  if(E('mfCalcTotal'))E('mfCalcTotal').value=total?money(total):'';
  if(E('mfCalcPayment'))E('mfCalcPayment').value=payment?money(payment):'';
+};
+window.mfCalcExpression=function(){
+ const raw=String(E('mfCalcExpr')?.value||'').trim();
+ if(!raw)return;
+ const expr=raw.replace(/×/g,'*').replace(/÷/g,'/').replace(/٪/g,'%').replace(/,/g,'.').replace(/\\s+/g,'');
+ if(!/^[0-9+\-*/().%]+$/.test(expr)){if(typeof mfToast==='function')mfToast('العملية غير صالحة','bad');return;}
+ try{
+   const v=Function('"use strict";return ('+expr+')')();
+   if(!Number.isFinite(Number(v)))throw new Error();
+   E('mfCalcResult').textContent=String(v);
+ }catch(_){if(typeof mfToast==='function')mfToast('تعذر حساب العملية','bad');}
 };
 })();
 </script>
