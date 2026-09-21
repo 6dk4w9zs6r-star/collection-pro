@@ -3310,7 +3310,7 @@ function mfEmployeeCatalog(){
   raw.forEach(e=>{if(!e)return;const name=e.full_name||e.name||e.employee||e.email;if(!name)return;
     // Legacy display-only LO IDs must not displace the persisted employee ID.
     if(String(e.id||'').startsWith('lo_')&&(clients||[]).some(c=>c.assignedUserId&&norm(c.employee)===norm(name)))return;
-    const entry={id:e.id||e.user_id||name,name,email:e.email||"",phone:e.phone||"",role:String(e.role||"lo").toLowerCase(),branch:e.branch_code||e.branch||"",team:e.team||e.team_name||"",photo:e.photo||e.avatar_url||"",jobTitle:e.job_title||""};map.set(key(entry),entry);
+    const entry={id:e.id||e.user_id||name,name,email:e.email||"",phone:e.phone||"",role:String(e.role||"lo").toLowerCase(),branch:e.branch_code||e.branch||"",team:e.team||e.team_name||"",supervisorEmail:e.supervisor_email||e.supervisorEmail||"",photo:e.photo||e.avatar_url||"",jobTitle:e.job_title||""};map.set(key(entry),entry);
   });
   (clients||[]).forEach(c=>{const name=c.employee||"غير مسند",entry={id:c.assignedUserId||name,name,email:c.employeeEmail||"",phone:c.employeePhone||"",role:"lo",branch:c.branchCode||c.branch||"",team:c.team||"غير محدد",photo:"",jobTitle:"Loan Officer"},k=key(entry);
     if(!map.has(k))map.set(k,entry);else{const e=map.get(k);e.branch=e.branch||entry.branch;e.team=e.team||entry.team;}
@@ -3325,7 +3325,7 @@ function mfEmployeeMetrics(e){
   const base=Math.min(45,collected/100),follow=Math.min(25,done*2.5),promise=ps.length?Math.max(0,20*((kept-broken)/ps.length+1)/2):10,quality=Math.max(0,10-Math.min(10,(late+due)/Math.max(1,cs.length)*10)),score=Math.round(Math.max(0,Math.min(100,base+follow+promise+quality)));
   return {clients:cs.length,late,due,collected,followups:fs.length,done,pending,today:todayCount,kept,broken,score};
 }
-function mfVisibleEmployees(){return mfEmployeeCatalog().filter(e=>{const r=mfRole();if(["founder","cfmp"].includes(r))return true;if(r==="bm")return !CURRENT_PROFILE?.branch_code||String(e.branch).toUpperCase()===String(CURRENT_PROFILE.branch_code).toUpperCase();if(r==="als")return e.role==="lo"||String(e.id)===String(CURRENT_PROFILE?.id);return String(e.id)===String(CURRENT_PROFILE?.id)||norm(e.name)===norm(CURRENT_PROFILE?.full_name)})}
+function mfVisibleEmployees(){return mfEmployeeCatalog().filter(e=>{const r=mfRole();if(["founder","cfmp"].includes(r))return true;if(r==="bm")return !CURRENT_PROFILE?.branch_code||String(e.branch).toUpperCase()===String(CURRENT_PROFILE.branch_code).toUpperCase();if(r==="als")return String(e.id)===String(CURRENT_PROFILE?.id)||norm(e.name)===norm(CURRENT_PROFILE?.full_name)||(e.role==="lo"&&norm(e.supervisorEmail)===norm(CURRENT_PROFILE?.email));return String(e.id)===String(CURRENT_PROFILE?.id)||norm(e.name)===norm(CURRENT_PROFILE?.full_name)})}
 function mfOpenDashboard(){mfRenderDashboard();mfOpen("mfDashboardModal")}
 function mfRenderDashboard(){
   const out=$("mfDashboardBody");if(!out)return;const people=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score),total=mfCollectionTotal(),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>mfIsLate30to60(c)).length,due=scope.filter(c=>c.inDue).length;
