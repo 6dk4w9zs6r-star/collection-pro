@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260921-menu-security-r31";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-founder-profile-r32";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3337,8 +3337,12 @@ async function mfSaveEmployeeEdit(){
     const db=await getSecureClient();if(!db)throw Error("قاعدة البيانات غير متاحة");
     let row=null;
     if(String(e.id)===String(CURRENT_PROFILE?.id)||mfArray(typeof profiles!=="undefined"?profiles:[]).some(x=>String(x.id)===String(e.id))){
-      const payload=admin?{full_name:entry.name,phone:entry.phone,branch_code:entry.branch,team:entry.team,avatar_url:entry.photo,job_title:entry.jobTitle}:{phone:entry.phone,avatar_url:entry.photo};
-      const {data,error}=await db.from("profiles").update(payload).eq("id",e.id).select().single();if(error)throw error;row=data;
+      if(admin){
+        const {data,error}=await db.rpc("founder_update_profile",{target_id:e.id,p_full_name:entry.name,p_phone:entry.phone,p_branch_code:entry.branch,p_team:entry.team,p_avatar_url:entry.photo,p_job_title:entry.jobTitle});if(error)throw error;row=Array.isArray(data)?data[0]:data;
+      }else{
+        const payload={phone:entry.phone,avatar_url:entry.photo};
+        const {data,error}=await db.from("profiles").update(payload).eq("id",e.id).select().single();if(error)throw error;row=data;
+      }
     }else{
       const payload=admin?{full_name:entry.name,phone:entry.phone,branch_code:entry.branch,avatar_url:entry.photo,official_title:entry.jobTitle}:{phone:entry.phone,avatar_url:entry.photo};
       const {data,error}=await db.from("employees").update(payload).eq("id",e.id).select().single();if(error)throw error;row=data;
