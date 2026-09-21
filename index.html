@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260919-consent-r24";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-auth-chain-r25";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3944,7 +3944,7 @@ function mfPatchLabelsFinal(){
 }
 
 const mfStage5AfterAuthBeforeCompletion=window.mfStage5AfterAuth;
-window.mfStage5AfterAuth=function(){mfStage5AfterAuthBeforeCompletion();mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfApplyMenuPermissions();mfSubscribePaymentNotifications();mfPatchLabelsFinal()};
+window.mfStage5AfterAuth=async function(){const prior=await mfStage5AfterAuthBeforeCompletion?.apply(this,arguments);if(prior===false)return false;mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfApplyMenuPermissions();mfSubscribePaymentNotifications();mfPatchLabelsFinal();return true};
 
 const mfPhase5AfterBootstrapBeforeCompletion=window.mfPhase5AfterBootstrap;
 window.mfPhase5AfterBootstrap=function(){mfPhase5AfterBootstrapBeforeCompletion();mfCompletionState();mfRefreshIdentityFinal();mfPatchHomeFinal();mfInstallCompletionMenu();mfAddLawyerRoleOption();mfPatchLabelsFinal()};
