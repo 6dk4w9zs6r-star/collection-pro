@@ -5506,6 +5506,15 @@ window.mfCan=function(action,c){
 'use strict';
 const role=()=>{try{return String(mfRole?.()||CURRENT_PROFILE?.role||'').toLowerCase()}catch(_){return String(CURRENT_PROFILE?.role||'').toLowerCase()}};
 const canManageClients=()=>['founder','cfmp','bm','als'].includes(role());
+const canBrowseBranchesDirect=()=>['founder','cfmp','bm'].includes(role());
+const oldBranches=window.openBranchesHub;
+window.openBranchesHub=function(){if(!canBrowseBranchesDirect())return mfToast?.('غير مصرح بفتح الفروع','bad');return oldBranches?.apply(this,arguments)};
+const oldBranch=window.openBranchPage;
+window.openBranchPage=function(ref){
+ const r=role(),mine=String(CURRENT_PROFILE?.branch_code||'').toUpperCase(),wanted=String(ref||'').toUpperCase();
+ if(!['founder','cfmp','bm'].includes(r)||(r==='bm'&&mine!==wanted))return mfToast?.('غير مصرح بفتح هذا الفرع','bad');
+ return oldBranch?.apply(this,arguments);
+};
 const oldOpenModal=window.openModal;
 window.openModal=function(){if(!canManageClients())return mfToast?.('إضافة العملاء غير متاحة لهذا الدور','bad');return oldOpenModal?.apply(this,arguments)};
 const oldSaveClient=window.saveClient;
