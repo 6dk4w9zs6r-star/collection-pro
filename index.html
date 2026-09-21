@@ -2553,6 +2553,10 @@ window.secureUniversalSearch=function(q){
   </div>`).join("")||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
 };
 
+/* V6.42 secure limited global search */
+window.secureUniversalSearch=async function(q){q=String(q||"").trim();const out=document.getElementById("universalSearchResults");if(!out)return;if(q.length<2){out.innerHTML="";return}try{sb=await getSecureClient();if(!sb)throw Error("secure session required");const res=await sb.rpc("limited_global_client_search",{p_query:q});if(res.error)throw res.error;const rows=Array.isArray(res.data)?res.data:[];out.innerHTML=rows.map(function(r){const i=(clients||[]).findIndex(function(c){return String(c.id)===String(r.id)});const actions=(r.in_scope&&i>=0)?("<div class=\"actions\" style=\"margin-top:10px\"><button class=\"secondary\" onclick=\"followClient("+i+")\">📝 متابعة</button><button class=\"call\" onclick=\"callClient("+i+")\">📞 اتصال</button><button class=\"whatsapp\" onclick=\"whatsappClient("+i+")\">WhatsApp</button></div>"):"";return "<div class=\"searchResult\"><b>"+safe(r.client_name||"-")+"</b><small>رقم العميل: "+safe(r.client_number||"-")+" | هاتف: "+safe(r.phone||"-")+"<br>الكفيل: "+safe(r.guarantor_name||"-")+" | هاتف الكفيل: "+safe(r.guarantor_phone||"-")+"<br>الموظف المسؤول: "+safe(r.assigned_employee||"-")+" | الفرع: "+safe(r.branch_code||"-")+(r.in_scope?"":"<br>بيانات اتصال محدودة — خارج نطاقك التشغيلي")+"</small>"+actions+"</div>"}).join("")||"<div class=\"empty\">لا توجد نتائج</div>"}catch(e){out.innerHTML="<div class=\"empty\">تعذر تنفيذ البحث الآمن</div>"}};
+window.secureGlobalSearch=window.secureUniversalSearch;
+
 /* V6.41: accept both YYYY-MM-DD and DD-MM-YYYY (also slash-separated). */
 function normalizeEnteredDate(value){
   const raw=String(value||"").trim();
