@@ -5417,7 +5417,7 @@ window.mfSaveEscalationFinal=async function(){
   const db=await getSecureClient(),staged=[];
   for(const targetRole of targets){
    const rec=await recipient(c,targetRole);
-   const payload={client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:rec.id,escalation_level:(r==='lo'?(targetRole==='als'?'lo_to_supervisor':'lo_to_branch_manager'):'supervisor_to_branch_manager'),reason,instructions:lastAction||null,status:'open',escalated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,linked_group_id:groupId,to_role:targetRole,last_action:lastAction||null,result:null};
+   const payload={client_id:c.id,from_employee_id:a.employeeId||CURRENT_PROFILE?.employee_id||null,to_employee_id:rec.id,escalation_level:(r==='lo'?(targetRole==='als'?'lo_to_supervisor':'lo_to_branch_manager'):r==='als'?'supervisor_to_branch_manager':'branch_manager_to_lawyer'),reason,instructions:lastAction||null,status:'open',escalated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,linked_group_id:groupId,to_role:targetRole,last_action:lastAction||null,result:null};
    const {data,error}=await db.from('escalated_cases').insert(payload).select().single();if(error)throw error;
    staged.push({id:String(data.id),dbId:data.id,linkedGroupId:data.linked_group_id||groupId,clientId:mfClientKey(c),clientNo:c.clientNo,clientName:c.name,ownerId:c.assignedUserId||null,ownerName:c.employee||'',branch:c.branchCode||c.branch||'',team:c.team||'',fromRole:a.role,fromId:a.id,fromName:a.name,toRole:targetRole,toEmployeeId:rec.id,toName:rec.full_name||targetRole,reason,lastAction,status:data.status||'open',result:data.result||'',createdAt:data.created_at||a.at,history:[{from:a.role,to:targetRole,at:data.created_at||a.at,by:a.name}]});
   }
