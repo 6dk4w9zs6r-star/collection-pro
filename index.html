@@ -549,6 +549,16 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   }
 }
 </style>
+
+<style id="mfNexaIosSafeAreaFix_20260921">
+/* MF_NEXA_IOS_SAFE_AREA_FIX_20260921 */
+@supports (padding-top: env(safe-area-inset-top)){
+  @media (max-width:700px){
+    header{padding-top:calc(18px + env(safe-area-inset-top))!important;}
+    .menuBtn{top:calc(14px + env(safe-area-inset-top))!important;}
+  }
+}
+</style>
 </head>
 <!-- NEXA-MF V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
