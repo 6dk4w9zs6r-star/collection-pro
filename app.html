@@ -4097,7 +4097,7 @@ window.mfSaveCommunicationFinal=async function(){
 };
 
 // Register PWA service worker and keep session untouched by share/install operations.
-async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20260920-r25',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
+async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20260921-r32',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
 
 const afterAuthOld=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){const r=await afterAuthOld?.apply(this,arguments);if(r===false)return false;await registerPwa();await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350);return true};
