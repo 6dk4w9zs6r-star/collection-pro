@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260921-comms-permissions-r29";</script>
+<head><script>window.MF_NEXA_BUILD="20260921-security-calculator-r30";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4951,14 +4951,14 @@ window.mfShowMorning=async function(){
 (function(){
 'use strict';
 const E=id=>document.getElementById(id);
-const DEFAULT_RATE=3;
+const FIXED_RATE=3;
 window.mfOpenCalculator=function(){
- mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة %</label><input id="mfCalcRate" type="number" min="0" step="0.01" placeholder="أدخل نسبة الفائدة" value="" oninput="mfCalcLoan()"></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div><small class="mfPartyHint">أدخل نسبة الفائدة المطلوبة ثم أكمل الحساب.</small></div><div class="mfPanel"><div class="mfPanelTitle">الحاسبة السريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × 3"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`);
+ mfForm("الحاسبات",`<div class="mfPanel"><div class="mfPanelTitle">حاسبة القرض — فائدة ثابتة</div><div class="mfForm"><div class="mfField"><label>أصل القرض</label><input id="mfCalcPrincipal" type="number" min="0" step="0.01" oninput="mfCalcLoan()"></div><div class="mfField"><label>نسبة الفائدة الثابتة %</label><input id="mfCalcRate" type="number" value="3" readonly></div><div class="mfField"><label>عدد الأشهر</label><input id="mfCalcMonths" type="number" min="1" step="1" oninput="mfCalcLoan()"></div><div class="mfField"><label>قيمة الفائدة</label><input id="mfCalcInterest" readonly></div><div class="mfField"><label>الإجمالي مع الفائدة</label><input id="mfCalcTotal" readonly></div><div class="mfField"><label>القسط الشهري</label><input id="mfCalcPayment" readonly></div></div><small class="mfPartyHint">نسبة الفائدة ثابتة ومعتمدة: 3%.</small></div><div class="mfPanel"><div class="mfPanelTitle">الحاسبة السريعة</div><div class="mfSearchRow"><input id="mfCalcExpr" class="mfSearchInput" placeholder="مثال: (250 + 40) × 3"><button class="mfIconButton" onclick="mfCalcExpression()">=</button></div><div id="mfCalcResult" class="mfAiOutput" style="min-height:auto">0</div></div>`);
 };
 window.mfCalcLoan=function(){
  const p=Number(E('mfCalcPrincipal')?.value)||0;
  const n=Math.max(0,Math.floor(Number(E('mfCalcMonths')?.value)||0));
- const rate=Math.max(0,Number(E('mfCalcRate')?.value)||0)/100;
+ const rate=FIXED_RATE/100;
  const interest=p*rate*n,total=p+interest,payment=n?total/n:0;
  if(E('mfCalcInterest'))E('mfCalcInterest').value=interest?money(interest):'';
  if(E('mfCalcTotal'))E('mfCalcTotal').value=total?money(total):'';
