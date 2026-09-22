@@ -2928,8 +2928,8 @@ function mfInstallManifest(){
 }
 function mfUpdateHome(){
   if(!$("mfStage5Home"))return;mfAutoStates();const s=mfState(),d=today();
-  const dueToday=s.followups.filter(f=>f.status==="pending"&&mfDateOnly(f.dueAt)===d).length;
-  const pending=s.promises.filter(p=>p.status==="pending").length;
+  const dueToday=s.followups.filter(f=>f.status==="pending"&&mfDateOnly(f.dueAt)===d&&(()=>{const c=mfRecordClient(f);return !!c&&mfInScope(c)})()).length;
+  const pending=s.promises.filter(p=>p.status==="pending"&&(()=>{const c=mfRecordClient(p);return !!c&&mfInScope(c)})()).length;
   const escalated=s.escalations.filter(e=>["open","in_progress","returned"].includes(e.status)&&mfEscalationVisible(e)).length;
   $("mfTodayCount").textContent=dueToday;$("mfPromiseCount").textContent=pending;$("mfEscalatedCount").textContent=escalated;
   const emp=$("mfSearchEmployee"),br=$("mfSearchBranch");
