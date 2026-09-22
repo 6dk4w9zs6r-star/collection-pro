@@ -3118,7 +3118,7 @@ async function mfApplyPayment(c,amount,date,type,status="successful",note="",rec
   if(applied&&type!=="deferral_fee"&&amount>before)throw new Error(`المبلغ ${amount} أكبر من الرصيد المستحق ${before}`);
   let savedPayment=null;
   if(source!=="system-sync"){
-    const db={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:type,status,notes:note,balance_before:before,balance_after:after,payment_no:no,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};
+    const installmentAmount=num(c.installment||c.installmentAmount),installmentUnits=applied&&type!=="deferral_fee"&&installmentAmount>0?Math.max(1,Math.floor((amount+1e-9)/installmentAmount)):1;const db={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:type,status,installment_units:installmentUnits,notes:note,balance_before:before,balance_after:after,payment_no:no,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};
     savedPayment=await mfTryInsert("payments",db);
     if(!savedPayment)throw new Error("تعذر حفظ الدفعة في قاعدة البيانات");
   }
