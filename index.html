@@ -4470,7 +4470,7 @@ window.mfApplyPayment=async function(c,amount,date,type,status='successful',note
 window.mfSavePayment=async function(){
   const i=Number($f('mfPayIndex')?.value),c=clients?.[i],amount=num($f('mfPayAmount')?.value),date=$f('mfPayDate')?.value,status=$f('mfPayStatus')?.value,note=$f('mfPayNote')?.value.trim(),source=$f('mfPaySource')?.value||'manual';if(!c||amount<=0||!date)return mfToast('أدخل مبلغًا وتاريخًا صحيحين','bad');
   const inst=installment(c),under=inst>0&&amount<inst,classification=$f('mfPayClassification')?.value||'',type=under?classification:($f('mfPayType')?.value||'full');if(under&&!classification)return mfToast('المبلغ أقل من القسط: اختر دفعة جزئية أو رسوم تأجيل قبل الحفظ','bad');
-  try{const receipt=await mfFileData($f('mfPayReceipt'));await window.mfApplyPayment(c,amount,date,type,status,note,receipt,source);mfFormClose();mfRenderClient();mfToast(type==='deferral_fee'?'تم تسجيل رسوم التأجيل دون خصمها من الأقساط':'تم حفظ الدفعة حسب التصنيف المعتمد')}catch(e){mfToast(e.message||'تعذر حفظ العملية','bad')}
+  if(window.mfPaymentSaving)return;window.mfPaymentSaving=true;try{const receipt=await mfFileData($f('mfPayReceipt'));await window.mfApplyPayment(c,amount,date,type,status,note,receipt,source);mfFormClose();mfRenderClient();mfToast(type==='deferral_fee'?'تم تسجيل رسوم التأجيل دون خصمها من الأقساط':'تم حفظ الدفعة حسب التصنيف المعتمد')}catch(e){mfToast(e.message||'تعذر حفظ العملية','bad')}finally{window.mfPaymentSaving=false}
 };
 window.registerPayment=function(i,kind='late'){mfOpenPaymentForm(i,kind)};
 
