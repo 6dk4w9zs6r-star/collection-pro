@@ -4497,7 +4497,7 @@ window.mfSaveFollowup=async function(){
     if(error)throw error;if(!row?.id)throw Error('لم تؤكد قاعدة البيانات حفظ المتابعة');
     st().followups.push({id:String(row.id),dbId:row.id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,targetLabel:label,type:row.follow_up_type,dueAt:row.next_follow_up_at,status:row.status,note:row.notes,reminder,actorId:row.created_by,actorName:a.name,actorRole:a.role,createdAt:row.created_at,completedAt:row.completed_at});
     c.followup=mfDateOnly(row.next_follow_up_at);c.followedToday=row.status==='completed';
-    mfCommit('followup_created',c,label+' • '+type+' • '+row.status);mfFormClose();mfRenderClient();mfToast('تم حفظ المتابعة في قاعدة البيانات');
+    mfCommit('followup_created',c,label+' • '+type+' • '+row.status);mfFormClose();mfRenderClient();mfRenderToday();mfToast('تم حفظ المتابعة في قاعدة البيانات');
   }catch(e){mfToast('تعذر حفظ المتابعة: '+(e?.message||e),'bad')}
   finally{window.mfFollowSaving=false}
 };
