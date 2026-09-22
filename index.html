@@ -3210,7 +3210,7 @@ async function mfUpdatePromise(id,status){
   if(!["pending","kept","broken"].includes(status))return mfToast("حالة وعد غير صالحة","bad");
   try{
     const row=await mfPersistCollectionUpdate("promises_to_pay",p,{status,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
-    p.status=row.status;p.updatedAt=row.updated_at;mfCommit("promise_status",c,`${p.promiseDate} → ${row.status}`);mfRenderClient();mfToast("تم تحديث حالة الوعد");
+    p.status=row.status;p.updatedAt=row.updated_at;mfCommit("promise_status",c,`${p.promiseDate} → ${row.status}`);mfRenderClient();mfRenderToday();mfToast("تم تحديث حالة الوعد");
   }catch(e){mfToast("تعذر تحديث الوعد: "+(e?.message||e),"bad")}
 }
 
