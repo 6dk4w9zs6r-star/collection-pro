@@ -1400,30 +1400,45 @@ function closeSectionViewer(){
 }
 function runGlobalSearch(q){ secureGlobalSearch(q); }
 function registerPayment(i,kind="late"){
- let c=clients[i],isDue=kind==="due",bal=isDue?num(c.dueAmount):num(c.arrears),raw=prompt(`\u0645\u0628\u0644\u063a \u0627\u0644\u062f\u0641\u0639\u0629 \u0644\u0644\u0639\u0645\u064a\u0644 ${c.name}:`,bal||"");if(raw===null)return;let amount=num(raw);if(amount<=0)return;
+ let c=clients[i],isDue=kind==="due",bal=isDue?num(c.dueAmount):num(c.arrears),raw=prompt(`مبلغ الدفعة للعميل ${c.name}:`,bal||"");if(raw===null)return;let amount=num(raw);if(amount<=0)return;
  let rem=Math.max(0,bal-amount);if(isDue)c.dueAmount=rem;else c.arrears=rem;
  c.paymentCount=(Number(c.paymentCount)||0)+1;c.totalPaid=(num(c.totalPaid)||0)+amount;c.lastPaymentDate=today();
- c.status=c.paymentCount===1?"\u062f\u0641\u0639\u0629 1":"\u062f\u0641\u0639\u0627\u062a "+c.paymentCount;
+ c.status=c.paymentCount===1?"دفعة 1":"دفعات "+c.paymentCount;
  meta.payments.push({id:uid(),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",amount,date:today(),paymentNo:c.paymentCount,balance:rem,source:kind});
  meta.paidCustomers[c.clientNo]={
    clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",
    paymentCount:c.paymentCount,totalPaid:c.totalPaid,balance:rem,lastPaymentDate:today(),source:kind
  };
  let key=c.cea||c.employee;
- [lateData,dueData].forEach(d=>{
-   d.paidIds=Array.isArray(d.paidIds)?d.paidIds:[];
-   if(!d.paidIds.includes(c.clientNo))d.paidIds.push(c.clientNo);
-   d.currentIds=(d.currentIds||[]).filter(x=>x!==c.clientNo);
-   if(d.byEmployee&&d.byEmployee[key]){
-     d.byEmployee[key].paidIds=Array.isArray(d.byEmployee[key].paidIds)?d.byEmployee[key].paidIds:[];
-     if(!d.byEmployee[key].paidIds.includes(c.clientNo))d.byEmployee[key].paidIds.push(c.clientNo);
-     d.byEmployee[key].currentIds=(d.byEmployee[key].currentIds||[]).filter(x=>x!==c.clientNo);
-   }
- });
- c.inLate=false;c.inDue=false;
- c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:`\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u062f\u0641\u0639\u0629 ${amount} \u062f.\u0623 \u0648\u0646\u0642\u0644 \u0627\u0644\u0639\u0645\u064a\u0644 \u0625\u0644\u0649 \u0643\u0634\u0641 \u0627\u0644\u0645\u0633\u062f\u062f\u064a\u0646`});
+ if(rem<=0){
+   [lateData,dueData].forEach(d=>{
+     d.paidIds=Array.isArray(d.paidIds)?d.paidIds:[];
+     if(!d.paidIds.includes(c.clientNo))d.paidIds.push(c.clientNo);
+     d.currentIds=(d.currentIds||[]).filter(x=>x!==c.clientNo);
+     if(d.byEmployee&&d.byEmployee[key]){
+       d.byEmployee[key].paidIds=Array.isArray(d.byEmployee[key].paidIds)?d.byEmployee[key].paidIds:[];
+       if(!d.byEmployee[key].paidIds.includes(c.clientNo))d.byEmployee[key].paidIds.push(c.clientNo);
+       d.byEmployee[key].currentIds=(d.byEmployee[key].currentIds||[]).filter(x=>x!==c.clientNo);
+     }
+   });
+   c.inLate=false;c.inDue=false;
+   c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:`تم تسجيل دفعة ${amount} د.أ واكتمال السداد؛ تم إخراج العميل من Late & Due النشط`});
+ }else{
+   c.inLate=true;c.inDue=true;
+   [lateData,dueData].forEach(d=>{
+     d.currentIds=Array.isArray(d.currentIds)?d.currentIds:[];
+     if(!d.currentIds.includes(c.clientNo))d.currentIds.push(c.clientNo);
+     d.paidIds=(d.paidIds||[]).filter(x=>x!==c.clientNo);
+     if(d.byEmployee&&d.byEmployee[key]){
+       d.byEmployee[key].currentIds=Array.isArray(d.byEmployee[key].currentIds)?d.byEmployee[key].currentIds:[];
+       if(!d.byEmployee[key].currentIds.includes(c.clientNo))d.byEmployee[key].currentIds.push(c.clientNo);
+       d.byEmployee[key].paidIds=(d.byEmployee[key].paidIds||[]).filter(x=>x!==c.clientNo);
+     }
+   });
+   c.history=c.history||[];c.history.push({date:new Date().toLocaleString("ar-JO"),text:`تم تسجيل دفعة جزئية ${amount} د.أ؛ المتبقي ${rem} د.أ والعميل ما زال في Late & Due`});
+ }
  save();render();pushCloud(true);
- alert("\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0633\u062f\u0627\u062f \u2705\n\u062a\u0645 \u0625\u062e\u0631\u0627\u062c \u0627\u0644\u0639\u0645\u064a\u0644 \u0645\u0646 Late / Due \u0627\u0644\u0646\u0634\u0637 \u0648\u0625\u0636\u0627\u0641\u062a\u0647 \u0644\u0643\u0634\u0641 \u0627\u0644\u0645\u0633\u062f\u062f\u064a\u0646.");
+ alert(rem<=0?"تم تسجيل السداد كاملًا ✅\nتم إخراج العميل من Late & Due النشط وإضافته لكشف المسددين.":`تم تسجيل الدفعة الجزئية ✅\nالمتبقي: ${rem} د.أ\nالعميل ما زال في Late & Due.`);
 }
 function openEmployeePage(key){
   if(CURRENT_PROFILE&&CURRENT_PROFILE.role==="lo"){
