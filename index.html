@@ -5549,5 +5549,29 @@ window.openSmsProvider=function(){
 };
 })();
 </script>
+
+<script id="mfNexaConnectivityGuard_20260923">
+(()=>{if(window.__mfNexaConnectivityGuard)return;window.__mfNexaConnectivityGuard=true;
+let syncing=false;
+async function mfConnectivitySync(){
+ if(syncing||!navigator.onLine||!CURRENT_PROFILE)return;
+ syncing=true;
+ try{
+  if(typeof window.mfBackendLoad==="function")await window.mfBackendLoad();
+  else if(typeof window.mfLoadBackend==="function")await window.mfLoadBackend();
+  else if(typeof window.loadBackend==="function")await window.loadBackend();
+  if(typeof window.mfSubscribeChat==="function")await window.mfSubscribeChat();
+  if(typeof window.mfSubscribePaymentNotifications==="function")await window.mfSubscribePaymentNotifications();
+  if(typeof window.mfSubscribeNotifications==="function")await window.mfSubscribeNotifications();
+  if(typeof window.mfRenderHome==="function")window.mfRenderHome();
+  if(typeof window.mfToast==="function")window.mfToast("عاد الاتصال وتمت مزامنة البيانات");
+ }catch(e){console.warn("connectivity resync",e?.message||e)}
+ finally{syncing=false}
+}
+window.addEventListener("offline",()=>{if(typeof window.mfToast==="function")window.mfToast("لا يوجد اتصال — سيتم تحديث البيانات عند عودة الشبكة","bad")});
+window.addEventListener("online",()=>{setTimeout(mfConnectivitySync,250)});
+window.mfConnectivitySync=mfConnectivitySync;
+})();
+</script>
 </body>
 </html>
