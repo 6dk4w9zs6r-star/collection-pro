@@ -3396,7 +3396,8 @@ async function mfSaveEmployeeEdit(){
       const payload=admin?{full_name:entry.name,phone:entry.phone,branch_code:entry.branch,avatar_url:entry.photo,official_title:entry.jobTitle}:{phone:entry.phone,avatar_url:entry.photo};
       const {data,error}=await db.from("employees").update(payload).eq("id",e.id).select().single();if(error)throw error;row=data;
     }
-    if(!row?.id)throw Error("لم تؤكد قاعدة البيانات تحديث ملف الموظف");\n    if(admin&&$("mfEmpSmartAssistant")){const enabled=!!$("mfEmpSmartAssistant").checked;const {data:aiData,error:aiError}=await db.rpc("founder_set_smart_assistant",{target_id:e.id,enabled});if(aiError)throw aiError;const aiRow=Array.isArray(aiData)?aiData[0]:aiData;if(!aiRow?.id)throw Error("لم تؤكد قاعدة البيانات تحديث صلاحية الاسم الذكي");entry.smartAssistantEnabled=enabled;if(String(e.id)===String(CURRENT_PROFILE?.id))CURRENT_PROFILE.smart_assistant_enabled=enabled;}
+    if(!row?.id)throw Error("لم تؤكد قاعدة البيانات تحديث ملف الموظف");
+    if(admin&&$("mfEmpSmartAssistant")){const enabled=!!$("mfEmpSmartAssistant").checked;const {data:aiData,error:aiError}=await db.rpc("founder_set_smart_assistant",{target_id:e.id,enabled});if(aiError)throw aiError;const aiRow=Array.isArray(aiData)?aiData[0]:aiData;if(!aiRow?.id)throw Error("لم تؤكد قاعدة البيانات تحديث صلاحية الاسم الذكي");entry.smartAssistantEnabled=enabled;if(String(e.id)===String(CURRENT_PROFILE?.id))CURRENT_PROFILE.smart_assistant_enabled=enabled;}
     const list=mfState().employeeProfiles,pos=list.findIndex(x=>String(x.id)===String(id));if(pos>=0)list[pos]=entry;else list.push(entry);
     mfCommit("employee_profile_updated",null,entry.name);mfFormClose();mfOpenEmployeeDashboard(entry.id);mfToast("تم تحديث ملف الموظف");
   }catch(err){mfToast(err?.message||"تعذر تحديث الموظف","bad")}
@@ -3659,7 +3660,7 @@ function mfRefreshIdentityFinal(){
   if(!card){card=document.createElement('section');card.id='mfAccountCardFinal';card.className='mfAccountCardFinal';header.insertAdjacentElement('afterend',card)}
   const name=CURRENT_PROFILE?.full_name_en||CURRENT_PROFILE?.english_name||CURRENT_AUTH_USER?.user_metadata?.full_name_en||CURRENT_AUTH_USER?.user_metadata?.english_name||CURRENT_PROFILE?.full_name||CURRENT_AUTH_USER?.user_metadata?.full_name||CURRENT_AUTH_USER?.email||'';
   const role=mfRole(),branch=CURRENT_PROFILE?.branch_code||CURRENT_PROFILE?.branch||'الفرع غير محدد';
-  card.innerHTML=`<div class="mfAccountAvatar">${safe((name||'U').trim().charAt(0).toUpperCase())}</div><div class="mfAccountInfo"><b>${safe(name)}</b><span>${safe(mfRoleLabelFinal(role))}</span>${}</div><div class="mfAccountBranch">${safe(branch)}</div>`;
+  card.innerHTML=`<div class="mfAccountAvatar">${safe((name||'U').trim().charAt(0).toUpperCase())}</div><div class="mfAccountInfo"><b>${safe(name)}</b><span>${safe(mfRoleLabelFinal(role))}</span></div><div class="mfAccountBranch">${safe(branch)}</div>`;
 }
 window.mfRefreshIdentityFinal=mfRefreshIdentityFinal;
 
