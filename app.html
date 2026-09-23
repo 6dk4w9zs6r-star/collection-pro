@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260921-cache-align-r34";</script>
+<head><script>window.MF_NEXA_BUILD="20260923-uat-session-r35";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2231,21 +2231,48 @@ async function roleAwareBootstrap(){
   applyRoleHomeSecurity();
 }
 async function secureInit(){
-  // V6.28 new Supabase + founder employee provisioning: التطبيق يبدأ مقفلاً من الـHTML نفسه.
-  // وكل فتح/تحديث جديد يطلب تسجيل الدخول من جديد، ولا يعتمد على جلسة قديمة محفوظة.
+  // Restore only an opted-in session; keep the gate closed until validation,
+  // scoped bootstrap and the existing consent checks have all succeeded.
   document.body.classList.add("secureLocked");
   $("authGate").style.display="flex";
   initRememberMe();
   CURRENT_AUTH_USER=null;
   CURRENT_PROFILE=null;
+  const btn=document.querySelector("#authGate .authPrimary");
+  const epoch=typeof mfSessionEpoch==="function"?mfSessionEpoch():0;
+  const assertCurrent=()=>{if(typeof mfSessionEpoch==="function"&&mfSessionEpoch()!==epoch)throw Error("تغيرت جلسة الدخول");};
+  if(btn)btn.disabled=true;
   try{
     sb=await getSecureClient();
-    if(!sb){$("authMsg").textContent="تعذر تشغيل خدمة الدخول";return}
-    try{ await sb.auth.signOut({scope:"local"}); }catch(_){}
-    $("authGate").style.display="flex";
+    assertCurrent();
+    if(!sb)throw Error("تعذر تشغيل خدمة الدخول");
+    if(!$("rememberMe")?.checked){
+      await sb.auth.signOut({scope:"local"});
+      return;
+    }
+    const {data,error}=await sb.auth.getSession();
+    assertCurrent();
+    if(error)throw error;
+    if(!data?.session)return;
+    const {data:verified,error:verifyError}=await sb.auth.getUser();
+    assertCurrent();
+    if(verifyError)throw verifyError;
+    if(!verified?.user||verified.user.id!==data.session.user.id)throw Error("تعذر التحقق من جلسة الدخول");
+    CURRENT_AUTH_USER=verified.user;
+    const approved=await loadSecureProfile();
+    assertCurrent();
+    if(!approved)throw Error("هذا الحساب غير مصرح له");
+    mfInstallStage5Dom();
+    mfState();
+    await mfFinishAuthenticatedEntry("session");
   }catch(e){
-    $("authMsg").textContent="خطأ تقني: "+(e&&e.message?e.message:String(e));
+    if(typeof mfInvalidateSessionView==="function")mfInvalidateSessionView();
+    else{CURRENT_AUTH_USER=null;CURRENT_PROFILE=null;}
+    document.body.classList.add("secureLocked");
+    $("authMsg").textContent="تعذر استعادة الجلسة: "+(e?.message||String(e));
     $("authGate").style.display="flex";
+  }finally{
+    if(btn)btn.disabled=false;
   }
 }
 
@@ -2498,9 +2525,9 @@ function saveRememberChoice(){
 
 /* V6.27 mandatory login / fail-closed security:
    - body is locked before JavaScript runs
-   - any saved local auth session is cleared on each fresh page load
-   - user must enter phone/email + password to unlock the app
-   - Remember Me keeps only the identifier; Safari/Keychain may fill the password, but the login button is still required.
+   - remembered sessions are revalidated before the existing authenticated-entry gate
+   - without Remember Me, a fresh page load still requires credentials
+   - passwords are never stored by the application.
 */
 /* V6.26 phone activation fix:
    signup no longer queries approved_accounts before authentication (blocked by RLS).
@@ -2762,7 +2789,8 @@ render=function(){
 };
 document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshBankDashboard,250));
 
-secureInit();
+// Run after all authentication wrappers and session guards have been installed.
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",secureInit,{once:true});else secureInit();
 </script>
   <!-- duplicate theme script removed by final audit; original preserved earlier -->
 <script id="mfNexaPhase5Core">
