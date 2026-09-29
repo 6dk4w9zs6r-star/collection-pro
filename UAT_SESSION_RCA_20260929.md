@@ -11,7 +11,7 @@ Read-only main reference: `bcbc861c4346f3feda1b5cb0f838e871bfdcb4d0`.
 - The session observer invalidates the view on sign-out/account change. It does not discard a matching restored session on INITIAL_SESSION or TOKEN_REFRESHED.
 - `index.html` and `app.html` are byte-identical. Neither application entry, the session module, nor the service worker was changed in this investigation: the reported remaining live defect was not reproduced against the current UAT source.
 - GitHub returned no deployment records for `ref=uat`. The inspected latest GitHub Pages deployment is associated with `main`; this does not exclude an external UAT deployment.
-- A previously saved private Site named MF-NEXA — UAT exists at `https://mf-nexa-uat-session.mashal-82.chatgpt.site`. Browser access reached its ChatGPT sign-in gate; authenticated app content and the Founder session were not verified. The user did not provide the specific failing UAT URL, so this Site cannot be assumed to be the failing target.
+- The private UAT Site at `https://mf-nexa-uat-session.mashal-82.chatgpt.site/` was subsequently opened after the user completed access. Its DOM script contains the same validated `secureInit` restoration path inspected on UAT. The real Founder login and two successive page reloads were then verified on this exact URL.
 
 ## Changes
 
@@ -26,9 +26,18 @@ Read-only main reference: `bcbc861c4346f3feda1b5cb0f838e871bfdcb4d0`.
 - Separate full-page JSDOM diagnostic with all six local external scripts and mocked Supabase restored the session and unlocked the page without errors. This was a local simulation, not a real browser refresh or real Supabase login.
 - Existing recovery suite fails at its success-consent fixture (old policy version and absent persisted re-read); existing loading suite fails because its query mock has no `range` method. These files were unchanged and their failures are not reported as passes.
 - Existing browser suite could not launch Edge (`spawn EPERM`).
-- No database writes, auth configuration changes, or Production deployment occurred.
+- No manual database writes, auth configuration changes, or Production deployment occurred. The live test used normal application login/restore behavior, which can record its usual audit events.
 
 ## Status / practical retest
 
-Current UAT source passes the focused simulated restore checks. The remaining reported live defect's root cause is **not confirmed**. Deployment/source mismatch is a hypothesis, not a verified conclusion. No new runtime fix is claimed. Practical retest readiness of the deployed target is **unverified** until its exact URL/served source is matched to UAT and the real Founder login → Refresh → retained identity flow is exercised. Preserve main/Production unchanged.
+The focused live refresh test **passed** on the exact private UAT URL above on 2026-09-29:
+1. Remember Me was checked and the user entered the existing Founder credentials in the site.
+2. Successful login visibly showed **Mashal Dawud / Founder / B1**.
+3. First browser reload briefly showed the locked login gate with its button disabled while initialization ran, then restored the same identity and home screen automatically without credentials.
+4. A second browser reload again restored **Mashal Dawud / Founder / B1** without credentials.
+5. Captured browser warning/error logs were empty after login and both reload checks.
+
+This verifies remembered-session persistence across two reloads in the current in-app browser. UAT is ready for the user's practical retest on this URL. It does not establish cross-browser, browser-restart, or token-expiry behavior. The earlier reported persistent return to login was not reproduced; its cause beyond the previously corrected unconditional sign-out remains unconfirmed. A transient locked login gate during validation must not be mistaken for a completed sign-out.
+
+No new runtime fix or deployment was needed or performed. The previously existing UAT restoration fix is functioning in this verified scenario. Current work changed only regression tests and this evidence report; main/Production remain outside scope.
 
