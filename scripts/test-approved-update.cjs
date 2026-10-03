@@ -29,8 +29,8 @@ function setup(){
   scope.getSecureClient=async()=>mode==='missing'?null:{from:()=>({update:()=>({eq:()=>({eq:()=>({select:()=>({single:async()=>mode==='error'?{error:Error('denied')}:{data:mode==='empty'?null:{id:'decision'}}})})})})})};
   scope.mfLoadBackendState=async()=>{if(mode==='refresh_failure')throw Error('refresh failed');events.push({loaded:true});};
   if(kind==='writeOffs')await scope.mfApproveWriteOff('decision','approved');else await scope.mfApproveOperation(kind,'decision','approved');
-  assert.equal(c.netToPay,100);assert.equal(events.some(e=>e.loaded),mode==='success');
-  if(mode==='refresh_failure')assert(events.some(e=>e.message?.includes('تم حفظ القرار')));
+  assert.equal(c.netToPay,100);assert.equal(events.some(e=>e.loaded),kind!=='writeOffs'&&mode==='success');
+  if(kind!=='writeOffs'&&mode==='refresh_failure')assert(events.some(e=>e.message?.includes('تم حفظ القرار')));
   if(['missing','error','empty'].includes(mode))assert(!events.some(e=>e.reload));count++;
  }
  const {scope:ds,state:dst,c:dc}=setup();dst.deferrals=[{id:'old',dbId:'old',clientId:'2',status:'approved',newDate:'2026-10-16',decidedAt:'2026-09-16'},{id:'new',dbId:'new',clientId:'2',status:'approved',newDate:'2026-11-16',decidedAt:'2026-09-17'},{id:'pending',dbId:'pending',clientId:'2',status:'pending',newDate:'2027-01-16',decidedAt:'2026-09-18'}];ds.mfApplySavedDeferralDates();assert.equal(dc.dueDate,'2026-11-16');count++;

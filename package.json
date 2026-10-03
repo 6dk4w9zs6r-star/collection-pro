@@ -1,0 +1,11 @@
+{
+  "name": "mf-nexa-uat-checks",
+  "private": true,
+  "scripts": {
+    "test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-uat-regression.ps1",
+    "test:browser": "node scripts/test-browser-update.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14"
+  }
+}

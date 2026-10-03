@@ -4,13 +4,13 @@ select set_config('request.jwt.claim.sub','f808b8d1-97ff-4302-adef-4bc8d5b9630b'
 do $$
 declare r public.usage_consents; again public.usage_consents; archive jsonb; n integer;
 begin
- select * into r from public.accept_usage_policy('2026-09-14');
- select * into again from public.accept_usage_policy('2026-09-14');
+ select * into r from public.accept_usage_policy('phase5-20260918');
+ select * into again from public.accept_usage_policy('phase5-20260918');
  if r.id<>again.id or length(r.accepted_text)<100 then raise exception 'Consent not idempotent or missing text';end if;
  select count(*) into n from public.audit_log where entity_type='usage_consents' and entity_id=r.id::text;
  if n<>1 then raise exception 'Consent audit missing or duplicated: %',n;end if;
  begin
-   insert into public.usage_consents(user_id,policy_version) values('6693ab34-0188-4a86-871d-b12554003894','2026-09-14');raise exception 'Forged consent accepted';
+   insert into public.usage_consents(user_id,policy_version) values('6693ab34-0188-4a86-871d-b12554003894','phase5-20260918');raise exception 'Forged consent accepted';
  exception when insufficient_privilege then null;end;
  begin update public.usage_consents set accepted_at=now() where id=r.id;raise exception 'Immutable consent updated';exception when insufficient_privilege then null;end;
  begin perform public.accept_usage_policy('unknown');raise exception 'Unknown policy accepted';exception when raise_exception then if sqlerrm<>'Unsupported usage policy version' then raise;end if;end;
@@ -30,7 +30,7 @@ begin
  update public.profiles set is_active=false where id='f808b8d1-97ff-4302-adef-4bc8d5b9630b';
  perform set_config('request.jwt.claim.sub','f808b8d1-97ff-4302-adef-4bc8d5b9630b',true);
  select count(*) into n from public.usage_consents where id=r.id;if n<>0 then raise exception 'Inactive user read consent';end if;
- begin perform public.accept_usage_policy('2026-09-14');raise exception 'Inactive user consent accepted';exception when insufficient_privilege then null;end;
+ begin perform public.accept_usage_policy('phase5-20260918');raise exception 'Inactive user consent accepted';exception when insufficient_privilege then null;end;
  perform set_config('request.jwt.claim.sub','6693ab34-0188-4a86-871d-b12554003894',true);
  update public.profiles set is_active=false where id=auth.uid();
  begin perform public.export_operational_archive();raise exception 'Inactive Founder exported project';exception when insufficient_privilege then null;end;

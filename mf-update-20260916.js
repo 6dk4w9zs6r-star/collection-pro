@@ -5,6 +5,7 @@ const el=id=>document.getElementById(id);
 const uid=()=>CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id;
 const sessionStamp=()=>({actor:uid(),epoch:window.mfSessionEpoch?.()});
 function requireSession(stamp){if(!stamp.actor||stamp.actor!==uid()||stamp.epoch!==window.mfSessionEpoch?.())throw Error('تغيرت جلسة المستخدم؛ أعد تحميل البيانات');}
+window.mfCanImportPayments=()=>CURRENT_PROFILE?.is_active===true&&!!uid()&&mfRole()==='founder';
 const operational=()=>['founder','cfmp','bm','als','lo'].includes(mfRole());
 async function dbRequired(){const db=await getSecureClient();if(!db)throw Error('الاتصال بقاعدة البيانات مطلوب');return db;}
 async function pages(build){const stamp=sessionStamp(),rows=[];requireSession(stamp);for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);requireSession(stamp);if(error)throw error;if(!Array.isArray(data))throw Error('تعذر تأكيد البيانات');rows.push(...data);if(data.length<500)return rows;}}
@@ -43,7 +44,10 @@ window.mfRefreshAuthoritativePayments=async function(){
   const actor=uid(),db=await dbRequired(),rows=await pages(()=>db.from('payments').select('*').order('id',{ascending:true}));
   if(!actor||uid()!==actor)throw Error('تغيرت جلسة المستخدم؛ أعد تحميل البيانات');
   const byId=new Map((clients||[]).map(c=>[String(c.id),c])),people=new Map((typeof mfEmployeeCatalog==='function'?mfEmployeeCatalog():[]).map(e=>[String(e.id),e.name]));
-  meta.payments=rows.map(p=>{const c=byId.get(String(p.client_id)),employeeId=p.employee_id||c?.assignedUserId||'',employee=people.get(String(employeeId))||(!p.employee_id||!c?.assignedUserId||String(p.employee_id)===String(c.assignedUserId)?c?.employee:'')||employeeId;return {id:p.id,dbId:p.id,clientId:c?mfClientKey(c):String(p.client_id||''),clientNo:p.client_number,name:c?.name||'',employee,employeeId,branch:p.branch_code||'',amount:Number(p.amount),date:p.payment_date,type:p.payment_type,status:p.status,balanceBefore:p.balance_before,balanceAfter:p.balance_after,balance:p.balance_after,source:p.source,reference:p.source_reference,note:p.notes||'',receipt:p.receipt_url?{storagePath:p.receipt_url,name:'إيصال',persistent:true}:null,createdAt:p.created_at};});
+  meta.payments=rows.map(p=>{const c=byId.get(String(p.client_id)),employeeId=p.employee_id||c?.assignedUserId||'',employee=people.get(String(employeeId))||(!p.employee_id||!c?.assignedUserId||String(p.employee_id)===String(c.assignedUserId)?c?.employee:'')||employeeId;return {id:p.id,dbId:p.id,clientId:c?mfClientKey(c):String(p.client_id||''),clientNo:p.client_number,name:c?.name||'',employee,employeeId,branch:p.branch_code||'',amount:Number(p.amount),date:p.payment_date,type:p.payment_type,status:p.status,paymentNo:p.payment_no,postedAt:p.posted_at,balanceBefore:p.balance_before,balanceAfter:p.balance_after,balance:p.balance_after,source:p.source,reference:p.source_reference,note:p.notes||'',receipt:p.receipt_url?{storagePath:p.receipt_url,name:'إيصال',persistent:true}:null,createdAt:p.created_at};});
+  const counts=new Map();
+  for(const p of rows){if(p.status!=='successful'||!p.posted_at||p.payment_type==='deferral_fee')continue;const k=String(p.client_id),x=counts.get(k)||{count:0,last:0};x.count++;x.last=Math.max(x.last,Number(p.payment_no)||0);counts.set(k,x);}
+  for(const c of clients||[]){const x=counts.get(String(c.id));c.paymentCount=x?Math.max(x.count,x.last):0;c.inLate=mfIsLate30to60(c);c.inDue=mfIsDue(c);}
   const paymentClients=new Map(rows.map(p=>[p.id,p.client_id]));
   mfState().pendingPayments=meta.payments.filter(p=>p.status==='pending'&&p.type==='unclassified').map(p=>({...p,installment:Number(byId.get(String(paymentClients.get(p.id)))?.installment)||0}));
   if(typeof renderPaid==='function')renderPaid();
@@ -55,13 +59,14 @@ window.mfClassifyPendingPayment=async function(){
   if(window.mfClassifyingPayment)return;window.mfClassifyingPayment=true;let saved=false;
   try{const db=await dbRequired(),{data,error}=await db.from('payments').update({payment_type:kind,status:'successful',installment_units:0}).eq('id',p.dbId).eq('status','pending').select().single();
     if(error)throw error;if(!data?.id)throw Error('لم تؤكد قاعدة البيانات التصنيف');saved=true;
-    await roleAwareBootstrap();await mfRefreshAuthoritativePayments();mfFormClose();mfRenderReports();mfToast('تم اعتماد التصنيف وتحديث الرصيد من قاعدة البيانات');
+    await roleAwareBootstrap();await mfRefreshAuthoritativePayments();await mfLoadBackendState();mfFormClose();mfRenderReports();mfToast('تم اعتماد التصنيف وتحديث الرصيد من قاعدة البيانات');
   }catch(e){mfToast(saved?'تم اعتماد التصنيف؛ أعد تحميل العرض دون إعادة العملية':e.message,'bad');}finally{window.mfClassifyingPayment=false;}
 };
 const savePaymentBefore=window.mfSavePayment;
-window.mfSavePayment=async function(){if(window.mfPaymentSaving)return;window.mfPaymentSaving=true;try{return await savePaymentBefore();}finally{window.mfPaymentSaving=false;}};
+window.mfSavePayment=async function(){return await savePaymentBefore();};
 const deciding=new Set();
 async function decideOperation(kind,id,status){
+  if(kind==='writeOffs')return mfToast('الشطب اليدوي معطل','bad');
   const table={writeOffs:'write_offs',deferrals:'deferrals',disbursements:'disbursements'}[kind];
   const entry=(mfState()[kind]||[]).find(x=>String(x.id)===String(id));
   if(!table||!entry?.dbId||!['approved','rejected'].includes(status))return mfToast('طلب محفوظ وقرار صحيح مطلوبان','bad');
@@ -77,7 +82,7 @@ window.mfApproveOperation=(kind,id,status)=>decideOperation(kind,id,status);
 
 window.mfImportPaymentsFile=async function(){
   const file=el('mfPaymentsImport')?.files?.[0],status=el('mfImportStatus');if(!file)return mfToast('اختر ملف الدفعات','bad');
-  if(!operational())return mfToast('غير مصرح لك باستيراد الدفعات','bad');if(window.mfImportRunning)return;
+  if(!mfCanImportPayments())return mfToast('غير مصرح لك باستيراد الدفعات','bad');if(window.mfImportRunning)return;
   window.mfImportRunning=true;const results=[];
   try{
     if(!window.XLSX)throw Error('قارئ Excel غير متاح');const db=await dbRequired(),source=el('mfImportSource')?.value.trim();
@@ -105,22 +110,51 @@ window.mfImportPaymentsFile=async function(){
 let syncRunning=false;
 window.mfSyncPayments=async function(showToast=false){
   if(syncRunning)return false;syncRunning=true;
-  try{const db=await dbRequired();if(operational()){const {data,error}=await db.rpc('match_unmatched_payments',{p_limit:200});if(error)throw error;if(data?.some(r=>r.status==='error'))console.warn('Unmatched payments require review');}
+  try{const db=await dbRequired();if(mfCanImportPayments()){const {data,error}=await db.rpc('match_unmatched_payments',{p_limit:200});if(error)throw error;if(data?.some(r=>r.status==='error'))console.warn('Unmatched payments require review');}
     await roleAwareBootstrap();await mfRefreshAuthoritativePayments();mfState().settings.lastPaymentSync=mfNow();save(false);
     if(showToast)mfToast('تم تحديث الدفعات والأرصدة من قاعدة البيانات');return true;
   }catch(e){if(showToast)mfToast('تعذرت المزامنة: '+e.message,'bad');return false;}finally{syncRunning=false;}
 };
 
+const reversing=new Set();
+window.mfOpenPaymentReversal=function(id){
+ const p=(meta.payments||[]).find(p=>String(p.id)===String(id)),c=p&&mfRecordClient(p);
+ if(!mfCanImportPayments()||!c||!mfInScope(c)||p.status!=='successful'||!p.postedAt)return mfToast('دفعة مرحّلة ضمن صلاحية المؤسس مطلوبة','bad');
+ mfForm('عكس دفعة مع الاحتفاظ بالأصل','<input id="mfReverseId" type="hidden" value="'+mfAttr(id)+'"><div class="mfField"><label>سبب العكس</label><textarea id="mfReverseReason"></textarea></div><button class="mfSubmit" onclick="mfReversePayment()">عكس الدفعة</button>');
+};
+window.mfReversePayment=async function(){
+ const id=el('mfReverseId')?.value,reason=el('mfReverseReason')?.value.trim(),p=(meta.payments||[]).find(p=>String(p.id)===String(id)),c=p&&mfRecordClient(p);
+ if(!mfCanImportPayments()||!c||!mfInScope(c)||!p.dbId||!reason)return mfToast('الصلاحية والدفعة المحفوظة وسبب العكس مطلوبة','bad');
+ if(reversing.has(id))return;reversing.add(id);let saved=false;const stamp=sessionStamp();
+ try{const db=await dbRequired();requireSession(stamp);const {data,error}=await db.rpc('reverse_payment',{p_payment_id:p.dbId,p_reason:reason});requireSession(stamp);if(error)throw error;if(!data||String(data.payment_id)!==String(p.dbId)||data.status!=='reversed')throw Error('لم تؤكد قاعدة البيانات العكس');saved=true;
+  await roleAwareBootstrap();await mfRefreshAuthoritativePayments();await mfLoadBackendState();requireSession(stamp);
+  const {data:audit,error:auditError}=await db.from('audit_log').select('*').eq('action','payment_reversed').eq('entity_id',String(p.dbId)).single();requireSession(stamp);if(auditError)throw auditError;if(!audit?.id)throw Error('تعذر تحميل سجل التعويض');
+  const entry={id:'db:'+audit.id,action:audit.action,clientId:String(audit.client_id),details:audit.metadata?.reason||'',actorId:audit.actor_user_id,createdAt:audit.created_at};
+  mfState().audit=mfState().audit||[];const pos=mfState().audit.findIndex(x=>x.id===entry.id);if(pos<0)mfState().audit.push(entry);else mfState().audit[pos]=entry;
+  mfFormClose();mfRenderClient();mfRenderReports();mfToast('تم عكس الدفعة مع الاحتفاظ بالأصل وسجل التعويض');
+ }catch(e){mfToast(saved?'تم العكس؛ أعد تحميل العرض دون إعادة العملية':e.message,'bad')}finally{reversing.delete(id)}
+};
+window.mfRenderClientPayments=function(c){
+ const rows=(meta.payments||[]).filter(p=>String(p.clientId)===String(mfClientKey(c))||String(p.clientNo)===String(c.clientNo));
+ const closed=Number(c.netToPay??c.outstanding_balance)>0?'رصيد قائم':'الرصيد مسدد';
+ return '<div class="mfPanel"><div class="mfPanelTitle">سجل الدفعات</div>'+(mfCan('payment',c)?'<button class="mfSubmit" onclick="mfOpenPaymentForm('+mfActiveClientIndex+')">تسجيل دفعة جديدة</button>':'')+rows.map(p=>'<div class="mfListRow"><b>'+money(p.amount)+'</b><small>'+safe(({pending:'معلقة — غير مرحّلة',successful:closed,reversed:'معكوسة — الأصل محفوظ',not_matched:'غير مطابقة'})[p.status]||p.status)+' • '+mfDate(p.createdAt||p.date)+' • '+safe(p.type||'')+'<br>الرصيد قبل: '+money(p.balanceBefore)+' • بعد: '+money(p.balanceAfter)+'</small><div class="mfRowActions">'+(p.status==='pending'&&mfCan('payment',c)?'<button class="mfSmallBtn" onclick="mfUpdatePaymentStatus(&quot;'+mfAttr(p.id)+'&quot;,&quot;successful&quot;)">اعتماد الدفعة</button>':'')+(p.status==='successful'&&p.postedAt&&mfCanImportPayments()?'<button class="mfSmallBtn bad" onclick="mfOpenPaymentReversal(&quot;'+mfAttr(p.id)+'&quot;)">عكس الدفعة</button>':'')+(p.receipt?.storagePath?'<button class="mfSmallBtn" onclick="mfOpenAttachment(&quot;'+mfAttr(p.id)+'&quot;,&quot;payment&quot;)">فتح الإيصال</button>':'')+'</div></div>').join('')+'</div>';
+};
 const renderReportsBefore=window.mfRenderReports,previewBefore=window.mfPreviewReport,rowsBefore=window.mfReportRows;
 window.mfPaymentReportFilter={date:'',branch:'',employee:''};
 window.mfRenderReports=function(){
-  renderReportsBefore();const select=el('mfReportType');if(!select)return;
+  renderReportsBefore();
+  if(!mfCanImportPayments()){
+    el('mfPaymentsImport')?.closest('.mfPanel')?.remove();
+    el('mfReportsBody')?.querySelector('[onclick="mfSyncPayments(true)"]')?.remove();
+  }
+  const select=el('mfReportType');if(!select)return;
   const paymentOption=select.querySelector('option[value="payments"]');if(paymentOption)paymentOption.textContent='كشف الدفعات';
   const option=document.createElement('option');option.value='unmatched_payments';option.textContent='دفعات محفوظة غير مطابقة';select.appendChild(option);
   el('mfPaymentsImport')?.insertAdjacentHTML('beforebegin','<div class="mfForm"><div class="mfField full"><label>اسم مصدر الدفعات المعتمد (ثابت لكل عمليات الاستيراد من المصدر نفسه)</label><input id="mfImportSource" maxlength="120" placeholder="اسم المصدر"><small>أعمدة مطلوبة: reference، clientno، amount، date (YYYY-MM-DD). إعادة المرجع نفسه لا ترحّل دفعة ثانية.</small></div></div>');
 };
 window.mfSetPaymentReportFilter=function(key,value){mfPaymentReportFilter[key]=value;if(key==='branch')mfPaymentReportFilter.employee='';mfPreviewReport();};
 window.mfReportRows=function(type){
+  if(type==='writeoffs')return (mfState().writeOffs||[]).filter(r=>{const c=(clients||[]).find(c=>String(mfClientKey(c))===String(r.clientId));return c&&mfInScope(c)}).map(r=>({ClientNo:r.clientNo||(clients||[]).find(c=>String(mfClientKey(c))===String(r.clientId))?.clientNo,Amount:r.amount,Status:r.status,Reason:r.reason,CreatedAt:r.createdAt}));
   if(type==='unmatched_payments')return (meta.payments||[]).filter(p=>p.status==='not_matched').map(p=>({Reference:p.reference,ClientNo:p.clientNo,Amount:p.amount,Date:p.date,Source:p.source,Status:'غير مطابق'}));
   if(type!=='payments')return rowsBefore(type);
   const f=mfPaymentReportFilter,date=f.date||today();

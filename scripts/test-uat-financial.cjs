@@ -1,0 +1,97 @@
+// Real Postgres (PGlite), disposable fixture. No remote database/network calls.
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const {PGlite}=require('@electric-sql/pglite');
+const root=path.join(__dirname,'..');
+const baseline=JSON.parse(fs.readFileSync(process.env.MF_BASELINE_FILE||path.join(__dirname,'fixtures/uat-backend-functions.json'),'utf8'));
+const F='11111111-1111-4111-8111-111111111111',L='22222222-2222-4222-8222-222222222222';
+(async()=>{
+const db=new PGlite();let checks=0;
+await db.exec(`create role anon;create role authenticated;create schema auth;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create table public.profiles(id uuid primary key,is_active boolean,role text,email text,supervisor_email text,branch_code text);
+create table public.clients(id bigint primary key,client_number text,assigned_user_id uuid,branch_code text,employee_id uuid,
+ outstanding_balance numeric,overdue_amount numeric,due_amount numeric,paid_amount numeric,last_payment_date date,installments_due_count int,installment_amount numeric);
+create table public.payments(id uuid primary key default gen_random_uuid(),client_id bigint references clients(id),client_number text,
+ amount numeric not null check(amount>0),payment_date date,status text,payment_type text,installment_units int default 0,
+ source text default 'manual',source_reference text,source_payload jsonb,created_by uuid,branch_code text,employee_id uuid,
+ posted_at timestamptz,matched_at timestamptz,balance_before numeric,balance_after numeric,payment_no int,
+ receipt_url text,notes text,created_at timestamptz default now(),updated_at timestamptz default now());
+create unique index on payments(source,source_reference) where source_reference is not null;
+create table public.promises_to_pay(id uuid primary key default gen_random_uuid(),client_id bigint,promise_date date,status text,payment_date date,
+ paid_amount numeric,updated_by uuid,updated_at timestamptz default now(),created_at timestamptz default now());
+create table public.audit_log(id uuid primary key default gen_random_uuid(),actor_user_id uuid,action text,entity_type text,entity_id text,client_id bigint,old_data jsonb,new_data jsonb,metadata jsonb);
+create table public.locations(id uuid primary key default gen_random_uuid(),client_id bigint,location_type text,latitude numeric,longitude numeric,accuracy numeric,status text,description text,locked boolean,created_by uuid);
+create table public.field_visits(id uuid primary key default gen_random_uuid(),client_id bigint,employee_id uuid,visit_type text,started_at timestamptz,completed_at timestamptz,status text,outcome text,amount_collected numeric,latitude numeric,longitude numeric,address_text text,notes text,created_by uuid);
+create table public.write_offs(id uuid primary key default gen_random_uuid(),client_id bigint,amount numeric,status text);
+create table public.usage_consents(policy_version text);
+create function public.accept_usage_policy(text) returns text language sql as $$ select 'phase5-20260918'::text $$;
+insert into profiles values('${F}',true,'founder','founder@example.test',null,'B1'),('${L}',true,'lo','lo@example.test',null,'B1');
+insert into clients values(1,'T1','${L}','B1',null,200,30,0,0,null,2,100);
+grant usage on schema public,auth to authenticated;
+grant select,insert,update,delete on all tables in schema public to authenticated;
+alter table payments enable row level security;create policy scoped_payments on payments to authenticated using(client_id=1 or client_id is null) with check(client_id=1 or client_id is null);
+alter table write_offs enable row level security;create policy scoped_writeoffs on write_offs to authenticated using(true) with check(true);
+`);
+for(const f of baseline.functions)await db.exec(f.definition+';');
+await db.exec(`alter table clients add column client_name text,add column phone text,add column guarantor_name text,add column guarantor_phone text,add column assigned_employee text,add column reference_1_name text,add column reference_1_phone text,add column reference_2_name text,add column reference_2_phone text;
+update clients set client_name='matching scoped' where id=1;
+insert into clients(id,client_number,assigned_user_id,branch_code,client_name) values(2,'T2','33333333-3333-4333-8333-333333333333','B1','matching outside');
+alter table clients enable row level security;create policy scoped_clients on clients to authenticated using(public.can_access_client(assigned_user_id,branch_code)) with check(public.can_access_client(assigned_user_id,branch_code));`);
+await db.exec(`create trigger trg_protect_payment_financial_fields before insert or update on payments for each row execute function protect_payment_financial_fields();
+create trigger trg_validate_payment_status_transition before update of status on payments for each row execute function validate_payment_status_transition();
+create trigger trg_apply_successful_payment after insert or update of status,client_id on payments for each row execute function apply_successful_payment();
+create trigger trg_link_successful_payment_to_promises after insert or update of status,posted_at on payments for each row execute function link_successful_payment_to_promises();
+create trigger trg_reverse_successful_payment after update of status on payments for each row execute function reverse_successful_payment();`);
+const patch=fs.readFileSync(path.join(root,'scripts/uat-financial-hardening.sql'),'utf8')+'\n'+fs.readFileSync(path.join(root,'scripts/uat-financial-functions.sql'),'utf8');
+await assert.rejects(db.exec(patch),/Isolated UAT/);await db.exec('rollback');checks++;
+await db.exec("set mf.isolated_uat='confirmed'");await db.exec(patch);
+const query=async sql=>(await db.query(sql)).rows;
+const balance=async()=>{const r=(await query('select outstanding_balance,overdue_amount,due_amount,paid_amount from clients where id=1'))[0];return Object.values(r).map(Number)};
+await db.exec(`set role authenticated;set request.jwt.claim.sub='${F}';`);
+const promise=(await query("insert into promises_to_pay(client_id,promise_date,status) values(1,current_date,'pending') returning id"))[0].id;
+const p=(await query("insert into payments(client_id,amount,payment_date,status,payment_type,created_by) values(1,50,current_date,'successful','partial',auth.uid()) returning id"))[0].id;
+assert.deepEqual(await balance(),[150,0,0,50]);checks++;
+assert.equal((await query(`select payment_no from payments where id='${p}'`))[0].payment_no,1);checks++;
+assert.equal((await query(`select status from promises_to_pay where id='${promise}'`))[0].status,'kept');checks++;
+await db.exec(`update payments set status='successful' where id='${p}'`);assert.deepEqual(await balance(),[150,0,0,50]);checks++;
+const pending=(await query("insert into payments(client_id,amount,payment_date,status,payment_type,created_by) values(1,10,current_date,'pending','partial',auth.uid()) returning id"))[0].id;
+await db.exec(`update payments set status='successful' where id='${pending}'`);
+assert.equal((await query(`select payment_no from payments where id='${pending}'`))[0].payment_no,2);assert.deepEqual(await balance(),[140,0,0,60]);checks++;
+await query(`select reverse_payment('${p}','wrong receipt')`);assert.deepEqual(await balance(),[190,30,0,10]);checks++;
+assert.equal((await query(`select status from promises_to_pay where id='${promise}'`))[0].status,'pending');checks++;
+await query(`select reverse_payment('${p}','retry')`);assert.deepEqual(await balance(),[190,30,0,10]);checks++;
+assert.equal((await query(`select count(*)::int n from audit_log where action='payment_reversed' and entity_id='${p}'`))[0].n,1);checks++;
+await db.exec(`set request.jwt.claim.sub='${L}'`);
+await assert.rejects(query(`select reverse_payment('${pending}','not authorized')`),/permission/);checks++;
+await assert.rejects(query("select import_payment_batch('bank','[]')"),/permission/);checks++;
+await assert.rejects(query("insert into write_offs(client_id,amount,status) values(1,1,'pending')"),/row-level/);checks++;
+await db.exec(`set request.jwt.claim.sub='${F}'`);
+const fee=(await query("insert into payments(client_id,amount,payment_date,status,payment_type,created_by) values(1,5,current_date,'successful','deferral_fee',auth.uid()) returning id"))[0].id;
+assert.equal((await query(`select status from promises_to_pay where id='${promise}'`))[0].status,'pending');checks++;
+await query(`select reverse_payment('${fee}','fee reversal')`);assert.deepEqual(await balance(),[190,30,0,10]);checks++;
+await assert.rejects(query("select record_field_visit_atomic(1,'client','home',31,35,1,'ok','done','overpayment',1000,null)"),/exceeds/);
+assert.equal((await query('select count(*)::int n from field_visits'))[0].n,0);checks++;
+const visit=await query("select record_field_visit_atomic(1,'client','home',31,35,1,'ok','done','visit',0,null) result");assert(visit[0].result.visit_id);checks++;
+await db.exec('reset role');assert.equal((await query(`select count(*)::int n from mf_private.payment_reversals where payment_id='${p}'`))[0].n,1);checks++;
+await db.exec(`set role authenticated;set request.jwt.claim.sub='${F}';`);
+assert.equal((await query(`select count(*)::int n from payments where id='${p}'`))[0].n,1);checks++;
+await query(`delete from payments where id='${p}'`);assert.equal((await query(`select count(*)::int n from payments where id='${p}'`))[0].n,1);checks++;
+await assert.rejects(query(`update payments set amount=999 where id='${pending}'`),/immutable/);checks++;
+await assert.rejects(query(`update payments set source_reference='forged' where id='${pending}'`),/immutable/);checks++;
+await assert.rejects(query(`update payments set status='successful' where id='${p}'`),/transition/);checks++;
+await assert.rejects(query(`select reverse_payment('${pending}','')`),/reason/);checks++;
+await db.exec(`set request.jwt.claim.sub='${L}'`);
+await assert.rejects(query(`update payments set status='reversed' where id='${pending}'`),/permission/);checks++;
+await assert.rejects(query("select match_unmatched_payments(100)"),/permission/);checks++;
+const search=await query("select * from limited_global_client_search('matching')");assert.equal(search.length,1);assert.equal(Number(search[0].id),1);assert.equal(search[0].in_scope,true);checks++;
+await db.exec('reset role;set role anon');await assert.rejects(query("select * from limited_global_client_search('matching')"),/permission/);checks++;await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${L}';`);
+await assert.rejects(query("insert into payments(client_id,amount,payment_date,status,payment_type,source_reference) values(1,1,current_date,'pending','import','bypass')"),/row-level/);checks++;
+await db.exec(`set request.jwt.claim.sub='${F}';`);
+const imported=await query("select import_payment_batch('bank','[{\"reference\":\"R1\",\"client_number\":\"T1\",\"amount\":100,\"payment_date\":\"2026-10-03\"}]') result");assert.equal(imported[0].result[0].status,'successful');checks++;
+const afterImport=await balance();
+const duplicate=await query("select import_payment_batch('bank','[{\"reference\":\"R1\",\"client_number\":\"T1\",\"amount\":100,\"payment_date\":\"2026-10-03\"}]') result");assert.equal(duplicate[0].result[0].status,'duplicate');assert.deepEqual(await balance(),afterImport);checks++;
+const field=await query("select record_field_visit_atomic(1,'client','home',31,35,1,'ok','done','collected',5,null) result");assert(field[0].result.payment_id);assert.equal((await query(`select count(*)::int n from payments where id='${field[0].result.payment_id}'`))[0].n,1);checks++;
+const beforeRollback=await balance();await db.exec('begin');await query(`select reverse_payment('${field[0].result.payment_id}','rollback test')`);await db.exec('rollback');assert.deepEqual(await balance(),beforeRollback);assert.equal((await query(`select status from payments where id='${field[0].result.payment_id}'`))[0].status,'successful');checks++;
+await db.exec('reset role');assert.equal((await query(`select count(*)::int n from mf_private.payment_reversals where payment_id='${field[0].result.payment_id}'`))[0].n,0);checks++;
+await db.close();console.log(JSON.stringify({postgresChecks:checks,engine:'PGlite PostgreSQL',data:'disposable local fixtures only'}));
+})().catch(e=>{console.error(e);process.exitCode=1});

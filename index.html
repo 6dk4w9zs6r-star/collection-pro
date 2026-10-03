@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#07111f">
 <link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="NEXA-MF">
 <title>NEXA-MF</title>
 <!-- GITHUB 05: Banking Home + cleanup -->
@@ -1259,7 +1260,7 @@ function renderEmployees(){
  let list=employees.filter(e=>e.id!=="sup");
  $("employeeSummary").innerHTML=list.length?list.map(e=>{
    let arr=clients.filter(c=>c.employee===e.name||(e.cea&&c.cea===e.cea));
-   let late=arr.filter(c=>c.inLate),due=arr.filter(c=>c.inDue);
+   let late=arr.filter(c=>c.inLate),due=arr.filter(c=>mfIsDue(c));
    return `<div class="employeeCard" onclick="openEmployeePage('${safe((e.cea||e.name).replace(/'/g,"&#39;"))}')" style="cursor:pointer">
      <b>${safe(e.name)}</b>
      <small>Late: <b class="red">${late.length}</b> &nbsp; | &nbsp; Due: <b class="yellow">${due.length}</b><br>
@@ -1449,7 +1450,7 @@ function openEmployeePage(key){
 
   let e=employees.find(x=>x.cea===key||x.name===key);if(!e)return;
   let arr=clients.filter(c=>c.employee===e.name||(e.cea&&c.cea===e.cea));
-  let late=arr.filter(c=>c.inLate),due=arr.filter(c=>c.inDue);
+  let late=arr.filter(c=>c.inLate),due=arr.filter(c=>mfIsDue(c));
   $("employeePageContent").innerHTML=`
     <div class="employeePageTitle">${safe(e.name)}</div>
     <div class="info">CEA: ${safe(e.cea||"-")} | Team: ${safe(e.team||"-")}</div>
@@ -1490,7 +1491,7 @@ function openEmployeeLate(key){
 function openEmployeeDue(key){
   let e=employees.find(x=>x.cea===key||x.name===key);if(!e)return;
   let arr=clients.filter(c=>c.employee===e.name||(e.cea&&c.cea===e.cea));
-  let due=arr.filter(c=>c.inDue),prom=due.filter(c=>c.promiseDate&&c.promiseDate>=today()),fol=due.filter(c=>c.followup===today()&&!c.followedToday);
+  let due=arr.filter(c=>mfIsDue(c)),prom=due.filter(c=>c.promiseDate&&c.promiseDate>=today()),fol=due.filter(c=>c.followup===today()&&!c.followedToday);
   let grp=dueData.byEmployee?.[e.cea||e.name]||{startIds:[]};
   let st=grp.startIds?.length||due.length,rem=due.length,paid=Math.max(0,st-rem),pc=st?Math.round(paid/st*1000)/10:0;
   $("employeePageContent").innerHTML=`
@@ -2194,7 +2195,7 @@ async function roleAwareBootstrap(){
   // Rebuild Due / Late counters from the scoped database rows.
   // Due = active overdue clients (>0 days). Late Payment = active 30–60 day clients.
   const dueAll=mapped.filter(c=>num(c.dueLateDays)>0);
-  const dueCurrent=dueAll.filter(c=>c.inDue);
+  const dueCurrent=dueAll.filter(c=>mfIsDue(c));
   const duePaid=dueAll.filter(c=>num(c.totalPaid)>0);
   const lateAll=mapped.filter(c=>num(c.lateDays)>=30 && num(c.lateDays)<=60);
   const lateCurrent=lateAll.filter(c=>c.inLate);
@@ -2333,7 +2334,7 @@ async function openBranchPage(branchId){
   let late=clientRows.filter(c=>c.in_late).length,due=clientRows.filter(c=>c.in_due).length;
   if(isBalad&&clientRows.length===0){
     late=(clients||[]).filter(c=>c.inLate).length;
-    due=(clients||[]).filter(c=>c.inDue).length;
+    due=(clients||[]).filter(c=>mfIsDue(c)).length;
   }
   $("branchManagementSummary").innerHTML=`
     <div class="branchMini clickable" onclick="openBmView('${branchId}')">
@@ -2477,7 +2478,7 @@ function ensureLegacyLOs(){
 }
 function legacyLOStats(e){
   let arr=(clients||[]).filter(c=>c.employee===e.name||(e.cea&&c.cea===e.cea));
-  return {late:arr.filter(c=>c.inLate).length,due:arr.filter(c=>c.inDue).length,total:arr.length};
+  return {late:arr.filter(c=>c.inLate).length,due:arr.filter(c=>mfIsDue(c)).length,total:arr.length};
 }
 function legacyGlobalSearch(q){
   let nq=norm(q);
@@ -2598,7 +2599,7 @@ window.secureUniversalSearch=function(q){
 };
 
 /* V6.42 secure limited global search */
-window.secureUniversalSearch=async function(q){q=String(q||"").trim();const out=document.getElementById("universalSearchResults");if(!out)return;if(q.length<2){out.innerHTML="";return}try{sb=await getSecureClient();if(!sb)throw Error("secure session required");const res=await sb.rpc("limited_global_client_search",{p_query:q});if(res.error)throw res.error;const rows=Array.isArray(res.data)?res.data:[];out.innerHTML=rows.map(function(r){const i=(clients||[]).findIndex(function(c){return String(c.id)===String(r.id)});const actions=(r.in_scope&&i>=0)?("<div class=\"actions\" style=\"margin-top:10px\"><button class=\"secondary\" onclick=\"followClient("+i+")\">📝 متابعة</button><button class=\"call\" onclick=\"callClient("+i+")\">📞 اتصال</button><button class=\"whatsapp\" onclick=\"whatsappClient("+i+")\">WhatsApp</button></div>"):"";return "<div class=\"searchResult\"><b>"+safe(r.client_name||"-")+"</b><small>رقم العميل: "+safe(r.client_number||"-")+" | هاتف: "+safe(r.phone||"-")+"<br>الكفيل: "+safe(r.guarantor_name||"-")+" | هاتف الكفيل: "+safe(r.guarantor_phone||"-")+"<br>الموظف المسؤول: "+safe(r.assigned_employee||"-")+" | الفرع: "+safe(r.branch_code||"-")+(r.in_scope?"":"<br>بيانات اتصال محدودة — خارج نطاقك التشغيلي")+"</small>"+actions+"</div>"}).join("")||"<div class=\"empty\">لا توجد نتائج</div>"}catch(e){out.innerHTML="<div class=\"empty\">تعذر تنفيذ البحث الآمن</div>"}};
+window.secureUniversalSearch=async function(q){q=String(q||"").trim();const out=document.getElementById("universalSearchResults");if(!out)return;if(q.length<2){out.innerHTML="";return}try{sb=await getSecureClient();if(!sb)throw Error("secure session required");const res=await sb.rpc("limited_global_client_search",{p_query:q});if(res.error)throw res.error;const rows=(Array.isArray(res.data)?res.data:[]).filter(r=>r.in_scope===true&&(clients||[]).some(c=>String(c.id)===String(r.id)&&mfInScope(c)));out.innerHTML=rows.map(function(r){const i=(clients||[]).findIndex(function(c){return String(c.id)===String(r.id)});const actions=(r.in_scope&&i>=0)?("<div class=\"actions\" style=\"margin-top:10px\"><button class=\"secondary\" onclick=\"followClient("+i+")\">📝 متابعة</button><button class=\"call\" onclick=\"callClient("+i+")\">📞 اتصال</button><button class=\"whatsapp\" onclick=\"whatsappClient("+i+")\">WhatsApp</button></div>"):"";return "<div class=\"searchResult\"><b>"+safe(r.client_name||"-")+"</b><small>رقم العميل: "+safe(r.client_number||"-")+" | هاتف: "+safe(r.phone||"-")+"<br>الكفيل: "+safe(r.guarantor_name||"-")+" | هاتف الكفيل: "+safe(r.guarantor_phone||"-")+"<br>الموظف المسؤول: "+safe(r.assigned_employee||"-")+" | الفرع: "+safe(r.branch_code||"-")+""+"</small>"+actions+"</div>"}).join("")||"<div class=\"empty\">لا توجد نتائج</div>"}catch(e){out.innerHTML="<div class=\"empty\">تعذر تنفيذ البحث الآمن</div>"}};
 window.secureGlobalSearch=window.secureUniversalSearch;
 
 /* V6.41: accept both YYYY-MM-DD and DD-MM-YYYY (also slash-separated). */
@@ -2847,7 +2848,7 @@ function mfInScope(c){
   if(r==="als"){
     if(c.supervisorId)return String(c.supervisorId)===String(CURRENT_PROFILE?.id||"");
     if(c.supervisorEmail)return norm(c.supervisorEmail)===norm(CURRENT_PROFILE?.email);
-    return true;
+    return false;
   }
   return false;
 }
@@ -2949,10 +2950,7 @@ function mfInstallMenu(){
 }
 function mfInstallManifest(){
   if(document.querySelector('link[rel="manifest"]'))return;
-  const icon=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#07172a"/><path d="M13 43V21h8l11 14 11-14h8v22h-8V32L32 46 21 32v11z" fill="#009edb"/></svg>`;
-  const manifest={name:"NEXA-MF",short_name:"NEXA-MF",start_url:".",display:"standalone",background_color:"#07172a",theme_color:"#07172a",icons:[{src:"data:image/svg+xml,"+encodeURIComponent(icon),sizes:"any",type:"image/svg+xml"}]};
-  const link=document.createElement("link");link.rel="manifest";link.href="data:application/manifest+json,"+encodeURIComponent(JSON.stringify(manifest));document.head.appendChild(link);
-  let fav=document.querySelector('link[rel="icon"]');if(!fav){fav=document.createElement("link");fav.rel="icon";fav.type="image/svg+xml";fav.href="data:image/svg+xml,"+encodeURIComponent(icon);document.head.appendChild(fav)}
+  const link=document.createElement('link');link.rel='manifest';link.href='./manifest.webmanifest';document.head.appendChild(link);
 }
 function mfUpdateHome(){
   if(!$("mfStage5Home"))return;mfAutoStates();const s=mfState(),d=today();
@@ -2973,7 +2971,7 @@ function mfSearchHay(c){return [c.name,c.clientNo,c.phone,c.altPhone,c.guarantor
 function mfRunHomeSearch(){
   const out=$("mfHomeSearchResults"),q=norm($("mfHomeSearch")?.value),status=$("mfSearchStatus")?.value||"all",employee=$("mfSearchEmployee")?.value||"",branch=$("mfSearchBranch")?.value||"";if(!out)return;
   if(q.length<2&&status==="all"&&!employee&&!branch){out.innerHTML="";return}
-  let rows=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>(!q||mfSearchHay(c).includes(q))&&(!employee||c.employee===employee)&&(!branch||(c.branchCode||c.branch)===branch));
+  let rows=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>mfInScope(c)&&(!q||mfSearchHay(c).includes(q))&&(!employee||c.employee===employee)&&(!branch||(c.branchCode||c.branch)===branch));
   if(status==="late")rows=rows.filter(x=>x.c.inLate);if(status==="due")rows=rows.filter(x=>x.c.inDue);if(status==="active")rows=rows.filter(x=>x.c.status!=="مسدد");
   out.innerHTML=rows.slice(0,100).map(({c,i})=>{const p=mfPriority(c),outside=!mfInScope(c);return `<div class="mfSearchCard" onclick="mfOpenClient(${i})"><div class="mfListRowTop"><div><div class="mfSearchName">${safe(c.name||"بدون اسم")}</div><div class="mfSearchMeta">رقم العميل: ${safe(c.clientNo||"-")} • ${safe(c.phone||"-")}<br>الموظف: ${safe(c.employee||"-")} • الفرع: ${safe(c.branchCode||c.branch||"-")}</div></div><div><span class="mfBadge ${p.cls}">${p.label} ${p.score}</span>${outside?'<span class="mfBadge">عرض واتصال فقط</span>':''}</div></div></div>`}).join("")||'<div class="mfEmpty">لا توجد نتائج مطابقة</div>';
 }
@@ -2982,24 +2980,25 @@ function mfRunHomeSearch(){
 // NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
 function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
-function mfIsLate(c){return !!c&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
-function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0}
+function mfIsLate(c){return !!c&&num(c.paymentCount??c.payment_no??0)<2&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
+function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0&&num(c?.paymentCount??c?.payment_no??0)<2}
 
 function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
 }
-function mfAllocationRows(){return (clients||[]).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue)&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}
+function mfIsDue(c){const balance=c?.netToPay??c?.outstandingBalance??c?.outstanding_balance;return !!c&&num(c.dueAmount??c.due_amount)>0&&(balance==null||num(balance)>0)}
+function mfAllocationRows(){return (clients||[]).filter(mfInScope).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c))&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}
 function mfAllocSet(level,value){mfAllocation[level]=value;if(level==="branch"){mfAllocation.team="";mfAllocation.employee=""}if(level==="team")mfAllocation.employee="";mfRenderAllocation()}
 function mfRenderAllocation(){
-  const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),all=(clients||[]).filter(c=>mfAllocation.mode==="late"?mfIsLate30to60(c):c.inDue);let rows=mfAllocationRows();
+  const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),people=mfVisibleEmployees(),all=(clients||[]).filter(mfInScope).filter(c=>mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c));let rows=mfAllocationRows();
   let html=`<div class="mfTabs"><button class="mfTab ${mfAllocation.mode==='late'?'active':''}" onclick="mfAllocation.mode='late';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Late 30–60</button><button class="mfTab ${mfAllocation.mode==='due'?'active':''}" onclick="mfAllocation.mode='due';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Due</button></div><div class="mfBreadcrumbs"><button class="mfCrumb" onclick="mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">${mfAllocation.mode==='late'?'Late':'Due'} (${all.length})</button>${mfAllocation.branch?`<button class="mfCrumb" onclick="mfAllocSet('branch','')">${safe(mfAllocation.branch)}</button>`:''}${mfAllocation.team?`<button class="mfCrumb" onclick="mfAllocSet('team','')">${safe(mfAllocation.team)}</button>`:''}${mfAllocation.employee?`<button class="mfCrumb">${safe(mfAllocation.employee)}</button>`:''}</div>`;
   const high=["founder","cfmp"].includes(r),manager=high||r==="bm";
   if(high&&!mfAllocation.branch){
-    const groups=[...new Set(all.map(c=>c.branchCode||c.branch||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=all.filter(c=>(c.branchCode||c.branch||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('branch','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الفرق</small></button>`}).join("")}</div>`;
+    const groups=[...new Set(people.map(e=>e.branch||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=all.filter(c=>(c.branchCode||c.branch||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('branch','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الفرق</small></button>`}).join("")}</div>`;
   }else if(manager&&!mfAllocation.team){
-    const groups=[...new Set(rows.map(c=>c.team||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.team||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('team','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الموظفين</small></button>`}).join("")}</div>`;
+    const groups=[...new Set(people.filter(e=>!mfAllocation.branch||e.branch===mfAllocation.branch).map(e=>e.team||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.team||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('team','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الموظفين</small></button>`}).join("")}</div>`;
   }else if(r!=="lo"&&!mfAllocation.employee){
-    const groups=[...new Set(rows.map(c=>c.employee||"غير مسند"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.employee||"غير مسند")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('employee','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح القائمة</small></button>`}).join("")}</div>`;
+    const groups=[...new Set(people.filter(e=>(!mfAllocation.branch||e.branch===mfAllocation.branch)&&(!mfAllocation.team||(e.team||"غير محدد")===mfAllocation.team)).map(e=>e.name))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.employee||"غير مسند")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('employee','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح القائمة</small></button>`}).join("")}</div>`;
   }else{
     rows.sort((a,b)=>mfPriority(b).score-mfPriority(a).score);html+=rows.map(c=>{const i=mfClientIndex(c),p=mfPriority(c),amount=mfAllocation.mode==="late"?num(c.arrears):num(c.dueAmount);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(c.name)}</b><small>${safe(c.clientNo)} • ${safe(c.employee||"غير مسند")} • ${money(amount)}</small></div><span class="mfBadge ${p.cls}">${p.label} ${p.score}</span></div><button class="mfSubmit" onclick="mfOpenClient(${i})">فتح ملف العميل</button></div>`}).join("")||'<div class="mfEmpty">لا يوجد عملاء في هذه القائمة</div>';
   }
@@ -3013,7 +3012,7 @@ function mfSetClientTab(tab){mfClientTab=tab;mfRenderClient()}
 function mfRenderClient(){
   const out=$("mfClientBody"),c=clients?.[mfActiveClientIndex];if(!out||!c)return;const p=mfPriority(c),outside=!mfInScope(c);
   let body="";if(mfClientTab==="overview")body=mfRenderClientOverview(c);else if(mfClientTab==="payments")body=mfRenderClientPayments(c);else if(mfClientTab==="followups")body=mfRenderClientFollowups(c);else if(mfClientTab==="locations")body=mfRenderClientLocations(c);else if(mfClientTab==="legal")body=mfRenderClientLegal(c);else if(mfClientTab==="timeline")body=mfRenderClientTimeline(c);else body=mfRenderClientMessages(c);
-  out.innerHTML=`<div class="mfPanel"><div class="mfListRowTop"><div><div class="mfModalTitle">${safe(c.name||"بدون اسم")}</div><div class="mfSearchMeta">رقم العميل: ${safe(c.clientNo||"-")} • ${safe(c.employee||"غير مسند")} • ${safe(c.branchCode||c.branch||"-")}</div></div><div><span class="mfBadge ${p.cls}">Priority ${p.score} • ${p.label}</span>${c.inLate?'<span class="mfBadge broken">Late</span>':''}${c.inDue?'<span class="mfBadge pending">Due</span>':''}${outside?'<span class="mfBadge">خارج النطاق: View + Contact + Promise</span>':''}</div></div></div><div class="mfTabs">${mfClientTabs().map(([id,label])=>`<button class="mfTab ${mfClientTab===id?'active':''}" onclick="mfSetClientTab('${id}')">${label}</button>`).join("")}</div>${body}`;
+  out.innerHTML=`<div class="mfPanel"><div class="mfListRowTop"><div><div class="mfModalTitle">${safe(c.name||"بدون اسم")}</div><div class="mfSearchMeta">رقم العميل: ${safe(c.clientNo||"-")} • ${safe(c.employee||"غير مسند")} • ${safe(c.branchCode||c.branch||"-")}</div></div><div><span class="mfBadge ${p.cls}">Priority ${p.score} • ${p.label}</span>${c.inLate?'<span class="mfBadge broken">Late</span>':''}${c.inDue?'<span class="mfBadge pending">Due</span>':''}</div></div></div><div class="mfTabs">${mfClientTabs().map(([id,label])=>`<button class="mfTab ${mfClientTab===id?'active':''}" onclick="mfSetClientTab('${id}')">${label}</button>`).join("")}</div>${body}`;
 }
 function mfData(label,value){return `<div class="mfDataItem"><span>${label}</span><b>${safe(value||"-")}</b></div>`}
 function mfAction(icon,label,fn,allowed=true,cls=""){return `<button class="mfAction ${cls}" ${allowed?`onclick="${fn}"`:'disabled'}><span>${icon}</span>${label}</button>`}
@@ -3021,7 +3020,7 @@ function mfRenderClientOverview(c){
   const i=mfActiveClientIndex,payAllowed=mfCan("payment",c),editAllowed=mfCan("edit",c),legalAllowed=mfCan("legal",c),escAllowed=mfCan("escalate",c);
   const ref1n=c.reference1Name||c.reference_1_name,ref1p=c.reference1Phone||c.reference_1_phone,ref2n=c.reference2Name||c.reference_2_name,ref2p=c.reference2Phone||c.reference_2_phone;
   return `<div class="mfKpis"><div class="mfKpi"><span>المتأخر</span><b>${money(Math.max(num(c.arrears),num(c.dueAmount)))}</b></div><div class="mfKpi"><span>القسط</span><b>${money(c.installment)}</b></div><div class="mfKpi"><span>أيام التأخير</span><b>${Math.max(num(c.lateDays),num(c.dueLateDays))}</b></div><div class="mfKpi"><span>إجمالي المدفوع</span><b>${money(c.totalPaid)}</b></div></div>
-  <div class="mfPanel"><div class="mfPanelTitle">Quick Actions <small>حسب الصلاحية</small></div><div class="mfActionsGrid">${mfAction("📞","Call",`mfQuickCall(${i})`)}${mfAction("◉","WhatsApp",`mfOpenMessageAction('whatsapp',${i})`)}${mfAction("✉","SMS",`mfOpenMessageAction('sms',${i})`)}${mfAction("💳","Payment",`mfOpenPaymentForm(${i})`,payAllowed,"primaryAction")}${mfAction("📅","Follow-up",`mfOpenFollowupForm(${i})`,mfCan("followup",c))}${mfAction("🤝","Promise",`mfOpenPromiseForm(${i})`,mfCan("promise",c))}${mfAction("📍","Visit",`mfOpenVisitForm(${i})`,mfCan("visit",c))}${mfAction("📝","Note",`mfOpenNoteForm(${i})`,mfCan("edit",c))}${mfAction("⚠","Warning PDF",`mfPrintWarning(${i})`,mfCan("edit",c))}${mfAction("⚖","Legal",`mfOpenLegalForm(${i})`,legalAllowed)}${mfAction("⬆","Escalate",`mfOpenEscalateForm(${i})`,escAllowed)}${mfAction("✎","Update",`mfOpenEditClient(${i})`,editAllowed)}${mfAction("↗","Share Client",`mfShareClient(${i})`,mfCan("share",c))}${mfAction("!","Report Issue",`mfOpenIssueForm(${i})`,mfCan("issue",c))}${mfAction("📌","Location",`mfSetClientTab('locations')`,true)}${mfAction("R-O","Write-Off",`mfOpenWriteOffForm(${i})`,mfCan("requestWriteOff",c),"dangerAction")}</div></div>
+  <div class="mfPanel"><div class="mfPanelTitle">Quick Actions <small>حسب الصلاحية</small></div><div class="mfActionsGrid">${mfAction("📞","Call",`mfQuickCall(${i})`)}${mfAction("◉","WhatsApp",`mfOpenMessageAction('whatsapp',${i})`)}${mfAction("✉","SMS",`mfOpenMessageAction('sms',${i})`)}${mfAction("💳","Payment",`mfOpenPaymentForm(${i})`,payAllowed,"primaryAction")}${mfAction("📅","Follow-up",`mfOpenFollowupForm(${i})`,mfCan("followup",c))}${mfAction("🤝","Promise",`mfOpenPromiseForm(${i})`,mfCan("promise",c))}${mfAction("📍","Visit",`mfOpenVisitForm(${i})`,mfCan("visit",c))}${mfAction("📝","Note",`mfOpenNoteForm(${i})`,mfCan("edit",c))}${mfAction("⚠","Warning PDF",`mfPrintWarning(${i})`,mfCan("edit",c))}${mfAction("⚖","Legal",`mfOpenLegalForm(${i})`,legalAllowed)}${mfAction("⬆","Escalate",`mfOpenEscalateForm(${i})`,escAllowed)}${mfAction("✎","Update",`mfOpenEditClient(${i})`,editAllowed)}${mfAction("↗","Share Client",`mfShareClient(${i})`,mfCan("share",c))}${mfAction("!","Report Issue",`mfOpenIssueForm(${i})`,mfCan("issue",c))}${mfAction("📌","Location",`mfSetClientTab('locations')`,true)}</div></div>
   <div class="mfPanel"><div class="mfPanelTitle">بيانات العميل</div><div class="mfDataGrid">${mfData("الاسم",c.name)}${mfData("رقم العميل",c.clientNo)}${mfData("الهاتف الأساسي",c.phone)}${mfData("هاتف بديل",c.altPhone)}${mfData("العنوان",c.clientAddress)}${mfData("حالة الموقع",c.locationStatus||c.location_status||(c.unknownLocation?"مكان مجهول":""))}</div></div>
   <div class="mfPanel"><div class="mfPanelTitle">الكفيل والمعرّفون</div><div class="mfDataGrid">${mfData("اسم الكفيل",c.guarantor)}${mfData("هاتف الكفيل",c.guarantorPhone)}${mfData("عنوان الكفيل",c.guarantorAddress)}${mfData("المعرّف الأول",ref1n)}${mfData("هاتف المعرّف الأول",ref1p)}${mfData("المعرّف الثاني",ref2n)}${mfData("هاتف المعرّف الثاني",ref2p)}</div></div>
   <div class="mfPanel"><div class="mfPanelTitle">بيانات العمل</div><div class="mfDataGrid">${mfData("الشركة",c.company)}${mfData("مكان العمل",c.workLocation||c.work_location)}${mfData("هاتف مسؤول العمل",c.managerPhone||c.work_manager_phone)}${mfData("حالة الوظيفة",c.workStatus||c.employment_status)}${mfData("العمل الجديد",c.newWork||c.new_work)}${mfData("المحفظة / الفريق",(c.portfolio||"-")+" / "+(c.team||"-"))}</div></div>`;
@@ -3051,7 +3050,7 @@ function mfTimelineRows(c){
   mfArray(c.history).forEach(x=>add({type:"history",id:x.id,title:"سجل سابق",text:x.text,date:x.createdAt||x.date,actorName:x.actorName||x.employeeName||x.userName||"",actorRole:x.actorRole||x.role||""}));
   mfArray(meta.payments).filter(x=>String(x.clientNo||"")===String(c.clientNo||"")||x.clientId===key).forEach(x=>add({type:"payment",id:x.id,dbId:x.dbId,title:"دفعة "+money(x.amount),text:(x.type||x.source||"")+" • "+(x.status||"")+" • الرصيد بعد: "+money(x.balance),date:x.createdAt||x.date,actorName:x.actorName||x.employeeName||"",actorRole:x.actorRole||""}));
   [["followups","متابعة"],["promises","وعد دفع"],["visits","زيارة ميدانية"],["legal","إجراء قانوني"],["escalations","تصعيد"],["messages","رسالة"],["writeOffs","شطب"],["deferrals","تأجيل"],["disbursements","صرف"]].forEach(([kind,title])=>mfArray(s[kind]).filter(x=>x.clientId===key).forEach(x=>add({type:kind,id:x.id,dbId:x.dbId,title,text:x.note||x.notes||x.reason||x.text||x.status||"",date:x.updatedAt||x.createdAt||x.promiseDate||x.dueAt,actorName:x.actorName||x.employeeName||x.createdByName||"",actorRole:x.actorRole||x.role||""})));
-  const operationalAuditActions=new Set(['payment_created','payment_updated','payment_posted','payment_pending','payment_approved','followup_created','promise_created','promise_kept','promise_broken','legal_action','case_escalated','case_escalated_to_bm','writeoff_requested','writeoff_approved','writeoff_rejected','deferral_requested','deferral_approved','deferral_rejected','disbursement_requested','disbursement_approved','disbursement_rejected','gps_party_location','field_visit','message_prepared']);mfArray(s.audit).filter(x=>(x.clientId===key||String(x.clientNo||"")===String(c.clientNo||""))&&!operationalAuditActions.has(String(x.action||''))).forEach(x=>add({type:"audit",id:x.id,title:x.action||"Audit",text:x.details||"",date:x.createdAt,actorName:x.actorName||"",actorRole:x.actorRole||""}));
+  const operationalAuditActions=new Set(['payment_created','payment_updated','payment_posted','payment_pending','payment_approved','followup_created','promise_created','promise_kept','promise_broken','legal_action','case_escalated','case_escalated_to_bm','writeoff_requested','writeoff_approved','writeoff_rejected','deferral_requested','deferral_approved','deferral_rejected','disbursement_requested','disbursement_approved','disbursement_rejected','gps_party_location','field_visit','message_prepared']);mfArray(s.audit).filter(x=>(x.clientId===key||String(x.clientNo||"")===String(c.clientNo||""))&&x.action!=='client_view'&&!operationalAuditActions.has(String(x.action||''))).forEach(x=>add({type:"audit",id:x.id,title:({promise_status:"تحديث حالة وعد الدفع",followup_status:"تحديث حالة المتابعة",payment_reversed:"عكس دفعة",session_login:"تسجيل الدخول",session_logout:"تسجيل الخروج"})[x.action]||x.action||"Audit",text:x.details||"",date:x.createdAt,actorName:x.actorName||"",actorRole:x.actorRole||""}));
   return rows.sort((a,b)=>b._time-a._time||String(b.date).localeCompare(String(a.date)));
 }
 function mfRenderClientTimeline(c){const rows=mfTimelineRows(c);return `<div class="mfPanel"><div class="mfPanelTitle">Customer Timeline <small>${rows.length} إجراء</small></div><div class="mfTimeline">${rows.map(x=>`<div class="mfTimelineItem"><b>${safe(x.title)}</b><small>${mfDate(x.date)}${x.actorName?` • ${safe(x.actorName)}`:""}${x.actorRole?` • ${safe(String(x.actorRole).toUpperCase())}`:""}</small><div>${safe(x.text||"")}</div></div>`).join("")||'<div class="mfEmpty">لا يوجد سجل زمني بعد</div>'}</div></div>`}
@@ -3141,39 +3140,15 @@ function mfOpenPaymentForm(i,source="manual"){
 }
 async function mfFileData(input,maxBytes=4*1024*1024){const f=input?.files?.[0];if(!f)return null;if(f.size>maxBytes)throw new Error("حجم المرفق أكبر من 4 MB");return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type,size:f.size,data:r.result});r.onerror=()=>rej(r.error);r.readAsDataURL(f)})}
 async function mfApplyPayment(c,amount,date,type,status="successful",note="",receipt=null,source="manual"){
-  const before=Math.max(num(c.arrears),num(c.dueAmount),num(c.netToPay)),applied=status==="successful",after=applied?Math.max(0,before-amount):before,no=(Number(c.paymentCount)||0)+(applied?1:0),id=mfId();
-  if(amount<=0)throw new Error("أدخل مبلغًا صحيحًا");
-  if(applied&&type!=="deferral_fee"&&amount>before)throw new Error(`المبلغ ${amount} أكبر من الرصيد المستحق ${before}`);
-  let savedPayment=null;
-  if(source!=="system-sync"){
-    const installmentAmount=num(c.installment||c.installmentAmount),installmentUnits=applied&&type!=="deferral_fee"&&installmentAmount>0?Math.max(1,Math.floor((amount+1e-9)/installmentAmount)):1;const db={client_id:c.id,client_number:c.clientNo,amount,payment_date:date,payment_type:type,status,installment_units:installmentUnits,notes:note,balance_before:before,balance_after:after,payment_no:no,branch_code:c.branchCode||c.branch||null,receipt_url:receipt?.storagePath||null,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null};
-    savedPayment=await mfTryInsert("payments",db);
-    if(!savedPayment)throw new Error("تعذر حفظ الدفعة في قاعدة البيانات");
-  }
-  if(applied){
-    if(num(c.arrears)>0)c.arrears=after;
-    if(num(c.dueAmount)>0)c.dueAmount=after;
-    if(num(c.netToPay)>0)c.netToPay=after;
-    c.paymentCount=no;c.totalPaid=num(c.totalPaid)+amount;c.lastPaymentDate=date;c.status=no===1?"دفعة 1":"دفعتان من أصل دفعتين";
-    const linkedPromise=mfState().promises.filter(p=>p.clientId===mfClientKey(c)&&p.status==="pending"&&date<=p.promiseDate).sort((a,b)=>String(a.promiseDate).localeCompare(String(b.promiseDate)))[0];
-    if(linkedPromise?.dbId){
-      try{
-        const row=await mfPersistCollectionUpdate("promises_to_pay",linkedPromise,{status:"kept",payment_date:date,paid_amount:amount,updated_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id||null,updated_at:mfNow()});
-        linkedPromise.status=row.status;linkedPromise.updatedAt=row.updated_at;linkedPromise.paymentDate=row.payment_date;linkedPromise.paidAmount=row.paid_amount;linkedPromise.keptByPayment=savedPayment?.id||id;
-      }catch(_){}
-    }
-  }
-  const payment={id,dbId:savedPayment?.id||null,clientId:mfClientKey(c),clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",branch:c.branchCode||c.branch||"",amount,date,type,status,note,receipt,source,paymentNo:no,balanceBefore:before,balanceAfter:after,balance:after,actor:mfActor(),createdAt:mfNow()};
-  meta.payments.push(payment);meta.paidCustomers=meta.paidCustomers||{};
-  if(applied)meta.paidCustomers[c.clientNo]={clientNo:c.clientNo,name:c.name,employee:c.employee||"",cea:c.cea||"",paymentCount:no,totalPaid:c.totalPaid,balance:after,lastPaymentDate:date,source};
-  const key=c.cea||c.employee,fullyPaid=applied&&after<=0,exitLate=fullyPaid,exitDue=fullyPaid;
-  if(exitLate){lateData.currentIds=mfArray(lateData.currentIds).filter(x=>x!==c.clientNo);lateData.paidIds=mfArray(lateData.paidIds);if(!lateData.paidIds.includes(c.clientNo))lateData.paidIds.push(c.clientNo);c.inLate=false}
-  if(exitDue){dueData.currentIds=mfArray(dueData.currentIds).filter(x=>x!==c.clientNo);dueData.paidIds=mfArray(dueData.paidIds);if(!dueData.paidIds.includes(c.clientNo))dueData.paidIds.push(c.clientNo);c.inDue=false}
-  [lateData,dueData].forEach(d=>{if(d.byEmployee?.[key]){if((d===lateData&&exitLate)||(d===dueData&&exitDue)){d.byEmployee[key].currentIds=mfArray(d.byEmployee[key].currentIds).filter(x=>x!==c.clientNo);d.byEmployee[key].paidIds=mfArray(d.byEmployee[key].paidIds);if(!d.byEmployee[key].paidIds.includes(c.clientNo))d.byEmployee[key].paidIds.push(c.clientNo)}}});
-  c.history=mfArray(c.history);c.history.push({date:new Date().toLocaleString("ar-JO"),text:`دفعة ${amount} د.أ (${type}) — ${applied?`الرصيد ${before} ← ${after}`:"Pending دون ترحيل على الرصيد"}`});
-  mfCommit(applied?"payment_posted":"payment_pending",c,`المبلغ ${amount}؛ الرصيد قبل ${before} وبعد ${after}`);
-  return payment;
+ if(!c||!mfCan('payment',c))throw Error('غير مصرح بتسجيل الدفعة');
+ if(!Number.isFinite(Number(amount))||Number(amount)<=0)throw Error('أدخل مبلغًا صحيحًا');
+ if(source==='system-sync'){await roleAwareBootstrap();await mfRefreshAuthoritativePayments();return null;}
+ const row=await mfConfirmedInsert('payments',{client_id:c.id,client_number:c.clientNo,amount:Number(amount),payment_date:date,payment_type:type,status,installment_units:0,notes:note,source,created_by:CURRENT_AUTH_USER?.id||CURRENT_PROFILE?.id,receipt_url:receipt?.storagePath||null});
+ try{await roleAwareBootstrap();await mfRefreshAuthoritativePayments();await mfLoadBackendState();}
+ catch(e){mfToast('تم حفظ الدفعة؛ تعذر تحديث العرض. أعد تحميل البيانات دون إعادة الدفع','bad');}
+ return (meta.payments||[]).find(p=>String(p.dbId)===String(row.id))||{id:row.id,dbId:row.id,status:row.status,amount:Number(row.amount)};
 }
+
 async function mfUpdatePaymentStatus(id,status){
   const p=mfArray(meta.payments).find(x=>String(x.id)===String(id));if(!p||p.status!=="pending"||status!=="successful")return;
   const c=mfRecordClient(p);if(!c||!mfCan("payment",c))return mfToast("غير مصرح لك باعتماد هذه الدفعة","bad");
@@ -3184,7 +3159,7 @@ async function mfUpdatePaymentStatus(id,status){
     if(error)throw error;if(!row?.id)throw Error("لم تؤكد قاعدة البيانات اعتماد الدفعة");
     const {data:clientRow,error:clientError}=await db.from("clients").select("*").eq("id",c.id).single();if(clientError)throw clientError;
     p.status=row.status;p.updatedAt=row.updated_at;p.balanceBefore=num(row.balance_before);p.balanceAfter=num(row.balance_after);p.balance=num(row.balance_after);p.paymentNo=row.payment_no;p.source=row.source||p.source;
-    if(clientRow){c.arrears=num(clientRow.overdue_amount);c.dueAmount=num(clientRow.due_amount);c.netToPay=num(clientRow.outstanding_balance);c.totalPaid=num(clientRow.paid_amount);c.lastPaymentDate=clientRow.last_payment_date;c.paymentCount=Math.max(Number(c.paymentCount)||0,Number(row.payment_no)||0);c.installmentsDueCount=num(clientRow.installments_due_count);const fullyPaid=num(row.balance_after)<=0||Math.max(num(clientRow.overdue_amount),num(clientRow.due_amount),num(clientRow.outstanding_balance))<=0;c.inLate=fullyPaid?false:(mfIsLate30to60(c)&&c.arrears>0);c.inDue=fullyPaid?false:num(c.dueAmount)>0}
+    await roleAwareBootstrap();await mfRefreshAuthoritativePayments();await mfLoadBackendState();
     mfCommit("payment_approved",c,String(p.dbId));mfRenderClient();mfRenderReports();mfToast("تم اعتماد نفس الدفعة وترحيلها دون إنشاء دفعة مكررة");
   }catch(e){mfToast("تعذر اعتماد الدفعة: "+(e?.message||e),"bad")}
 }
@@ -3285,9 +3260,9 @@ async function mfEscalateToBm(id){
   }catch(err){mfToast("تعذر التصعيد إلى BM: "+(err?.message||err),"bad")}
 }
 
-function mfOpenWriteOffForm(i){const c=clients?.[i];if(!c||!mfCan("requestWriteOff",c))return mfToast("طلب الشطب غير متاح خارج نطاق محفظتك","bad");mfForm("R-O / Write-Off",`<input id="mfWoIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>مبلغ الشطب</label><input id="mfWoAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField"><label>التاريخ</label><input id="mfWoDate" type="date" value="${today()}"></div><div class="mfField full"><label>السبب</label><textarea id="mfWoReason"></textarea></div><div class="mfField full"><label>مرفق القرار</label><input id="mfWoAttachment" type="file" accept="image/*,.pdf"></div></div><button class="mfSubmit" onclick="mfSaveWriteOffRequest()">إرسال طلب الشطب للموافقة</button>`)}
-async function mfSaveWriteOffRequest(){const i=Number($("mfWoIndex")?.value),c=clients?.[i],amount=num($("mfWoAmount")?.value),reason=$("mfWoReason")?.value.trim();if(!c||amount<=0||!reason)return mfToast("المبلغ والسبب مطلوبان","bad");if(mfState().writeOffs.some(x=>x.clientId===mfClientKey(c)&&x.status==="pending"))return mfToast("يوجد طلب شطب معلّق لهذا العميل بالفعل","bad");try{const a=mfActor(),attachment=await mfFileData($("mfWoAttachment")),before=Math.max(num(c.netToPay),num(c.outstandingBalance),num(c.arrears),num(c.dueAmount)),entry={id:mfId(),kind:"R-O / Write-Off",clientId:mfClientKey(c),clientNo:c.clientNo,amount,date:$("mfWoDate").value,reason,attachment,status:"pending",before:{arrears:c.arrears,dueAmount:c.dueAmount,netToPay:c.netToPay},requestedBy:a,createdAt:a.at};const row=await mfTryInsert("write_offs",{client_id:c.id,amount,reason,status:"pending",requested_by:a.id||null,notes:reason,balance_before:before});if(!row?.id)return mfToast("تعذر تثبيت طلب الشطب في قاعدة البيانات","bad");entry.dbId=row.id;mfState().writeOffs.push(entry);mfCommit("writeoff_requested",c,`${amount} • ${reason}`);mfFormClose();mfSetClientTab("legal");mfToast("تم إرسال طلب الشطب للموافقة")}catch(e){mfToast(e.message,"bad")}}
-async function mfApproveWriteOff(id,status){
+function mfOpenWriteOffForm(i){return mfToast("الشطب اليدوي معطل؛ السجلات التاريخية متاحة في تقرير R-O","bad");const c=clients?.[i];if(!c||!mfCan("requestWriteOff",c))return mfToast("طلب الشطب غير متاح خارج نطاق محفظتك","bad");mfForm("R-O / Write-Off",`<input id="mfWoIndex" type="hidden" value="${i}"><div class="mfForm"><div class="mfField"><label>مبلغ الشطب</label><input id="mfWoAmount" type="number" step="0.01" value="${Math.max(num(c.arrears),num(c.dueAmount))||''}"></div><div class="mfField"><label>التاريخ</label><input id="mfWoDate" type="date" value="${today()}"></div><div class="mfField full"><label>السبب</label><textarea id="mfWoReason"></textarea></div><div class="mfField full"><label>مرفق القرار</label><input id="mfWoAttachment" type="file" accept="image/*,.pdf"></div></div><button class="mfSubmit" onclick="mfSaveWriteOffRequest()">إرسال طلب الشطب للموافقة</button>`)}
+async function mfSaveWriteOffRequest(){return mfToast("الشطب اليدوي معطل؛ السجلات التاريخية متاحة في تقرير R-O","bad");const i=Number($("mfWoIndex")?.value),c=clients?.[i],amount=num($("mfWoAmount")?.value),reason=$("mfWoReason")?.value.trim();if(!c||amount<=0||!reason)return mfToast("المبلغ والسبب مطلوبان","bad");if(mfState().writeOffs.some(x=>x.clientId===mfClientKey(c)&&x.status==="pending"))return mfToast("يوجد طلب شطب معلّق لهذا العميل بالفعل","bad");try{const a=mfActor(),attachment=await mfFileData($("mfWoAttachment")),before=Math.max(num(c.netToPay),num(c.outstandingBalance),num(c.arrears),num(c.dueAmount)),entry={id:mfId(),kind:"R-O / Write-Off",clientId:mfClientKey(c),clientNo:c.clientNo,amount,date:$("mfWoDate").value,reason,attachment,status:"pending",before:{arrears:c.arrears,dueAmount:c.dueAmount,netToPay:c.netToPay},requestedBy:a,createdAt:a.at};const row=await mfTryInsert("write_offs",{client_id:c.id,amount,reason,status:"pending",requested_by:a.id||null,notes:reason,balance_before:before});if(!row?.id)return mfToast("تعذر تثبيت طلب الشطب في قاعدة البيانات","bad");entry.dbId=row.id;mfState().writeOffs.push(entry);mfCommit("writeoff_requested",c,`${amount} • ${reason}`);mfFormClose();mfSetClientTab("legal");mfToast("تم إرسال طلب الشطب للموافقة")}catch(e){mfToast(e.message,"bad")}}
+async function mfApproveWriteOff(id,status){return mfToast("الشطب اليدوي معطل","bad");
   const w=mfState().writeOffs.find(x=>String(x.id)===String(id)),c=w?(clients||[]).find(x=>mfClientKey(x)===w.clientId):null;if(!w||!c||!mfCan("approveWriteOff",c))return;if(!w.dbId)return mfToast("طلب الشطب غير مثبت في قاعدة البيانات","bad");
   const a=mfActor();
   try{
@@ -3352,10 +3327,10 @@ function mfRenderToday(){
 function mfEmployeeCatalog(){
   const map=new Map(),raw=(typeof employees!=="undefined"?mfArray(employees):[]).concat(mfArray(mfState().employeeProfiles));
   const key=e=>e.id?('id:'+e.id):('name:'+norm(e.name)+'|'+e.branch);
-  raw.forEach(e=>{if(!e)return;const name=e.full_name||e.name||e.employee||e.email;if(!name)return;
+  raw.forEach(e=>{if(!e||e.is_active===false)return;const name=e.full_name||e.name||e.employee||e.email;if(!name)return;
     // Legacy display-only LO IDs must not displace the persisted employee ID.
     if(String(e.id||'').startsWith('lo_')&&(clients||[]).some(c=>c.assignedUserId&&norm(c.employee)===norm(name)))return;
-    const entry={id:e.id||e.user_id||name,name,email:e.email||"",phone:e.phone||"",role:String(e.role||"lo").toLowerCase(),branch:e.branch_code||e.branch||"",team:e.team||e.team_name||"",supervisorEmail:e.supervisor_email||e.supervisorEmail||"",photo:e.photo||e.avatar_url||"",jobTitle:e.job_title||""};map.set(key(entry),entry);
+    const entry={id:e.id||e.user_id||name,authUserId:e.auth_user_id||e.user_id||e.id,active:e.is_active!==false,name,email:e.email||"",phone:e.phone||"",role:String(e.role||"lo").toLowerCase(),branch:e.branch_code||e.branch||"",team:e.team||e.team_name||"",supervisorEmail:e.supervisor_email||e.supervisorEmail||"",photo:e.photo||e.avatar_url||"",jobTitle:e.job_title||""};map.set(key(entry),entry);
   });
   (clients||[]).forEach(c=>{const name=c.employee||"غير مسند",entry={id:c.assignedUserId||name,name,email:c.employeeEmail||"",phone:c.employeePhone||"",role:"lo",branch:c.branchCode||c.branch||"",team:c.team||"غير محدد",photo:"",jobTitle:"Loan Officer"},k=key(entry);
     if(!map.has(k))map.set(k,entry);else{const e=map.get(k);e.branch=e.branch||entry.branch;e.team=e.team||entry.team;}
@@ -3363,17 +3338,18 @@ function mfEmployeeCatalog(){
   const actor=mfActor();if(actor.name){const entry={id:actor.id,name:actor.name,email:CURRENT_PROFILE?.email||CURRENT_AUTH_USER?.email||"",phone:CURRENT_PROFILE?.phone||"",role:actor.role,branch:actor.branch,team:CURRENT_PROFILE?.team||"",photo:CURRENT_PROFILE?.avatar_url||"",jobTitle:""};if(!map.has(key(entry)))map.set(key(entry),entry);}
   return [...map.values()].filter(e=>e.name&&e.name!=="غير مسند");
 }
-function mfEmployeeClients(e){return (clients||[]).filter(c=>mfInScope(c)&&(c.assignedUserId?String(c.assignedUserId)===String(e.id||''):!!e.name&&norm(c.employee)===norm(e.name)&&(!e.branch||String(c.branchCode||c.branch||'')===String(e.branch))))}
+function mfEmployeeClients(e){return (clients||[]).filter(c=>mfInScope(c)&&(c.assignedUserId?String(c.assignedUserId)===String(e.authUserId||e.id||''):!!e.name&&norm(c.employee)===norm(e.name)&&(!e.branch||String(c.branchCode||c.branch||'')===String(e.branch))))}
 function mfEmployeeMetrics(e){
   const cs=mfEmployeeClients(e),keys=new Set(cs.map(mfClientKey)),pays=mfCollectedPayments(mfArray(meta.payments).filter(p=>p.employeeId?String(p.employeeId)===String(e.id):p.clientId?keys.has(String(p.clientId)):!!p.clientNo&&cs.some(c=>String(c.clientNo)===String(p.clientNo)))),fs=mfMergedFollowups().filter(f=>keys.has(String(f.clientId))),ps=mfState().promises.filter(p=>keys.has(String(p.clientId)));
-  const collected=mfCollectionTotal(pays),late=cs.filter(c=>mfIsLate30to60(c)).length,due=cs.filter(c=>c.inDue).length,done=fs.filter(f=>f.status==="completed").length,broken=ps.filter(p=>p.status==="broken").length,kept=ps.filter(p=>p.status==="kept").length,pending=fs.filter(f=>f.status!=="completed").length,todayCount=fs.filter(f=>String(f.dueAt||f.nextFollowUp||f.next_follow_up||"").slice(0,10)===today()&&f.status!=="completed").length;
+  const collected=mfCollectionTotal(pays),late=cs.filter(c=>mfIsLate30to60(c)).length,due=cs.filter(c=>mfIsDue(c)).length,done=fs.filter(f=>f.status==="completed").length,broken=ps.filter(p=>p.status==="broken").length,kept=ps.filter(p=>p.status==="kept").length,pending=fs.filter(f=>f.status!=="completed").length,todayCount=fs.filter(f=>String(f.dueAt||f.nextFollowUp||f.next_follow_up||"").slice(0,10)===today()&&f.status!=="completed").length;
   const base=Math.min(45,collected/100),follow=Math.min(25,done*2.5),promise=ps.length?Math.max(0,20*((kept-broken)/ps.length+1)/2):10,quality=Math.max(0,10-Math.min(10,(late+due)/Math.max(1,cs.length)*10)),score=Math.round(Math.max(0,Math.min(100,base+follow+promise+quality)));
   return {clients:cs.length,late,due,collected,followups:fs.length,done,pending,today:todayCount,kept,broken,score};
 }
-function mfVisibleEmployees(){return mfEmployeeCatalog().filter(e=>{const r=mfRole();if(["founder","cfmp"].includes(r))return true;if(r==="bm")return !CURRENT_PROFILE?.branch_code||String(e.branch).toUpperCase()===String(CURRENT_PROFILE.branch_code).toUpperCase();if(r==="als")return String(e.id)===String(CURRENT_PROFILE?.id)||norm(e.name)===norm(CURRENT_PROFILE?.full_name)||(e.role==="lo"&&norm(e.supervisorEmail)===norm(CURRENT_PROFILE?.email));return String(e.id)===String(CURRENT_PROFILE?.id)||norm(e.name)===norm(CURRENT_PROFILE?.full_name)})}
+function mfVisibleEmployees(){return mfEmployeeCatalog().filter(e=>{const r=mfRole(),id=String(CURRENT_PROFILE?.id||''),email=norm(CURRENT_PROFILE?.email||'');if(['founder','cfmp'].includes(r))return true;if(r==='bm')return !!CURRENT_PROFILE?.branch_code&&String(e.branch).toUpperCase()===String(CURRENT_PROFILE.branch_code).toUpperCase();const own=!!id&&String(e.authUserId||e.id||'')===id;if(r==='als')return own||(e.active===true&&!!e.authUserId&&!!email&&!!e.supervisorEmail&&norm(e.supervisorEmail)===email);return own;})}
+
 function mfOpenDashboard(){mfRenderDashboard();mfOpen("mfDashboardModal")}
 function mfRenderDashboard(){
-  const out=$("mfDashboardBody");if(!out)return;const people=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score),total=mfCollectionTotal(),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>mfIsLate30to60(c)).length,due=scope.filter(c=>c.inDue).length;
+  const out=$("mfDashboardBody");if(!out)return;const people=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score),total=mfCollectionTotal(),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>mfIsLate30to60(c)).length,due=scope.filter(c=>mfIsDue(c)).length;
   out.innerHTML=`<div class="mfKpis"><div class="mfKpi"><span>الموظفين ضمن النطاق</span><b>${people.length}</b></div><div class="mfKpi"><span>التحصيل المسجل — كل الأيام</span><b>${money(total)}</b></div><div class="mfKpi"><span>Late</span><b>${late}</b></div><div class="mfKpi"><span>Due</span><b>${due}</b></div></div><div class="mfPanel"><div class="mfPanelTitle">Performance & Ranking <small>المعادلة: تحصيل + متابعة + وعود + جودة المحفظة</small></div>${people.map((x,k)=>`<div class="mfListRow"><div class="mfEmployeeHead"><div class="mfRank">#${k+1}</div>${x.e.photo?`<img class="mfAvatar" src="${mfAttr(x.e.photo)}" alt="">`:`<div class="mfAvatar">${safe(String(x.e.name).slice(0,2))}</div>`}<div style="flex:1"><b>${safe(x.e.name)}</b><small>${safe(x.e.role.toUpperCase())} • ${safe(x.e.branch||'-')} • ${safe(x.e.team||'-')}<br>${x.m.clients} عميل • ${money(x.m.collected)} • Today ${x.m.today} • Follow-ups ${x.m.done}/${x.m.followups} • Pending ${x.m.pending} • Kept ${x.m.kept} • Broken ${x.m.broken}</small></div><span class="mfBadge ${x.m.score>=65?'high':x.m.score>=35?'medium':'low'}">${x.m.score}</span></div><div class="mfRowActions"><button class="mfSmallBtn" onclick="mfOpenEmployeeDashboard('${mfAttr(String(x.e.id))}')">صفحة الموظف</button><button class="mfSmallBtn" onclick="mfOpenEmployeeAllocation('${mfAttr(x.e.name)}','late')">Late ${x.m.late}</button><button class="mfSmallBtn" onclick="mfOpenEmployeeAllocation('${mfAttr(x.e.name)}','due')">Due ${x.m.due}</button></div></div>`).join("")||'<div class="mfEmpty">لا تتوفر بيانات موظفين ضمن نطاقك</div>'}</div>`;
 }
 function mfOpenEmployeeDashboard(id){const e=mfEmployeeCatalog().find(x=>String(x.id)===String(id))||mfEmployeeCatalog().find(x=>norm(x.name)===norm(id));if(!e)return mfToast("الموظف غير موجود","bad");const m=mfEmployeeMetrics(e),cs=mfEmployeeClients(e).sort((a,b)=>mfPriority(b).score-mfPriority(a).score),out=$("mfOrgBody"),canEdit=mfCan("manageOrg")||String(e.id)===String(CURRENT_PROFILE?.id);if(!out)return;out.innerHTML=`<div class="mfPanel"><div class="mfEmployeeHead">${e.photo?`<img class="mfAvatar" src="${mfAttr(e.photo)}" alt="">`:`<div class="mfAvatar">${safe(String(e.name).slice(0,2))}</div>`}<div style="flex:1"><div class="mfModalTitle">${safe(e.name)}</div><div class="mfSearchMeta">${safe(e.jobTitle||e.role.toUpperCase())} • ${safe(e.branch||'-')} • ${safe(e.team||'-')}<br>${safe(e.email||'')} ${safe(e.phone||'')}</div></div>${canEdit?`<button class="mfSmallBtn" onclick="mfOpenEmployeeEdit('${mfAttr(String(e.id))}')">تحديث الملف</button>`:""}</div></div><div class="mfKpis"><div class="mfKpi"><span>Performance</span><b>${m.score}</b></div><div class="mfKpi"><span>Portfolio</span><b>${m.clients}</b></div><div class="mfKpi"><span>Late / Due</span><b>${m.late} / ${m.due}</b></div><div class="mfKpi"><span>Collected</span><b>${money(m.collected)}</b></div><div class="mfKpi"><span>Today</span><b>${m.today}</b></div><div class="mfKpi"><span>Follow-ups</span><b>${m.done} / ${m.followups}</b></div><div class="mfKpi"><span>Kept / Broken</span><b>${m.kept} / ${m.broken}</b></div><div class="mfKpi"><span>Pending</span><b>${m.pending}</b></div></div><div class="mfPanel"><div class="mfPanelTitle">محفظة الموظف <small>مرتبة حسب Priority Score</small></div>${cs.slice(0,150).map(c=>{const i=mfClientIndex(c),p=mfPriority(c);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(c.name)}</b><small>${safe(c.clientNo)} • ${money(Math.max(num(c.arrears),num(c.dueAmount)))}</small></div><span class="mfBadge ${p.cls}">${p.score}</span></div><button class="mfSubmit" onclick="mfOpenClient(${i})">فتح ملف العميل</button></div>`}).join("")||'<div class="mfEmpty">لا توجد محفظة مرتبطة</div>'}</div>`;mfOpen("mfOrgModal")}
@@ -3406,12 +3382,12 @@ function mfOpenEmployeeAllocation(name,mode){mfAllocation={mode,branch:"",team:"
 
 function mfOpenOrganization(){mfRenderOrganization();mfOpen("mfOrgModal")}
 function mfRenderOrganization(){
-  const out=$("mfOrgBody");if(!out)return;const people=mfVisibleEmployees(),branchNames=[...new Set((clients||[]).filter(mfInScope).map(c=>c.branchCode||c.branch||"غير محدد"))].sort();
+  const out=$("mfOrgBody");if(!out)return;const people=mfVisibleEmployees(),branchNames=[...new Set(people.map(e=>e.branch||"غير محدد"))].sort();
   out.innerHTML=`<div class="mfTabs"><button class="mfTab active">الفروع</button><button class="mfTab" onclick="mfOrganizationTeams()">الفرق</button><button class="mfTab" onclick="mfOrganizationEmployees()">الموظفين</button></div><div class="mfPanel"><div class="mfPanelTitle">Branch → Team → Employee → Portfolio</div><div class="mfScopeGrid">${branchNames.map(b=>{const cs=(clients||[]).filter(c=>mfInScope(c)&&(c.branchCode||c.branch||"غير محدد")===b);return `<button class="mfScopeCard" onclick="mfOrganizationBranch('${mfAttr(b)}')"><b>${safe(b)}</b><small>${new Set(cs.map(c=>c.team||'غير محدد')).size} فريق • ${new Set(cs.map(c=>c.employee||'غير مسند')).size} موظف • ${cs.length} عميل</small></button>`}).join("")||'<div class="mfEmpty">لا توجد فروع ضمن نطاقك</div>'}</div></div><div class="mfPanel"><div class="mfPanelTitle">دليل الموظفين <small>${people.length}</small></div>${people.slice(0,10).map(e=>`<button class="mfRoom" onclick="mfOpenEmployeeDashboard('${mfAttr(String(e.id))}')">${safe(e.name)} — ${safe(e.role.toUpperCase())}</button>`).join("")}</div>`;
 }
-function mfOrganizationBranch(branch){const out=$("mfOrgBody"),cs=(clients||[]).filter(c=>mfInScope(c)&&(c.branchCode||c.branch||"غير محدد")===branch),teams=[...new Set(cs.map(c=>c.team||"غير محدد"))];out.innerHTML=`<button class="mfSecondary" onclick="mfRenderOrganization()">← كل الفروع</button><div class="mfPanel"><div class="mfPanelTitle">${safe(branch)} <small>${cs.length} عميل</small></div><div class="mfScopeGrid">${teams.map(t=>{const xs=cs.filter(c=>(c.team||"غير محدد")===t);return `<button class="mfScopeCard" onclick="mfOrganizationTeam('${mfAttr(branch)}','${mfAttr(t)}')"><b>${safe(t)}</b><small>${new Set(xs.map(c=>c.employee||'غير مسند')).size} موظف • ${xs.length} عميل</small></button>`}).join("")}</div></div>`}
-function mfOrganizationTeam(branch,team){const out=$("mfOrgBody"),names=[...new Set((clients||[]).filter(c=>mfInScope(c)&&(c.branchCode||c.branch||"غير محدد")===branch&&(c.team||"غير محدد")===team).map(c=>c.employee).filter(Boolean))];out.innerHTML=`<button class="mfSecondary" onclick="mfOrganizationBranch('${mfAttr(branch)}')">← ${safe(branch)}</button><div class="mfPanel"><div class="mfPanelTitle">${safe(team)} <small>${names.length} موظف</small></div>${names.map(n=>{const e=mfEmployeeCatalog().find(x=>norm(x.name)===norm(n))||{id:n,name:n};const m=mfEmployeeMetrics(e);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(n)}</b><small>${m.clients} عميل • Late ${m.late} • Due ${m.due}</small></div><span class="mfBadge ${m.score>=65?'high':m.score>=35?'medium':'low'}">${m.score}</span></div><button class="mfSubmit" onclick="mfOpenEmployeeDashboard('${mfAttr(String(e.id))}')">صفحة الموظف</button></div>`}).join("")}</div>`}
-function mfOrganizationTeams(){const out=$("mfOrgBody"),groups=new Map();(clients||[]).filter(mfInScope).forEach(c=>{const k=(c.branchCode||c.branch||"-")+" • "+(c.team||"غير محدد");groups.set(k,(groups.get(k)||0)+1)});out.innerHTML=`<button class="mfSecondary" onclick="mfRenderOrganization()">← الهيكل</button><div class="mfPanel">${[...groups].map(([k,n])=>`<div class="mfListRow"><b>${safe(k)}</b><small>${n} عميل</small></div>`).join("")||'<div class="mfEmpty">لا توجد فرق</div>'}</div>`}
+function mfOrganizationBranch(branch){const out=$("mfOrgBody"),cs=(clients||[]).filter(c=>mfInScope(c)&&(c.branchCode||c.branch||"غير محدد")===branch),teams=[...new Set(mfVisibleEmployees().filter(e=>(e.branch||"غير محدد")===branch).map(e=>e.team||"غير محدد"))];out.innerHTML=`<button class="mfSecondary" onclick="mfRenderOrganization()">← كل الفروع</button><div class="mfPanel"><div class="mfPanelTitle">${safe(branch)} <small>${cs.length} عميل</small></div><div class="mfScopeGrid">${teams.map(t=>{const xs=cs.filter(c=>(c.team||"غير محدد")===t);return `<button class="mfScopeCard" onclick="mfOrganizationTeam('${mfAttr(branch)}','${mfAttr(t)}')"><b>${safe(t)}</b><small>${mfVisibleEmployees().filter(e=>(e.branch||"غير محدد")===branch&&(e.team||"غير محدد")===t).length} موظف • ${xs.length} عميل</small></button>`}).join("")}</div></div>`}
+function mfOrganizationTeam(branch,team){const out=$("mfOrgBody"),names=[...new Set(mfVisibleEmployees().filter(e=>(e.branch||"غير محدد")===branch&&(e.team||"غير محدد")===team).map(e=>e.name))];out.innerHTML=`<button class="mfSecondary" onclick="mfOrganizationBranch('${mfAttr(branch)}')">← ${safe(branch)}</button><div class="mfPanel"><div class="mfPanelTitle">${safe(team)} <small>${names.length} موظف</small></div>${names.map(n=>{const e=mfEmployeeCatalog().find(x=>norm(x.name)===norm(n))||{id:n,name:n};const m=mfEmployeeMetrics(e);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(n)}</b><small>${m.clients} عميل • Late ${m.late} • Due ${m.due}</small></div><span class="mfBadge ${m.score>=65?'high':m.score>=35?'medium':'low'}">${m.score}</span></div><button class="mfSubmit" onclick="mfOpenEmployeeDashboard('${mfAttr(String(e.id))}')">صفحة الموظف</button></div>`}).join("")}</div>`}
+function mfOrganizationTeams(){const out=$("mfOrgBody"),groups=new Map();mfVisibleEmployees().forEach(e=>{const k=(e.branch||"-")+" • "+(e.team||"غير محدد");groups.set(k,(groups.get(k)||0)+mfEmployeeClients(e).length)});out.innerHTML=`<button class="mfSecondary" onclick="mfRenderOrganization()">← الهيكل</button><div class="mfPanel">${[...groups].map(([k,n])=>`<div class="mfListRow"><b>${safe(k)}</b><small>${n} عميل</small></div>`).join("")||'<div class="mfEmpty">لا توجد فرق</div>'}</div>`}
 function mfOrganizationEmployees(){const out=$("mfOrgBody"),people=mfVisibleEmployees();out.innerHTML=`<button class="mfSecondary" onclick="mfRenderOrganization()">← الهيكل</button><div class="mfPanel">${people.map(e=>{const m=mfEmployeeMetrics(e);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(e.name)}</b><small>${safe(e.role.toUpperCase())} • ${safe(e.branch||'-')} • ${safe(e.team||'-')}</small></div><span class="mfBadge">${m.score}</span></div><button class="mfSubmit" onclick="mfOpenEmployeeDashboard('${mfAttr(String(e.id))}')">فتح الصفحة</button></div>`}).join("")}</div>`}
 
 function mfAccessibleTeams(){const direct=[CURRENT_PROFILE?.team,CURRENT_PROFILE?.team_name],fromClients=(clients||[]).filter(mfInScope).map(c=>c.team);return [...new Set(direct.concat(fromClients).filter(Boolean).map(String))].sort()}
@@ -3446,7 +3422,7 @@ function mfEndCall(){try{mfCallState?.stream?.getTracks().forEach(t=>t.stop());m
 function mfOpenAi(){const out=$("mfAiBody");out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">الاسم الذكي <small>التحليل محصور ببيانات وصلاحيات المستخدم</small></div><div class="mfSearchRow"><input id="mfAiPrompt" class="mfSearchInput" placeholder="مثال: لخص Late أو اكتب رسالة قوية للعميل الحالي"><button class="mfIconButton" onclick="mfVoiceSearch('mfAiPrompt',mfAskAi)">🎙️</button><button class="mfIconButton" onclick="mfAskAi()">➤</button></div></div><div id="mfAiOutput" class="mfAiOutput">أستطيع تلخيص المحفظة، تحليل Late وDue، ترتيب الأولويات، وصياغة رسائل المتابعة.</div>`;mfOpen("mfAiModal")}
 function mfAskAi(){
   if(CURRENT_PROFILE?.smart_assistant_enabled!==true)return mfToast("الاسم الذكي لم يُفعل بعد","bad");
-  const q=norm($("mfAiPrompt")?.value),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>c.inLate),due=scope.filter(c=>c.inDue),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score),out=$("mfAiOutput");let answer="";
+  const q=norm($("mfAiPrompt")?.value),scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>c.inLate),due=scope.filter(c=>mfIsDue(c)),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score),out=$("mfAiOutput");let answer="";
   if(!q)answer="اكتب طلبك أو استخدم الميكروفون.";
   else if(q.includes("رسالة")||q.includes("واتس")||q.includes("sms")){const c=clients?.[mfActiveClientIndex]||high[0]?.c;answer=c?`رسالة مقترحة للعميل ${c.name}:\n\n${mfTemplateText(q.includes("قانون")?"legal":q.includes("قوي")||q.includes("انذار")?"firm":"normal",c.name)}`:"افتح ملف عميل أولًا أو اختر عميلًا عالي الأولوية."}
   else if(q.includes("عميل")&&mfActiveClientIndex>=0){const c=clients[mfActiveClientIndex],p=mfPriority(c);answer=`ملخص ${c.name}\nرقم العميل: ${c.clientNo}\nالموظف: ${c.employee||"-"}\nLate: ${c.inLate?"نعم":"لا"} — Due: ${c.inDue?"نعم":"لا"}\nالمبلغ: ${money(Math.max(num(c.arrears),num(c.dueAmount)))}\nPriority Score: ${p.score} (${p.label})\nالإجراء المقترح: ${p.score>=65?"اتصال فوري ثم وعد دفع أو تصعيد عند عدم الاستجابة":"متابعة مجدولة وتوثيق النتيجة"}.`}
@@ -3474,7 +3450,7 @@ function mfReportRows(type){
   return scope.map(c=>({ClientNo:c.clientNo,Name:c.name,Phone:c.phone,Employee:c.employee,Branch:c.branchCode||c.branch,Team:c.team,Status:c.status,Late:c.inLate,Due:c.inDue,Priority:mfPriority(c).score}));
 }
 function mfOpenReports(){mfRenderReports();mfOpen("mfReportsModal")}
-function mfRenderReports(){const out=$("mfReportsBody"),last=mfState().settings.lastPaymentSync;out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">التقارير والكشوفات <small>تحترم نطاق الصلاحية الحالي</small></div><div class="mfForm"><div class="mfField"><label>نوع التقرير</label><select id="mfReportType" onchange="mfPreviewReport()"><option value="portfolio">Portfolio</option><option value="late">Late</option><option value="due">Due</option><option value="payments">Payments</option><option value="followups">Follow-ups</option><option value="promises">Promises</option><option value="escalations">Escalations</option></select></div><div class="mfField"><label>حالة مزامنة الدفعات</label><input readonly value="${mfAttr(last?mfDate(last):'لم تتم بعد')}"></div></div><div class="mfRowActions"><button class="mfSmallBtn ok" onclick="mfExportCurrentReport()">Excel / CSV</button><button class="mfSmallBtn" onclick="mfPrintCurrentReport()">طباعة / PDF</button><button class="mfSmallBtn" onclick="mfSyncPayments(true)">مزامنة Payments الآن</button></div></div><div class="mfPanel"><div class="mfPanelTitle">استيراد دفعات مع مطابقة العميل</div><input id="mfPaymentsImport" type="file" accept=".xlsx,.xls,.csv"><button class="mfSubmit" onclick="mfImportPaymentsFile()">فحص واستيراد الملف</button><div id="mfImportStatus" class="mfSearchMeta"></div></div><div id="mfReportPreview"></div>`;mfPreviewReport()}
+function mfRenderReports(){const out=$("mfReportsBody"),last=mfState().settings.lastPaymentSync;out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">التقارير والكشوفات <small>تحترم نطاق الصلاحية الحالي</small></div><div class="mfForm"><div class="mfField"><label>نوع التقرير</label><select id="mfReportType" onchange="mfPreviewReport()"><option value="portfolio">Portfolio</option><option value="late">Late</option><option value="due">Due</option><option value="payments">Payments</option><option value="writeoffs">R-O — السجل التاريخي</option><option value="followups">Follow-ups</option><option value="promises">Promises</option><option value="escalations">Escalations</option></select></div><div class="mfField"><label>حالة مزامنة الدفعات</label><input readonly value="${mfAttr(last?mfDate(last):'لم تتم بعد')}"></div></div><div class="mfRowActions"><button class="mfSmallBtn ok" onclick="mfExportCurrentReport()">Excel / CSV</button><button class="mfSmallBtn" onclick="mfPrintCurrentReport()">طباعة / PDF</button><button class="mfSmallBtn" onclick="mfSyncPayments(true)">مزامنة Payments الآن</button></div></div><div class="mfPanel"><div class="mfPanelTitle">استيراد دفعات مع مطابقة العميل</div><input id="mfPaymentsImport" type="file" accept=".xlsx,.xls,.csv"><button class="mfSubmit" onclick="mfImportPaymentsFile()">فحص واستيراد الملف</button><div id="mfImportStatus" class="mfSearchMeta"></div></div><div id="mfReportPreview"></div>`;mfPreviewReport()}
 function mfPreviewReport(){const out=$("mfReportPreview"),type=$("mfReportType")?.value||"portfolio",rows=mfReportRows(type);if(!out)return;const keys=Object.keys(rows[0]||{});out.innerHTML=`<div class="mfPanel"><div class="mfPanelTitle">معاينة ${safe(type)} <small>${rows.length} سجل</small></div><div style="overflow:auto"><table class="mfTable"><thead><tr>${keys.map(k=>`<th>${safe(k)}</th>`).join("")}</tr></thead><tbody>${rows.slice(0,100).map(r=>`<tr>${keys.map(k=>`<td>${safe(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${rows.length>100?'<div class="mfSearchMeta">المعاينة لأول 100 سجل؛ التصدير يشمل الجميع.</div>':''}</div>`}
 function mfExportCurrentReport(){const t=$("mfReportType")?.value||"portfolio";mfExportRows("NEXA-MF_"+t+"_"+today(),mfReportRows(t))}
 function mfPrintCurrentReport(){const t=$("mfReportType")?.value||"portfolio",rows=mfReportRows(t),keys=Object.keys(rows[0]||{});if(!rows.length)return mfToast("لا توجد بيانات للطباعة","bad");$("mfPrintArea").innerHTML=`<h1>دائرة التمويل الصغير — ${safe(t)}</h1><p>${new Date().toLocaleString('ar-JO')} • ${rows.length} سجل</p><table style="width:100%;border-collapse:collapse">${`<tr>${keys.map(k=>`<th style="border:1px solid #777;padding:5px">${safe(k)}</th>`).join('')}</tr>`}${rows.map(r=>`<tr>${keys.map(k=>`<td style="border:1px solid #aaa;padding:5px">${safe(r[k])}</td>`).join('')}</tr>`).join('')}</table>`;mfAudit("report_print",null,t);window.print()}
@@ -3542,7 +3518,7 @@ function mfNotify(title,body){if(!mfState().settings.notifications||!("Notificat
 function mfCheckReminders(){const s=mfState(),d=today(),actor=mfActor();mfMergedFollowups().filter(f=>f.status!=="completed"&&mfDateOnly(f.dueAt)===d&&(!mfRecordClient(f)||mfInScope(mfRecordClient(f)))).forEach(f=>{const key=actor.id+":"+f.id+":"+d;if(s.notifications.some(n=>n.key===key))return;s.notifications.push({id:mfId(),key,type:"followup",createdAt:mfNow()});mfNotify("دائرة التمويل الصغير — متابعة اليوم",(mfRecordClient(f)?.name||f.clientNo||"عميل")+" • "+f.type)});if(s.notifications.length>1000)s.notifications=s.notifications.slice(-1000);save(false)}
 function mfStartReminderLoop(){clearInterval(mfReminderTimer);mfCheckReminders();mfReminderTimer=setInterval(mfCheckReminders,5*60*1000)}
 
-function mfRenderSearchInto(out,q){if(!out)return;const nq=norm(q);const rows=(clients||[]).map((c,i)=>({c,i})).filter(x=>nq.length>=2&&mfSearchHay(x.c).includes(nq)).slice(0,100);out.innerHTML=rows.map(({c,i})=>`<div class="searchResultItem" onclick="mfOpenClient(${i})"><b>${safe(c.name)}</b><small>${safe(c.clientNo)} • ${safe(c.phone)} • ${safe(c.employee||'')}</small></div>`).join("")||'<div class="emptyState">لا توجد نتائج</div>'}
+function mfRenderSearchInto(out,q){if(!out)return;const nq=norm(q);const rows=(clients||[]).map((c,i)=>({c,i})).filter(x=>nq.length>=2&&mfInScope(x.c)&&mfSearchHay(x.c).includes(nq)).slice(0,100);out.innerHTML=rows.map(({c,i})=>`<div class="searchResultItem" onclick="mfOpenClient(${i})"><b>${safe(c.name)}</b><small>${safe(c.clientNo)} • ${safe(c.phone)} • ${safe(c.employee||'')}</small></div>`).join("")||'<div class="emptyState">لا توجد نتائج</div>'}
 const mfLegacyCardHtml=window.cardHtml;
 if(typeof mfLegacyCardHtml==="function")window.cardHtml=function(c,i,kind){const html=mfLegacyCardHtml(c,i,kind),button=`<button class="smallBtn" onclick="mfOpenClient(${i})">فتح ملف العميل الكامل</button>`;const at=html.lastIndexOf("</div>");return at>=0?html.slice(0,at)+button+html.slice(at):html+button};
 window.secureGlobalSearch=function(q){mfRenderSearchInto($("globalSearchResults"),q)};
@@ -3789,7 +3765,7 @@ window.mfEmployeeCatalog=function(){
 
 window.secureUniversalSearch=function(q){
   q=String(q||'').trim();const out=$('universalSearchResults');if(!out)return;if(q.length<2){out.innerHTML='';return}
-  const needle=norm(q),data=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.company,c.company_name,c.workLocation,c.work_location,c.managerPhone,c.work_manager_phone,c.workStatus,c.employment_status,c.newWork,c.new_work,c.employee,c.assigned_employee,c.branchCode,c.branch].some(v=>norm(String(v||'')).includes(needle))).slice(0,100);
+  const needle=norm(q),data=(clients||[]).map((c,i)=>({c,i})).filter(({c})=>mfInScope(c)&&[c.name,c.clientNo,c.phone,c.altPhone,c.guarantor,c.guarantorPhone,c.reference1Name,c.reference_1_name,c.reference1Phone,c.reference_1_phone,c.reference2Name,c.reference_2_name,c.reference2Phone,c.reference_2_phone,c.company,c.company_name,c.workLocation,c.work_location,c.managerPhone,c.work_manager_phone,c.workStatus,c.employment_status,c.newWork,c.new_work,c.employee,c.assigned_employee,c.branchCode,c.branch].some(v=>norm(String(v||'')).includes(needle))).slice(0,100);
   out.innerHTML=data.map(({c,i})=>`<div class="searchResult"><b>${safe(c.name||'-')}</b><small>رقم العميل: ${safe(c.clientNo||'-')} | هاتف: ${safe(c.phone||'-')}<br>الكفيل: ${safe(c.guarantor||'-')} | هاتف الكفيل: ${safe(c.guarantorPhone||'-')}<br>الموظف المسؤول: ${safe(c.employee||'-')} | الفرع: ${safe(c.branchCode||c.branch||'-')}</small><div class="mfRowActions" style="margin-top:10px"><button class="mfSmallBtn" onclick="$('universalSearchModal').style.display='none';mfOpenClient(${i})">ملف العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('call',${i},'client')">اتصال العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('whatsapp',${i},'client')">WhatsApp العميل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('call',${i},'guarantor')">اتصال الكفيل</button><button class="mfSmallBtn" onclick="mfOpenContactTarget('whatsapp',${i},'guarantor')">WhatsApp الكفيل</button></div></div>`).join('')||'<div class="empty">لا توجد نتائج ضمن صلاحيتك</div>';
 };
 
@@ -4054,7 +4030,7 @@ window.mfSaveLegal=async function(){
 };
 
 // Write-Off is a real backend workflow.
-window.mfSaveWriteOffRequest=async function(){
+window.mfSaveWriteOffRequest=async function(){return mfToast("الشطب اليدوي معطل؛ استخدم تقرير R-O التاريخي","bad");
   const i=Number($('mfWoIndex')?.value),c=clients?.[i],amount=num($('mfWoAmount')?.value),reason=$('mfWoReason')?.value.trim(),balance=c?Math.max(num(c.netToPay),num(c.outstandingBalance),num(c.arrears),num(c.dueAmount)):0;if(!c||amount<=0||!reason)return mfToast('المبلغ والسبب مطلوبان','bad');if(!mfCan('writeoff',c))return mfToast('غير مصرح لك بطلب شطب لهذا العميل','bad');if(state().writeOffs.some(x=>x.clientId===mfClientKey(c)&&x.status==='pending'))return mfToast('يوجد طلب شطب معلّق لهذا العميل بالفعل','bad');if(balance<=0)return mfToast('لا يوجد رصيد قائم قابل للشطب','bad');if(amount-balance>0.005)return mfToast('مبلغ الشطب لا يجوز أن يتجاوز الرصيد القائم: '+money(balance),'bad');
   try{const a=mfActor(),attachment=await mfFileData($('mfWoAttachment')),row=await mustInsert('write_offs',{client_id:c.id,amount,reason,status:'pending',requested_by:currentUid(),notes:$('mfWoDate')?.value||today(),attachment_url:attachment?.storagePath||null,balance_before:Math.max(num(c.arrears),num(c.dueAmount),num(c.netToPay))});const entry={id:String(row?.id||mfId()),dbId:row?.id,kind:'R-O / Write-Off',clientId:mfClientKey(c),clientNo:c.clientNo,amount,date:$('mfWoDate').value,reason,attachment,status:'pending',before:{arrears:c.arrears,dueAmount:c.dueAmount},requestedBy:a,createdAt:a.at};state().writeOffs.push(entry);mfCommit('writeoff_requested',c,`${amount} • ${reason}`);mfFormClose();mfSetClientTab('legal');mfToast('تم إرسال طلب الشطب للموافقة')}
   catch(e){mfToast('تعذر إرسال طلب الشطب: '+(e?.message||e),'bad')}
@@ -4641,7 +4617,7 @@ window.mfAskAi=async function(){
     try{mfAudit?.('ai_general_question',null,prompt.slice(0,250))}catch(_){}return;
   }
   try{
-    const q=nrm(prompt),scope=(clients||[]).filter(c=>typeof mfInScope==='function'?mfInScope(c):true),late=scope.filter(c=>mfIsLate(c)),due=scope.filter(c=>c.inDue),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score);let answer='';
+    const q=nrm(prompt),scope=(clients||[]).filter(c=>typeof mfInScope==='function'?mfInScope(c):true),late=scope.filter(c=>mfIsLate(c)),due=scope.filter(c=>mfIsDue(c)),high=scope.map(c=>({c,p:mfPriority(c)})).filter(x=>x.p.score>=65).sort((a,b)=>b.p.score-a.p.score);let answer='';
     if(q.includes('رسالة')||q.includes('واتس')||q.includes('sms')){const c=clients?.[mfActiveClientIndex]||high[0]?.c;answer=c?`رسالة مقترحة للعميل ${c.name}:\n\n${mfTemplateText(q.includes('قانون')?'legal':q.includes('قوي')||q.includes('انذار')?'firm':'normal',c.name)}`:'افتح ملف عميل أولًا أو اختر عميلًا عالي الأولوية.'}
     else if(q.includes('عميل')&&mfActiveClientIndex>=0){const c=window.clients[mfActiveClientIndex],p=mfPriority(c);answer=`ملخص ${c.name}\nرقم العميل: ${c.clientNo}\nالموظف: ${c.employee||'-'}\nLate: ${c.inLate?'نعم':'لا'} — Due: ${c.inDue?'نعم':'لا'}\nالمبلغ: ${money(Math.max(num(c.arrears),num(c.dueAmount)))}\nPriority Score: ${p.score} (${p.label})`}
     else if(q.includes('اداء')||q.includes('أداء')||q.includes('ترتيب'))answer=mfVisibleEmployees().map(e=>({e,m:mfEmployeeMetrics(e)})).sort((a,b)=>b.m.score-a.m.score).slice(0,10).map((x,i)=>`${i+1}. ${x.e.name} — ${x.m.score} نقطة — تحصيل ${money(x.m.collected)}`).join('\n')||'لا توجد بيانات أداء متاحة.';
@@ -4678,6 +4654,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 const byId=id=>document.getElementById(id);
 
 /* Field Visit must persist to both Locations and Field Visits. */
+const $f=byId,st=()=>mfState();
 window.mfSaveVisit=async function(){
   const i=Number($f('mfVisitIndex')?.value),c=clients?.[i],target=$f('mfVisitTarget')?.value||'client',gps=window.mfGpsCapture,description=$f('mfVisitDescription')?.value.trim(),amount=num($f('mfVisitAmount')?.value);
   if(!c||!gps)return mfToast('يجب التقاط GPS جديد وقت الزيارة','bad');
@@ -4693,7 +4670,7 @@ window.mfSaveVisit=async function(){
     const {data,error}=await db.rpc('record_field_visit_atomic',{p_client_id:c.id,p_target:target,p_location_type:locType,p_latitude:gps.lat,p_longitude:gps.lng,p_accuracy:gps.accuracy??null,p_location_status:locationStatus,p_visit_result:result,p_description:description,p_amount:amount,p_attachment_url:attachment?.storagePath||null});
     if(error)throw error;if(!data?.location_id||!data?.visit_id||(amount>0&&!data.payment_id))throw Error('لم تؤكد قاعدة البيانات اكتمال الزيارة');
     persisted=true;window.mfGpsCapture=null;const actor=mfActor(),base={id:String(data.location_id),dbId:data.location_id,visitDbId:data.visit_id,clientId:mfClientKey(c),clientNo:c.clientNo,targetType:target,type:target==='guarantor'?'guarantor':locType,status:locationStatus,visitResult:result,description,lat:gps.lat,lng:gps.lng,accuracy:gps.accuracy,capturedAt:gps.capturedAt,attachment,actorId:actor.id,actorName:actor.name,createdAt:mfNow()};
-    st().locations.push(base);st().visits.push({...base,id:String(data.visit_id),dbId:data.visit_id});mfCommit('field_visit',c,result+' • '+description);mfFormClose();await roleAwareBootstrap();await window.mfLoadBackendState();mfSetClientTab('locations');mfToast('تم اعتماد الزيارة وحفظها في السجل الميداني');
+    st().locations.push(base);st().visits.push({...base,id:String(data.visit_id),dbId:data.visit_id});mfCommit('field_visit',c,result+' • '+description);mfFormClose();await roleAwareBootstrap();await mfRefreshAuthoritativePayments();await window.mfLoadBackendState();mfSetClientTab('locations');mfToast('تم اعتماد الزيارة وحفظها في السجل الميداني');
   }catch(e){mfToast(persisted?'تم حفظ الزيارة؛ تعذر تحديث العرض. أعد تحميل البيانات دون إعادة التسجيل':(e?.message||'تعذر حفظ الزيارة'),'bad')}finally{window.mfVisitSaving=false}
 };
 /* Keep the approved branding and Allocation wording stable after every bootstrap/render. */
@@ -4721,48 +4698,11 @@ window.MF_NEXA_AUDIT_HARDENING='2026-09-14';
 'use strict';
 function role(){try{return String(mfRole?.()||'').toLowerCase()}catch(_){return ''}}
 function founderOnly(){if(role()!=='founder'){try{mfToast('Backup / Restore متاح للمؤسس فقط','bad')}catch(_){};return false}return true}
-function payload(){
-  return {
-    product:'NEXA-MF',
-    schema:'mf-nexa-backup-v1',
-    exported_at:new Date().toISOString(),
-    app_version:(typeof MF_STAGE5_VERSION!=='undefined'?MF_STAGE5_VERSION:null),
-    data:typeof snapshot==='function'?snapshot():{clients:window.clients||[],lateData:window.lateData||{},dueData:window.dueData||{},employees:window.employees||[],meta:window.meta||{}}
-  };
-}
-window.mfExportBackup=function(){
-  if(!founderOnly())return;
-  try{
-    const b=payload(),blob=new Blob([JSON.stringify(b,null,2)],{type:'application/json;charset=utf-8'}),a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download='NEXA-MF_BACKUP_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    try{mfAudit?.('backup_export',null,'Founder backup export')}catch(_){}
-    mfToast('تم تجهيز نسخة Backup دون تعديل أي بيانات');
-  }catch(e){mfToast('تعذر تجهيز Backup: '+(e?.message||e),'bad')}
-};
-window.mfValidateBackupFile=async function(file){
-  if(!founderOnly()||!file)return;
-  try{
-    const raw=await file.text(),b=JSON.parse(raw),d=b?.data;
-    if(b?.product!=='NEXA-MF'||b?.schema!=='mf-nexa-backup-v1'||!d||!Array.isArray(d.clients)||!d.meta)throw new Error('ملف Backup غير صالح أو غير تابع لـ NEXA-MF');
-    window.__MF_PENDING_RESTORE=b;
-    const info=`الملف صالح.\nالتاريخ: ${b.exported_at||'-'}\nالعملاء: ${d.clients.length}\nلن يتم تغيير أي بيانات قبل الضغط على اعتماد Restore.`;
-    const out=document.getElementById('mfBackupValidation');if(out)out.textContent=info;
-    const btn=document.getElementById('mfRestoreConfirmBtn');if(btn)btn.disabled=false;
-  }catch(e){window.__MF_PENDING_RESTORE=null;const out=document.getElementById('mfBackupValidation');if(out)out.textContent='فشل التحقق: '+(e?.message||e);const btn=document.getElementById('mfRestoreConfirmBtn');if(btn)btn.disabled=true}
-};
-window.mfApplyValidatedRestore=function(){
-  if(!founderOnly())return;const b=window.__MF_PENDING_RESTORE,d=b?.data;if(!d)return mfToast('اختر Backup صالح أولًا','bad');
-  if(!confirm('سيتم استبدال الحالة المحلية الحالية بمحتوى ملف Backup. لا يتم حذف بيانات Supabase بهذه العملية. هل تريد المتابعة؟'))return;
-  try{if(typeof applySnapshot!=='function')throw new Error('Restore engine غير متاح');applySnapshot(d);save(false);window.__MF_PENDING_RESTORE=null;try{mfAudit?.('backup_restore',null,'Validated local restore')}catch(_){};mfFormClose?.();mfToast('تم تطبيق Restore محليًا. بيانات Supabase لم تُحذف.')}catch(e){mfToast('تعذر Restore: '+(e?.message||e),'bad')}
-};
-window.mfOpenBackupRestore=function(){
-  if(!founderOnly())return;
-  mfForm('Backup / Restore',`<div class="mfPanel"><div class="mfPanelTitle">Backup / Restore</div><small>Backup يصدر نسخة JSON من الحالة الحالية. Restore يبدأ بالتحقق من الملف ولا يطبق أي تغيير قبل موافقة صريحة، ولا يحذف بيانات Supabase.</small></div><div class="mfForm"><button class="mfSubmit" onclick="mfExportBackup()">Export Backup</button><div class="mfField"><label>Restore from Backup</label><input type="file" accept="application/json,.json" onchange="mfValidateBackupFile(this.files?.[0])"></div><div id="mfBackupValidation" class="mfPendingNotice">لم يتم اختيار ملف.</div><button id="mfRestoreConfirmBtn" class="mfSecondary" disabled onclick="mfApplyValidatedRestore()">اعتماد Restore</button></div>`);
-};
+/* Operational archive handlers are supplied by mf-recovery-20260916.js. */
 function install(){
   if(role()!=='founder')return;const drawer=document.querySelector('.mainMenuDrawer');if(!drawer||document.getElementById('mfMenuBackupRestore'))return;
   const logout=[...drawer.querySelectorAll('.menuItem')].find(b=>/تسجيل الخروج|logout/i.test(b.textContent||''));
-  const html='<button id="mfMenuBackupRestore" class="menuItem" onclick="closeMainMenu();mfOpenBackupRestore()">💾 Backup / Restore</button>';
+  const html='<button id="mfMenuBackupRestore" class="menuItem" onclick="closeMainMenu();mfOpenBackupRestore()">💾 أرشيف تشغيلي مشفر</button>';
   if(logout)logout.insertAdjacentHTML('beforebegin',html);else drawer.insertAdjacentHTML('beforeend',html);
 }
 const a=window.mfStage5AfterAuth;window.mfStage5AfterAuth=async function(){const r=await a?.apply(this,arguments);install();return r};
@@ -4926,16 +4866,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function(){
 'use strict';
 const e=id=>document.getElementById(id),h=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
-window.secureUniversalSearch=async function(q){
- q=String(q||'').trim();const out=e('universalSearchResults');if(!out)return;if(q.length<2){out.innerHTML='';return}
- try{
-  const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');
-  const {data:{session}}=await db.auth.getSession();if(!session?.access_token)throw Error('انتهت جلسة الدخول');
-  const res=await fetch(SB_URL+'/functions/v1/limited-client-search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SB_ANON_KEY},body:JSON.stringify({q,limit:100})});
-  const payload=await res.json().catch(()=>({}));if(!res.ok)throw Error(payload?.error||('HTTP '+res.status));
-  const data=Array.isArray(payload?.data)?payload.data:[];
-  out.innerHTML=data.map(r=>`<div class="searchResult"><b>${h(r.client_name||'-')}</b><small>رقم العميل: ${h(r.client_number||'-')} | هاتف: ${h(r.phone||'-')}<br>الكفيل: ${h(r.guarantor_name||'-')} | هاتف الكفيل: ${h(r.guarantor_phone||'-')}<br>الفرع: ${h(r.branch_code||'-')} | الموظف المسؤول: ${h(r.assigned_employee||'-')}</small><div class="note">${r.in_scope?'ضمن نطاق صلاحيتك — افتح العميل من البحث التشغيلي لإجراء المتابعة.':'خارج نطاق صلاحيتك — عرض محدود فقط، ولا تتوفر أي إجراءات على العميل.'}</div></div>`).join('')||'<div class="empty">لا توجد نتائج</div>';
- }catch(err){out.innerHTML='<div class="empty">تعذر تنفيذ البحث العام: '+h(err?.message||err)+'</div>'}
+window.secureUniversalSearch=function(q){
+ const out=e('universalSearchResults');if(!out)return;
+ if(String(q||'').trim().length<2){out.innerHTML='';return}
+ mfRenderSearchInto(out,q);
 };
 function installVoice(){const input=e('universalSearchInput');if(!input||e('mfUniversalVoiceBtn'))return;const b=document.createElement('button');b.id='mfUniversalVoiceBtn';b.className='mfIconButton';b.type='button';b.textContent='🎙️';b.setAttribute('aria-label','بحث صوتي عام');b.onclick=()=>mfVoiceSearch('universalSearchInput',()=>secureUniversalSearch(input.value));input.insertAdjacentElement('afterend',b)}
 const oldOpen=window.openUniversalSearch;window.openUniversalSearch=function(){const r=oldOpen?.apply(this,arguments);setTimeout(installVoice,0);return r};
@@ -5037,7 +4971,7 @@ window.mfCalcExpression=function(){
 'use strict';
 const E=id=>document.getElementById(id),H=v=>typeof safe==='function'?safe(String(v??'')):String(v??'');
 function summaryRows(){
- const scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>typeof mfIsLate30to60==='function'?mfIsLate30to60(c):c.inLate),due=scope.filter(c=>(Number(c.dueAmount)||0)>0);
+ const scope=(clients||[]).filter(mfInScope),late=scope.filter(c=>typeof mfIsLate30to60==='function'?mfIsLate30to60(c):c.inLate),due=scope.filter(mfIsDue);
  const promises=mfState().promises.filter(p=>!mfRecordClient(p)||mfInScope(mfRecordClient(p)));
  return {scope,late,due,pending:promises.filter(p=>p.status==='pending'),kept:promises.filter(p=>p.status==='kept'),broken:promises.filter(p=>p.status==='broken')};
 }
@@ -5524,16 +5458,19 @@ window.mfInScope=function(c){
  const branch=String(c.branchCode||c.branch||'').toUpperCase(),myBranch=String(CURRENT_PROFILE?.branch_code||'').toUpperCase();
  if(r==='bm')return !!myBranch&&branch===myBranch;
  if(r==='als'){
-  if(c.supervisorId)return String(c.supervisorId)===String(CURRENT_PROFILE?.id||'');
-  if(c.supervisorEmail)return norm(c.supervisorEmail)===norm(CURRENT_PROFILE?.email);
-  return !!myBranch&&branch===myBranch;
+  const actor=String(CURRENT_PROFILE?.id||''),assigned=String(c.assignedUserId||'');
+  if(actor&&assigned===actor)return true;
+  const owner=mfEmployeeCatalog().find(e=>e.active===true&&e.authUserId&&String(e.authUserId)===assigned);
+  const email=norm(CURRENT_PROFILE?.email||'');
+  return !!assigned&&!!email&&!!owner?.supervisorEmail&&norm(owner.supervisorEmail)===email;
  }
- if(r==='lo')return String(c.assignedUserId||'')===String(CURRENT_PROFILE?.id||'')||norm(c.employee)===norm(CURRENT_PROFILE?.full_name);
+ if(r==='lo')return !!CURRENT_PROFILE?.id&&String(c.assignedUserId||'')===String(CURRENT_PROFILE.id);
  return false;
 };
 const prevCan=window.mfCan||mfCan;
 window.mfCan=function(action,c){
  const r=mfRole(),inside=window.mfInScope(c);
+ if(['writeoff','requestWriteOff','approveWriteOff'].includes(action))return false;
  if(action==='centralChat')return r==='founder';
  if(action==='audit')return ['founder','cfmp','bm','als'].includes(r);
  if(action==='manageOrg')return r==='founder';

@@ -1,7 +1,7 @@
 create table public.usage_consents (
  id uuid primary key default gen_random_uuid(),
  user_id uuid not null default auth.uid() references auth.users(id),
- policy_version text not null check(policy_version='2026-09-14'),
+ policy_version text not null check(policy_version='phase5-20260918'),
  accepted_text text not null default '',
  accepted_at timestamptz not null default now(),
  unique(user_id,policy_version)
@@ -26,7 +26,7 @@ create trigger usage_consent_audit after insert on public.usage_consents for eac
 create function public.accept_usage_policy(p_version text) returns public.usage_consents language plpgsql security invoker set search_path='' as $$
 declare r public.usage_consents;
 begin
- if p_version is distinct from '2026-09-14' then raise exception 'Unsupported usage policy version';end if;
+ if p_version is distinct from 'phase5-20260918' then raise exception 'Unsupported usage policy version';end if;
  insert into public.usage_consents(user_id,policy_version) values(auth.uid(),p_version) on conflict(user_id,policy_version) do nothing;
  select * into strict r from public.usage_consents where user_id=auth.uid() and policy_version=p_version;
  return r;

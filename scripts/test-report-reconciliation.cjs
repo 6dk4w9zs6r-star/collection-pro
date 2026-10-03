@@ -10,7 +10,7 @@ load('function mfLateDaysValue(','function mfAllocationRows(');
 load('function mfEmployeeClients(','function mfVisibleEmployees(');
 load('function mfRenderDashboard(','function mfOpenEmployeeDashboard(');
 const e={id:'E1',name:'Same',branch:'B1',role:'lo'};
-s.clients=[{id:1,clientNo:'C1',name:'Client',employee:'Same',assignedUserId:'E1',branchCode:'B1',arrears:100,lateDays:40,inLate:true,inDue:true,netToPay:100}];
+s.clients=[{id:1,clientNo:'C1',name:'Client',employee:'Same',assignedUserId:'E1',branchCode:'B1',arrears:100,lateDays:40,inLate:true,inDue:true,dueAmount:100,netToPay:100}];
 s.meta.payments=[{id:'success',clientId:'1',clientNo:'C1',employeeId:'E1',status:'successful',type:'partial',amount:50,date:'2026-09-14'},{id:'pending',clientId:'1',status:'pending',amount:90},{id:'fee',clientId:'1',status:'successful',type:'deferral_fee',amount:10},{id:'unmatched',clientId:'1',status:'not_matched',amount:500},{id:'failed',clientId:'1',status:'failed',amount:1000}];
 let checks=0;function equal(actual,expected,label){assert.deepEqual(actual,expected,label);checks++;}
 equal(s.mfEmployeeMetrics(e).collected,50,'pending, unmatched, failed and fees must not inflate collection');
@@ -18,7 +18,7 @@ const before=JSON.stringify({clients:s.clients,meta:s.meta});
 s.renderPaid();equal(nodes.paymentsCount.textContent,1,'successful payment count');equal(nodes.paidTotal.textContent,'50.00','successful payment total');equal(nodes.onePayCount.textContent,1,'paid list rebuilds after reload');equal(nodes.twoPayCount.textContent,0,'single payment');equal(nodes.paidList.innerHTML.includes('Client'),true,'client included without legacy cache');
 equal(JSON.stringify({clients:s.clients,meta:s.meta}),before,'report rendering preserves source state and old cache');
 s.meta.payments.push({id:'second',clientId:'1',clientNo:'C1',status:'successful',type:'regular',amount:'25.25',date:'2026-09-15'});s.renderPaid('two');equal(nodes.twoPayCount.textContent,1,'repeat payer');equal(nodes.paidTotal.textContent,'75.25','numeric-string amounts');equal(s.mfPaidReportRows()[0].lastPaymentDate,'2026-09-15','latest date regardless of input order');equal(s.mfPaidReportRows()[0].balance,100,'current balance not historical payment balance');
-s.clients.push({id:2,clientNo:'C2',employee:'Same',assignedUserId:'E2',branchCode:'B2',arrears:100,lateDays:40,inLate:true,inDue:false},{id:3,clientNo:'C3',employee:'Other',assignedUserId:'',branchCode:'B1',arrears:100,lateDays:40,inLate:true,inDue:true});
+s.clients.push({id:2,clientNo:'C2',employee:'Same',assignedUserId:'E2',branchCode:'B2',arrears:100,lateDays:40,inLate:true,inDue:false},{id:3,clientNo:'C3',employee:'Other',assignedUserId:'',branchCode:'B1',arrears:100,lateDays:40,inLate:true,inDue:true,dueAmount:100});
 equal(s.mfEmployeeClients(e).length,1,'same name must not override assigned ID');
 equal(s.mfEmployeeClients({id:'E3',name:'Same',branch:'B3'}).length,0,'unassigned employee ID must not borrow a namesake portfolio');
 s.meta.payments.push({id:'transferred',clientId:'1',employeeId:'E2',status:'successful',type:'partial',amount:20,date:'2026-09-15'});
