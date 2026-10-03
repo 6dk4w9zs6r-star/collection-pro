@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const el=id=>document.getElementById(id),uid=()=>CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id,VERSION='phase5-20260918';
-const FORMAT='mf-nexa-encrypted-archive-v1',SOURCE='thfnitjiiwdsbwcunlbs',ITERATIONS=310000,MAX_FILE=40*1024*1024;
+const FORMAT='mf-nexa-encrypted-archive-v1',SOURCE='usxhunxwanwuigaoajlj',ITERATIONS=310000,MAX_FILE=40*1024*1024;
 const tables=['activities','announcement_reads','announcements','approved_accounts','attachments','audit_log','branches','call_invitations','chat_messages','client_notes','clients','deferrals','disbursements','employees','escalated_cases','field_visits','follow_ups','late_due','legal_cases','loan_requests','locations','messages','notification_preferences','notifications','payments','portfolios','profiles','promises_to_pay','promotions','teams','usage_consents','write_offs'];
 async function dbRequired(){const db=await getSecureClient();if(!db)throw Error('قاعدة البيانات غير متاحة');let actor=uid();if(!actor){try{const {data,error}=await db.auth.getSession();if(!error&&data?.session?.user){CURRENT_AUTH_USER=data.session.user;actor=uid()||data.session.user.id}}catch(_){}}if(!actor)throw Error('جلسة الدخول غير متاحة');return db;}
 function founder(){if(mfRole()!=='founder'){mfToast('هذه العملية متاحة للمؤسس فقط','bad');return false;}return true;}

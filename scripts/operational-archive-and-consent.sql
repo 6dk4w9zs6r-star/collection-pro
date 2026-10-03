@@ -48,7 +48,7 @@ begin
    total:=total+octet_length(rows::text);if total>20971520 then raise exception 'Operational archive exceeds 20 MiB; use managed database backup';end if;
    data:=data||jsonb_build_object(t,rows);counts:=counts||jsonb_build_object(t,jsonb_array_length(rows));
  end loop;
- return jsonb_build_object('product','NEXA-MF','schema','mf-nexa-operational-archive-v2','source','thfnitjiiwdsbwcunlbs','exported_at',statement_timestamp(),'exported_by',auth.uid(),'tables',data,'counts',counts,'excluded',jsonb_build_array('auth','storage_file_bytes','database_schema_functions_policies','collection_app_snapshot','edge_functions_secrets','external_configuration'),'disaster_recovery',false);
+ return jsonb_build_object('product','NEXA-MF','schema','mf-nexa-operational-archive-v2','source','usxhunxwanwuigaoajlj','exported_at',statement_timestamp(),'exported_by',auth.uid(),'tables',data,'counts',counts,'excluded',jsonb_build_array('auth','storage_file_bytes','database_schema_functions_policies','collection_app_snapshot','edge_functions_secrets','external_configuration'),'disaster_recovery',false);
 end $$;
 revoke all on function mf_private.operational_archive() from public,anon;
 grant execute on function mf_private.operational_archive() to authenticated;
