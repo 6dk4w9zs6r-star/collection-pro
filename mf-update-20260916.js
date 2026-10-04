@@ -141,8 +141,19 @@ window.mfRenderClientPayments=function(c){
 };
 const renderReportsBefore=window.mfRenderReports,previewBefore=window.mfPreviewReport,rowsBefore=window.mfReportRows;
 window.mfPaymentReportFilter={date:'',branch:'',employee:''};
+window.mfOpenSourcePayments=async function(){
+ const actor=uid(),epoch=window.mfSessionEpoch?.();
+ try{
+  const db=await dbRequired(),{data,error}=await db.rpc('get_source_payment_history');
+  if(error)throw error;
+  if(!actor||uid()!==actor||window.mfSessionEpoch?.()!==epoch)return;
+  const rows=Array.isArray(data)?data:[];
+  mfForm('دفعات LMIS للمطابقة','<p>دفعات المصدر للفترة 1–31 أكتوبر 2026. لا يغيّر هذا العرض المستحقات؛ يلزم التحقق من احتساب الدفعة في الكشف قبل ترحيلها.</p><p>'+rows.length+' دفعة ضمن صلاحياتك • '+money(rows.reduce((sum,p)=>sum+Number(p.amount||0),0))+'</p><div style="overflow:auto"><table class="mfTable"><thead><tr><th>العميل / القرض</th><th>الموظف</th><th>التاريخ</th><th>المبلغ</th><th>المرجع</th><th>المراجعة</th></tr></thead><tbody>'+rows.map(p=>'<tr><td>'+safe(p.client_number)+' / '+safe(p.loan_sequence)+'</td><td>'+safe(p.employee_code)+'</td><td>'+safe(p.payment_date)+'</td><td>'+money(p.amount)+'</td><td>'+safe(p.voucher_number)+'</td><td>'+(p.review_state==='account_not_in_reports'?'الحساب غير موجود في الكشوف':'مطابقة الرصيد مطلوبة')+'</td></tr>').join('')+'</tbody></table></div>');
+ }catch(e){if(uid()===actor&&window.mfSessionEpoch?.()===epoch)mfToast(e.message||'تعذر تحميل دفعات المصدر','bad')}
+};
 window.mfRenderReports=function(){
   renderReportsBefore();
+  el('mfReportsBody')?.insertAdjacentHTML?.('afterbegin','<div class="mfPanel"><button class="mfSmallBtn" onclick="mfOpenSourcePayments()">دفعات LMIS للمطابقة</button></div>');
   if(!mfCanImportPayments()){
     el('mfPaymentsImport')?.closest('.mfPanel')?.remove();
     el('mfReportsBody')?.querySelector('[onclick="mfSyncPayments(true)"]')?.remove();
