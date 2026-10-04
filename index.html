@@ -2156,6 +2156,7 @@ async function roleAwareBootstrap(){
       dueAmount:num(c.due_amount),
       installment:num(c.installment_amount),
       installmentsDueCount:num(c.installments_due_count),
+      lateSourceOverdueAmount:c.late_source_overdue_amount==null?null:num(c.late_source_overdue_amount),
       lateDays:days,
       dueLateDays:days,
       inLate,
@@ -2980,7 +2981,7 @@ function mfRunHomeSearch(){
 // NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
 function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
-function mfLateHasTwoInstallments(c){const amount=num(c?.arrears??c?.overdue_amount),inst=num(c?.installment??c?.installment_amount);if(inst>0)return amount>inst+0.005;const count=c?.installmentsDueCount??c?.installments_due_count;return count==null?amount>0:num(count)>1}
+function mfLateHasTwoInstallments(c){const amount=num(c?.arrears??c?.overdue_amount),inst=num(c?.installment??c?.installment_amount),baseline=c?.lateSourceOverdueAmount??c?.late_source_overdue_amount;if(amount<=0)return false;if(baseline!=null&&num(baseline)>0){const paid=Math.max(0,num(baseline)-amount);if(inst>0&&paid+0.005<Math.min(inst,num(baseline)))return true;if(inst<=0&&paid<=0.005)return true;}if(inst>0)return amount>inst+0.005;const count=c?.installmentsDueCount??c?.installments_due_count;return count==null?amount>0:num(count)>1}
 function mfIsLate(c){return !!c&&mfLateHasTwoInstallments(c)&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
 function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0&&mfLateHasTwoInstallments(c)}
 
