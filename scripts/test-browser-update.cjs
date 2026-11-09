@@ -30,7 +30,7 @@ const root=path.join(__dirname,'..');
     mfRenderReports();document.getElementById('mfReportType').value='payments';mfPreviewReport();mfOpen('mfReportsModal');
     return {send:actions.includes('إرسال الموقع'),open:actions.includes('فتح الموقع'),report:document.getElementById('mfReportPreview').innerText,source:!!document.getElementById('mfPaymentsImport')&&!!document.getElementById('mfImportStatus')};
    });
-   assert(result.send&&result.open&&result.source);assert(result.report.includes('كشف الدفعات للفرع'));assert(result.report.includes('عميل توضيحي'));
+   assert(result.send&&result.open&&result.source,JSON.stringify({send:result.send,open:result.open,source:result.source}));assert(result.report.includes('كشف الدفعات للفرع'));assert(result.report.includes('عميل توضيحي'));
    const output=path.resolve(process.env.MF_NEXA_TEST_OUTPUT||path.join(root,'../output/verification'));fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`report-${viewport.width}.png`),fullPage:true});
    const reconciliation=await page.evaluate(()=>{
     // Synthetic financial values mirror the read-only SQL aggregate, not customer identities.
