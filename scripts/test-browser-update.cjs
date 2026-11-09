@@ -21,7 +21,7 @@ const root=path.join(__dirname,'..');
    const initial=await page.evaluate(()=>({clients:clients.length,payments:meta.payments.length,locked:document.body.classList.contains('secureLocked'),preserved:localStorage.getItem('collection_clients').includes('OLD_ACCOUNT_CLIENT')}));assert.deepEqual(initial,{clients:0,payments:0,locked:true,preserved:true});
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
-    CURRENT_PROFILE={id:'browser-fixture',role:'founder',branch_code:'B1',full_name:'UI regression'};
+    CURRENT_PROFILE={id:'browser-fixture',role:'founder',branch_code:'B1',full_name:'UI regression',is_active:true};CURRENT_AUTH_USER={id:'browser-fixture'};
     clients=[{id:901,clientNo:'DEMO-901',name:'عميل توضيحي',employee:'موظف توضيحي',branchCode:'B1',installment:20}];
     meta.payments=[{id:'fixture',dbId:'fixture',clientId:'901',clientNo:'DEMO-901',name:'عميل توضيحي',employee:'موظف توضيحي',employeeId:'E1',branch:'B1',amount:10,date:today(),type:'partial',status:'successful',balanceBefore:30,balanceAfter:20}];
     mfState().locations=[{dbId:'fixture-location',clientId:mfClientKey(clients[0]),type:'client_home',lat:31.95,lng:35.91,createdAt:'2026-09-16'}];
