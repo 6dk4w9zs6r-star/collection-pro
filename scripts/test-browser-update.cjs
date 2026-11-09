@@ -47,7 +47,7 @@ const root=path.join(__dirname,'..');
     const fixtureRows=[{id:'fixture-ann',content_type:'announcement',title:'إعلان توضيحي',body:'محتوى منشور للاختبار المحلي',audience:'all',created_at:new Date().toISOString(),is_published:true}];
     window.getSecureClient=async()=>({from:()=>{const q={select:()=>q,eq:()=>q,order:()=>q,limit:async()=>({data:fixtureRows,error:null})};return q}});
     await mfRenderCommunications();mfOpen('mfCommsModal');const body=document.getElementById('mfCommsBody').innerText;
-    const timeline=mfTimelineRows(clients[0]);mfOpenAnnouncementForm('morning');
+    clients[0].history=[{id:'fixture-note',text:'ملاحظة توضيحية محفوظة',createdAt:new Date().toISOString()}];const timeline=mfTimelineRows(clients[0]);mfOpenAnnouncementForm('morning');
     const form=!!document.getElementById('mfCommTitle')&&!!document.getElementById('mfCommBranch')&&!!document.getElementById('mfCommTeam')&&!!document.getElementById('mfCommMandatory');mfFormClose();
     return {body,notes:timeline.filter(x=>x.type==='history').length,form};
    });
