@@ -49,7 +49,7 @@ const root=path.join(__dirname,'..');
     await mfRenderCommunications();mfOpen('mfCommsModal');const body=document.getElementById('mfCommsBody').innerText;
     const timeline=mfTimelineRows(clients[0]);mfOpenAnnouncementForm('morning');
     const form=!!document.getElementById('mfCommTitle')&&!!document.getElementById('mfCommBranch')&&!!document.getElementById('mfCommTeam')&&!!document.getElementById('mfCommMandatory');mfFormClose();
-    return {body,notes:timeline.filter(x=>x.type==='note').length,form};
+    return {body,notes:timeline.filter(x=>x.type==='history').length,form};
    });
    assert(collaboration.body.includes('إعلان توضيحي')&&collaboration.body.includes('إضافة إعلان'));assert.equal(collaboration.notes,1);assert(collaboration.form);
    await page.screenshot({path:path.join(output,`communications-${viewport.width}.png`),fullPage:true});
