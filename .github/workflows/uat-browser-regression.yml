@@ -1,0 +1,21 @@
+name: UAT browser regression
+on:
+  push:
+    branches:
+      - codex/uat-browser-check-20261109
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install pinned test tools
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1 @electric-sql/pglite@0.3.14
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser regression
+        run: node scripts/test-browser-update.cjs
