@@ -42,16 +42,16 @@ const root=path.join(__dirname,'..');
    });
    assert.equal(reconciliation.employeeTotal,50);assert.equal(reconciliation.total,50);assert.equal(reconciliation.paidCount,1);assert.equal(reconciliation.paidCustomers,1);assert.equal(reconciliation.late,2);assert.equal(reconciliation.due,1);assert.equal(reconciliation.historic,50);assert.equal(reconciliation.current,0);assert(reconciliation.dashboard.includes('كل الأيام'));
    await page.screenshot({path:path.join(output,`reconciled-report-${viewport.width}.png`),fullPage:true});
-   const collaboration=await page.evaluate(()=>{
-    mfClose('mfReportsModal');const s=mfState();
-    s.announcements=[{id:'fixture-ann',dbId:'fixture-ann',title:'إعلان توضيحي',text:'محتوى منشور للاختبار المحلي',isPublished:true,authorId:CURRENT_PROFILE.id,createdAt:new Date().toISOString(),attachment:{storagePath:'fixture/path',type:'image/png'}}];
-    s.morningContent=[];s.teamSpiritContent=[];s.clientNotes=[{id:'fixture-note',clientId:'901',text:'ملاحظة توضيحية محفوظة',createdAt:new Date().toISOString()}];
-    mfRenderCommunications();mfOpen('mfCommsModal');const body=document.getElementById('mfCommsBody').innerText;
+   const collaboration=await page.evaluate(async()=>{
+    mfClose('mfReportsModal');
+    const fixtureRows=[{id:'fixture-ann',content_type:'announcement',title:'إعلان توضيحي',body:'محتوى منشور للاختبار المحلي',audience:'all',created_at:new Date().toISOString(),is_published:true}];
+    window.getSecureClient=async()=>({from:()=>{const q={select:()=>q,eq:()=>q,order:()=>q,limit:async()=>({data:fixtureRows,error:null})};return q}});
+    await mfRenderCommunications();mfOpen('mfCommsModal');const body=document.getElementById('mfCommsBody').innerText;
     const timeline=mfTimelineRows(clients[0]);mfOpenAnnouncementForm('morning');
-    const form=!!document.getElementById('mfCommPublish')&&!!document.getElementById('mfCommStarts')&&!!document.getElementById('mfCommTeam');mfFormClose();
+    const form=!!document.getElementById('mfCommTitle')&&!!document.getElementById('mfCommBranch')&&!!document.getElementById('mfCommTeam')&&!!document.getElementById('mfCommMandatory');mfFormClose();
     return {body,notes:timeline.filter(x=>x.type==='note').length,form};
    });
-   assert(collaboration.body.includes('إعلان توضيحي')&&collaboration.body.includes('عرض المرفق')&&collaboration.body.includes('إدارة المحتوى والمسودات'));assert.equal(collaboration.notes,1);assert(collaboration.form);
+   assert(collaboration.body.includes('إعلان توضيحي')&&collaboration.body.includes('إضافة إعلان'));assert.equal(collaboration.notes,1);assert(collaboration.form);
    await page.screenshot({path:path.join(output,`communications-${viewport.width}.png`),fullPage:true});
    const recovery=await page.evaluate(()=>{
     mfClose('mfCommsModal');mfOpenBackupRestore();return {password:document.getElementById('mfArchivePassword')?.type,confirm:!!document.getElementById('mfArchivePasswordAgain'),verify:!!document.getElementById('mfArchiveOpenPassword'),dangerousRestore:!!document.getElementById('mfRestoreConfirmBtn')};
