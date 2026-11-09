@@ -28,7 +28,7 @@ const root=path.join(__dirname,'..');
     mfActiveClientIndex=0;const actions=mfRenderClientOverview(clients[0]);
     document.body.classList.remove('secureLocked');document.getElementById('authGate').style.display='none';
     mfRenderReports();document.getElementById('mfReportType').value='payments';mfPreviewReport();mfOpen('mfReportsModal');
-    return {send:actions.includes('إرسال الموقع'),open:actions.includes('فتح الموقع'),report:document.getElementById('mfReportPreview').innerText,source:!!document.getElementById('mfImportSource')};
+    return {send:actions.includes('إرسال الموقع'),open:actions.includes('فتح الموقع'),report:document.getElementById('mfReportPreview').innerText,source:!!document.getElementById('mfPaymentsImport')&&!!document.getElementById('mfImportStatus')};
    });
    assert(result.send&&result.open&&result.source);assert(result.report.includes('كشف الدفعات للفرع'));assert(result.report.includes('عميل توضيحي'));
    const output=path.resolve(process.env.MF_NEXA_TEST_OUTPUT||path.join(root,'../output/verification'));fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`report-${viewport.width}.png`),fullPage:true});
