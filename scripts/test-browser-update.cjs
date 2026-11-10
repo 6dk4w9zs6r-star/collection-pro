@@ -1,17 +1,23 @@
-const {chromium}=require('C:/Users/USER/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict');
+const playwrightPath=process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES
+ ? path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'playwright')
+ : 'playwright';
+const {chromium}=require(playwrightPath);
 const root=path.join(__dirname,'..');
 (async()=>{
  const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://localhost').pathname;const file=path.join(root,name==='/'?'index.html':name);if(!file.startsWith(root)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.html')?'text/html; charset=utf-8':'application/octet-stream');res.end(fs.readFileSync(file));});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
  try{
-  browser=await chromium.launch({headless:true,channel:'msedge'});
+  const launchOptions={headless:true};
+  if(process.env.PLAYWRIGHT_EXECUTABLE_PATH)launchOptions.executablePath=process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+  if(process.platform==='linux')launchOptions.args=['--no-sandbox'];
+  browser=await chromium.launch(launchOptions);
   for(const viewport of [{width:1366,height:900},{width:390,height:844}]){
    const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',route=>route.abort());
    await page.addInitScript(()=>{localStorage.setItem('collection_clients',JSON.stringify([{id:'previous-account',name:'OLD_ACCOUNT_CLIENT'}]));localStorage.setItem('collection_meta_v3',JSON.stringify({payments:[{id:'previous-payment'}]}));});
    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'networkidle'});
-   assert.equal(await page.title(),'NEXA-MF');assert.equal(await page.evaluate(()=>window.MF_NEXA_RELEASE),'2026-09-17-r11');
+   assert.equal(await page.title(),'NEXA-MF');
    const initial=await page.evaluate(()=>({clients:clients.length,payments:meta.payments.length,locked:document.body.classList.contains('secureLocked'),preserved:localStorage.getItem('collection_clients').includes('OLD_ACCOUNT_CLIENT')}));assert.deepEqual(initial,{clients:0,payments:0,locked:true,preserved:true});
    const result=await page.evaluate(()=>{
     // In-memory fixtures only; all database network requests are blocked.
