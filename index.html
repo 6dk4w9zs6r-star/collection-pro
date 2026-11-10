@@ -2172,9 +2172,30 @@ async function roleAwareBootstrap(){
     };
   });
 
-  // Publish only after both complete scoped reads succeed.
-  const followRows=await mfReadOperationalRows(sb,'follow_ups');
+  // Keep Due and Late source values separate. A loan can have a 30–60 day
+  // Late case while another installment is older; collapsing both into the
+  // clients.days_overdue maximum incorrectly drops it from the Late list.
+  const periodStart=today().slice(0,7)+'-01';
+  const [followRows,portfolioRows]=await Promise.all([
+    mfReadOperationalRows(sb,'follow_ups'),
+    mfReadOperationalRows(sb,'late_due','id,client_id,case_type,period_start,remaining_amount,remaining_installments,days_overdue',q=>q.eq('period_start',periodStart))
+  ]);
   if(loadingActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل المتابعات');
+  const mappedById=new Map(mapped.map(c=>[String(c.id),c]));
+  for(const row of portfolioRows){
+    const c=mappedById.get(String(row.client_id));if(!c)continue;
+    if(row.case_type==='due'){
+      c.dueAmount=num(row.remaining_amount);
+      c.dueLateDays=num(row.days_overdue);
+      c.installmentsDueCount=num(row.remaining_installments);
+      c.inDue=c.dueAmount>0;
+    }else if(row.case_type==='late'){
+      c.arrears=num(row.remaining_amount);
+      c.lateSourceOverdueAmount=num(row.remaining_amount);
+      c.lateDays=num(row.days_overdue);
+      c.inLate=c.lateDays>=30&&c.lateDays<=60&&c.arrears>0;
+    }
+  }
   clients=mapped;
   {
     followUps=followRows.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
@@ -2979,7 +3000,7 @@ function mfRunHomeSearch(){
 
 // NEXA_LATE_ACTIVE_FIX_20260914
 // NEXA_SOURCE_FIX_20260914_V2 — canonical Late classification helpers.
-function mfLateDaysValue(c){return Math.max(num(c?.lateDays),num(c?.dueLateDays))}
+function mfLateDaysValue(c){return num(c?.lateDays)||num(c?.dueLateDays)}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
 function mfLateHasTwoInstallments(c){const amount=num(c?.arrears??c?.overdue_amount),inst=num(c?.installment??c?.installment_amount),baseline=c?.lateSourceOverdueAmount??c?.late_source_overdue_amount;if(amount<=0)return false;if(baseline!=null&&num(baseline)>0){const paid=Math.max(0,num(baseline)-amount);if(inst>0&&paid+0.005<Math.min(inst,num(baseline)))return true;if(inst<=0&&paid<=0.005)return true;}if(inst>0)return amount>inst+0.005;const count=c?.installmentsDueCount??c?.installments_due_count;return count==null?amount>0:num(count)>1}
 function mfIsLate(c){return !!c&&mfLateHasTwoInstallments(c)&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
