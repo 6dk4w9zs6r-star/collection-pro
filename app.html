@@ -2196,7 +2196,7 @@ async function roleAwareBootstrap(){
   const periodStart=today().slice(0,7)+'-01';
   const [followRows,portfolioRows]=await Promise.all([
     mfReadOperationalRows(sb,'follow_ups'),
-    mfReadOperationalRows(sb,'late_due','id,client_id,case_type,period_start,remaining_amount,remaining_installments,days_overdue',q=>q.eq('period_start',periodStart))
+    mfReadOperationalRows(sb,'late_due','id,client_id,case_type,period_start,remaining_amount,remaining_installments,days_overdue,status',q=>q.eq('period_start',periodStart))
   ]);
   if(loadingActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل المتابعات');
   const mappedById=new Map(mapped.map(c=>[String(c.id),c]));
@@ -2211,7 +2211,8 @@ async function roleAwareBootstrap(){
       c.arrears=num(row.remaining_amount);
       c.lateSourceOverdueAmount=num(row.remaining_amount);
       c.lateDays=num(row.days_overdue);
-      c.inLate=c.lateDays>=30&&c.lateDays<=60&&c.arrears>0;
+      c.lateCaseStatus=String(row.status||'').toLowerCase();
+      c.inLate=(!c.lateCaseStatus||c.lateCaseStatus==='open')&&c.lateDays>=30&&c.lateDays<=60&&c.arrears>0;
     }
   }
   clients=mapped;
@@ -3023,7 +3024,7 @@ function mfLateDaysValue(c){return num(c?.lateDays)||num(c?.dueLateDays)}
 function mfFlagTrue(v){return v===true||v===1||String(v||'').toLowerCase()==='true'||String(v||'')==='1'}
 function mfLateHasTwoInstallments(c){const amount=num(c?.arrears??c?.overdue_amount),inst=num(c?.installment??c?.installment_amount),baseline=c?.lateSourceOverdueAmount??c?.late_source_overdue_amount;if(amount<=0)return false;if(baseline!=null&&num(baseline)>0){const paid=Math.max(0,num(baseline)-amount);if(inst>0&&paid+0.005<Math.min(inst,num(baseline)))return true;if(inst<=0&&paid<=0.005)return true;}if(inst>0)return amount>inst+0.005;const count=c?.installmentsDueCount??c?.installments_due_count;return count==null?amount>0:num(count)>1}
 function mfIsLate(c){return !!c&&mfLateHasTwoInstallments(c)&&num(c.arrears??c.overdue_amount)>0&&(mfFlagTrue(c.inLate)||mfLateDaysValue(c)>=30)}
-function mfIsLate30to60(c){const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0&&mfLateHasTwoInstallments(c)}
+function mfIsLate30to60(c){const status=String(c?.lateCaseStatus||'').toLowerCase();if(status&&status!=='open')return false;const d=mfLateDaysValue(c);return d>=30&&d<=60&&num(c?.arrears??c?.overdue_amount)>0&&mfLateHasTwoInstallments(c)}
 
 function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
