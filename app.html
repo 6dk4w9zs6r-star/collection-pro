@@ -2116,12 +2116,26 @@ async function roleAwareBootstrap(){
 
   // V6.34: clients table is the operational source for authenticated users.
   // RLS remains the security boundary; LO also gets an explicit owner filter as defense in depth.
-  const loadingActor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;const rows=await mfReadOperationalRows(sb,'clients','*',q=>{
-    if(CURRENT_PROFILE.role==='lo')return q.eq('assigned_user_id',CURRENT_AUTH_USER.id);
-    if(CURRENT_PROFILE.role==='bm'&&CURRENT_PROFILE.branch_code)return q.eq('branch_code',CURRENT_PROFILE.branch_code);
-    return q;
-  });
+  const loadingActor=CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id;
+  const [rows,employeeRows,teamRows]=await Promise.all([
+    mfReadOperationalRows(sb,'clients','*',q=>{
+      if(CURRENT_PROFILE.role==='lo')return q.eq('assigned_user_id',CURRENT_AUTH_USER.id);
+      if(CURRENT_PROFILE.role==='bm'&&CURRENT_PROFILE.branch_code)return q.eq('branch_code',CURRENT_PROFILE.branch_code);
+      return q;
+    }),
+    mfReadOperationalRows(sb,'employees','id,auth_user_id,employee_number,full_name,email,phone,role,official_title,branch_code,team_id,supervisor_employee_id,avatar_url,is_active',q=>q.eq('is_active',true)).catch(e=>{console.warn('Employee directory unavailable',e);return []}),
+    mfReadOperationalRows(sb,'teams','id,code,name,branch_code,supervisor_employee_id,is_active',q=>q.eq('is_active',true)).catch(e=>{console.warn('Team directory unavailable',e);return []})
+  ]);
   if(loadingActor!==(CURRENT_PROFILE?.id||CURRENT_AUTH_USER?.id))throw Error('تغير الحساب أثناء تحميل العملاء');
+  mfBackendTeamDirectory=teamRows;
+  const teamById=new Map(teamRows.map(t=>[String(t.id),t]));
+  const employeeById=new Map(employeeRows.map(e=>[String(e.id),e]));
+  mfBackendEmployeeDirectory=employeeRows.map(e=>({
+    id:e.id,employeeId:e.id,authUserId:e.auth_user_id||'',active:e.is_active===true,name:e.full_name||'',email:e.email||'',phone:e.phone||'',
+    role:String(e.role||'lo').toLowerCase(),branch:e.branch_code||'',teamId:e.team_id||'',team:teamById.get(String(e.team_id||''))?.name||'',
+    supervisorEmployeeId:e.supervisor_employee_id||'',supervisorEmail:employeeById.get(String(e.supervisor_employee_id||''))?.email||'',photo:e.avatar_url||'',jobTitle:e.official_title||'',employeeNumber:e.employee_number||''
+  }));
+  const employeeByAuthId=new Map(mfBackendEmployeeDirectory.filter(e=>e.authUserId).map(e=>[String(e.authUserId),e]));
   const mapped=rows.map(c=>{
     const days=num(c.days_overdue);
     const paid=num(c.paid_amount);
@@ -2147,10 +2161,14 @@ async function roleAwareBootstrap(){
       managerPhone:c.work_manager_phone||"",
       workStatus:c.employment_status||"",
       newWork:c.new_work||c.new_workplace||"",
-      employee:c.assigned_employee||CURRENT_PROFILE.full_name||"",
+      employee:employeeByAuthId.get(String(c.assigned_user_id||''))?.name||c.assigned_employee||CURRENT_PROFILE.full_name||"",
       assignedUserId:c.assigned_user_id||"",
+      employeeId:c.employee_id||employeeByAuthId.get(String(c.assigned_user_id||''))?.employeeId||"",
       branchCode:c.branch_code||"",
-      team:c.team_name||"",
+      teamId:c.team_id||employeeByAuthId.get(String(c.assigned_user_id||''))?.teamId||"",
+      team:teamById.get(String(c.team_id||''))?.name||c.team_name||employeeByAuthId.get(String(c.assigned_user_id||''))?.team||"",
+      supervisorId:employeeById.get(String(employeeByAuthId.get(String(c.assigned_user_id||''))?.supervisorEmployeeId||''))?.auth_user_id||"",
+      supervisorEmail:employeeById.get(String(employeeByAuthId.get(String(c.assigned_user_id||''))?.supervisorEmployeeId||''))?.email||"",
       arrears:num(c.overdue_amount),
       netToPay:c.outstanding_balance==null?null:num(c.outstanding_balance),
       dueAmount:num(c.due_amount),
@@ -2821,6 +2839,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 const MF_STAGE5_VERSION="5.0.0-v642-overlay";
 const MF_UNRWA_LOGO="https://commons.wikimedia.org/wiki/Special:Redirect/file/UNRWA-logo.svg";
 let mfActiveClientIndex=-1,mfClientTab="overview",mfToastTimer=null,mfAllocation={mode:"late",branch:"",team:"",employee:""},mfGpsCapture=null,mfCurrentChatRoom="general",mfPaymentSyncTimer=null,mfReminderTimer=null,mfChatSubscription=null,mfCallState=null;
+let mfBackendEmployeeDirectory=[],mfBackendTeamDirectory=[];
 
 function mfArray(v){return Array.isArray(v)?v:[]}
 function mfNow(){return new Date().toISOString()}
@@ -3010,18 +3029,19 @@ function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
 }
 function mfIsDue(c){const balance=c?.netToPay??c?.outstandingBalance??c?.outstanding_balance;return !!c&&num(c.dueAmount??c.due_amount)>0&&(balance==null||num(balance)>0)}
-function mfAllocationRows(){return (clients||[]).filter(mfInScope).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c))&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||(c.team||"غير محدد")===mfAllocation.team)&&(!mfAllocation.employee||c.employee===mfAllocation.employee))}
+function mfAllocationRows(){return (clients||[]).filter(mfInScope).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c))&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||String(c.teamId||"")===String(mfAllocation.team))&&(!mfAllocation.employee||(String(c.assignedUserId||"")===String(mfAllocation.employee)||String(c.employeeId||"")===String(mfAllocation.employee)||(!c.assignedUserId&&!c.employeeId&&norm(c.employee)===norm(mfAllocation.employee))))) }
 function mfAllocSet(level,value){mfAllocation[level]=value;if(level==="branch"){mfAllocation.team="";mfAllocation.employee=""}if(level==="team")mfAllocation.employee="";mfRenderAllocation()}
 function mfRenderAllocation(){
   const out=$("mfAllocationBody");if(!out)return;const r=mfRole(),people=mfVisibleEmployees(),all=(clients||[]).filter(mfInScope).filter(c=>mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c));let rows=mfAllocationRows();
-  let html=`<div class="mfTabs"><button class="mfTab ${mfAllocation.mode==='late'?'active':''}" onclick="mfAllocation.mode='late';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Late 30–60</button><button class="mfTab ${mfAllocation.mode==='due'?'active':''}" onclick="mfAllocation.mode='due';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Due</button></div><div class="mfBreadcrumbs"><button class="mfCrumb" onclick="mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">إجمالي ${mfAllocation.mode==='late'?'Late':'Due'} ضمن صلاحياتك: ${all.length}</button>${mfAllocation.branch?`<button class="mfCrumb" onclick="mfAllocSet('branch','')">${safe(mfAllocation.branch)}</button>`:''}${mfAllocation.team?`<button class="mfCrumb" onclick="mfAllocSet('team','')">${safe(mfAllocation.team)}</button>`:''}${mfAllocation.employee?`<button class="mfCrumb">${safe(mfAllocation.employee)} — ${rows.length} عميل</button>`:''}</div>`;
+  const selectedTeam=mfBackendTeamDirectory.find(t=>String(t.id)===String(mfAllocation.team)),selectedEmployee=people.find(e=>String(e.authUserId||e.employeeId||e.id)===String(mfAllocation.employee));
+  let html=`<div class="mfTabs"><button class="mfTab ${mfAllocation.mode==='late'?'active':''}" onclick="mfAllocation.mode='late';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Late 30–60</button><button class="mfTab ${mfAllocation.mode==='due'?'active':''}" onclick="mfAllocation.mode='due';mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">Due</button></div><div class="mfBreadcrumbs"><button class="mfCrumb" onclick="mfAllocation.branch='';mfAllocation.team='';mfAllocation.employee='';mfRenderAllocation()">إجمالي ${mfAllocation.mode==='late'?'Late':'Due'} ضمن صلاحياتك: ${all.length}</button>${mfAllocation.branch?`<button class="mfCrumb" onclick="mfAllocSet('branch','')">${safe(mfAllocation.branch)}</button>`:''}${mfAllocation.team?`<button class="mfCrumb" onclick="mfAllocSet('team','')">${safe(selectedTeam?.name||'الفريق')}</button>`:''}${mfAllocation.employee?`<button class="mfCrumb">${safe(selectedEmployee?.name||'الموظف')} — ${rows.length} عميل</button>`:''}</div>`;
   const high=["founder","cfmp"].includes(r),manager=high||r==="bm";
   if(high&&!mfAllocation.branch){
     const groups=[...new Set(people.map(e=>e.branch||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=all.filter(c=>(c.branchCode||c.branch||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('branch','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الفرق</small></button>`}).join("")}</div>`;
   }else if(manager&&!mfAllocation.team){
-    const groups=[...new Set(people.filter(e=>!mfAllocation.branch||e.branch===mfAllocation.branch).map(e=>e.team||"غير محدد"))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.team||"غير محدد")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('team','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح الموظفين</small></button>`}).join("")}</div>`;
+    const teams=mfBackendTeamDirectory.filter(t=>t.is_active!==false&&(!mfAllocation.branch||String(t.branch_code||"")===String(mfAllocation.branch))).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ar"));html+=`<div class="mfScopeGrid">${teams.map(t=>{const n=rows.filter(c=>String(c.teamId||"")===String(t.id)).length;return `<button class="mfScopeCard" onclick="mfAllocSet('team','${mfAttr(String(t.id))}')"><b>${safe(t.name||t.code||"فريق")}</b><small>${n} عميل • فتح الموظفين</small></button>`}).join("")||'<div class="mfEmpty">لا توجد فرق معرفة ضمن هذا النطاق</div>'}</div>`;
   }else if(r!=="lo"&&!mfAllocation.employee){
-    const groups=[...new Set(people.filter(e=>(!mfAllocation.branch||e.branch===mfAllocation.branch)&&(!mfAllocation.team||(e.team||"غير محدد")===mfAllocation.team)).map(e=>e.name))];html+=`<div class="mfScopeGrid">${groups.map(g=>{const n=rows.filter(c=>(c.employee||"غير مسند")===g).length;return `<button class="mfScopeCard" onclick="mfAllocSet('employee','${mfAttr(g)}')"><b>${safe(g)}</b><small>${n} عميل • فتح القائمة</small></button>`}).join("")}</div>`;
+    const members=people.filter(e=>e.role==="lo"&&(!mfAllocation.branch||String(e.branch)===String(mfAllocation.branch))&&(!mfAllocation.team||String(e.teamId||"")===String(mfAllocation.team))).sort((a,b)=>String(a.name).localeCompare(String(b.name),"ar"));html+=`<div class="mfScopeGrid">${members.map(e=>{const key=String(e.authUserId||e.employeeId||e.id),n=rows.filter(c=>String(c.assignedUserId||"")===key||String(c.employeeId||"")===String(e.employeeId||e.id)).length;return `<button class="mfScopeCard" onclick="mfAllocSet('employee','${mfAttr(key)}')"><b>${safe(e.name)}</b><small>${n} عميل • فتح القائمة</small></button>`}).join("")||'<div class="mfEmpty">لا يوجد موظفون ضمن هذا الفريق</div>'}</div>`;
   }else{
     rows.sort((a,b)=>mfPriority(b).score-mfPriority(a).score);html+=rows.map(c=>{const i=mfClientIndex(c),p=mfPriority(c),amount=mfAllocation.mode==="late"?num(c.arrears):num(c.dueAmount);return `<div class="mfListRow"><div class="mfListRowTop"><div><b>${safe(c.name)}</b><small>${safe(c.clientNo)} • ${safe(c.employee||"غير مسند")} • ${money(amount)}</small></div><span class="mfBadge ${p.cls}">${p.label} ${p.score}</span></div><button class="mfSubmit" onclick="mfOpenClient(${i})">فتح ملف العميل</button></div>`}).join("")||'<div class="mfEmpty">لا يوجد عملاء في هذه القائمة</div>';
   }
@@ -3348,6 +3368,11 @@ function mfRenderToday(){
 }
 
 function mfEmployeeCatalog(){
+  if(mfBackendEmployeeDirectory.length){
+    const directory=mfBackendEmployeeDirectory.filter(e=>e.active!==false&&e.name);
+    const actor=mfActor();if(actor.name&&!directory.some(e=>String(e.authUserId||e.id)===String(actor.id)))directory.push({id:actor.id,employeeId:"",authUserId:actor.id,active:true,name:actor.name,email:CURRENT_PROFILE?.email||CURRENT_AUTH_USER?.email||"",role:actor.role,branch:actor.branch,team:"",teamId:"",photo:CURRENT_PROFILE?.avatar_url||"",jobTitle:""});
+    return directory;
+  }
   const map=new Map(),raw=(typeof employees!=="undefined"?mfArray(employees):[]).concat(mfArray(mfState().employeeProfiles));
   const key=e=>e.id?('id:'+e.id):('name:'+norm(e.name)+'|'+e.branch);
   raw.forEach(e=>{if(!e||e.is_active===false)return;const name=e.full_name||e.name||e.employee||e.email;if(!name)return;
