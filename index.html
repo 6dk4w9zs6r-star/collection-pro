@@ -567,6 +567,48 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   #nexaHeaderIdentity{position:relative!important;top:32px!important;margin-bottom:32px!important;}
 }
 </style>
+
+<style id="mfNexaAndroidCompactHeader_20261112">
+/* Android phone header and compact search controls; no role or permission changes. */
+@media screen and (max-width:480px){
+  body:not(.secureLocked) header{
+    position:relative!important;min-height:84px!important;
+    padding:12px 10px 9px!important;
+  }
+  body:not(.secureLocked) header .menuBtn{
+    left:10px!important;top:11px!important;width:46px!important;height:46px!important;
+  }
+  body:not(.secureLocked) #nexaHeaderIdentity{
+    position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+    transform:none!important;margin:3px 50px 0!important;padding:0!important;
+    width:auto!important;max-width:none!important;min-height:46px!important;
+    justify-content:center!important;gap:8px!important;
+  }
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaUnrwaLogo{
+    flex:0 0 42px!important;width:42px!important;height:42px!important;
+    padding:2px!important;object-fit:contain!important;border-radius:8px!important;
+  }
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept{
+    min-width:0!important;line-height:1.2!important;
+  }
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept b{
+    font-size:12px!important;white-space:nowrap!important;
+  }
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept span{
+    font-size:11px!important;white-space:nowrap!important;
+  }
+  body:not(.secureLocked) .mfSearchFilters{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;
+  }
+  body:not(.secureLocked) .mfSearchFilters select:first-child{
+    grid-column:1/-1!important;
+  }
+}
+@media screen and (max-width:360px){
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept b{font-size:11px!important}
+  body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept span{font-size:10px!important}
+}
+</style>
 </head>
 <!-- NEXA-MF V6.33 CLIENT DATA SCOPE FIX -->
 <body class="secureLocked">
