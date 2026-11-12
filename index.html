@@ -2720,35 +2720,41 @@ window.openBranchesHub=async function(){
 };
 
 window.openBranchPage=async function(branchRef){
-  sb=await getSecureClient();
+  sb=await getSecureClient();if(!sb)return;
   let branch=(BRANCH_CACHE||[]).find(b=>String(b.code||"").toUpperCase()===String(branchRef||"").toUpperCase()||String(b.id)===String(branchRef));
   if(!branch){await window.loadBranches();branch=BRANCH_CACHE.find(b=>String(b.code||"").toUpperCase()===String(branchRef||"").toUpperCase()||String(b.id)===String(branchRef));}
   if(!branch)return;
-  if(!window.canOpenBranch(branch.code))return denyScope();
-  ACTIVE_BRANCH=branch;const code=String(branch.code||"").toUpperCase();
+  const code=String(branch.code||branch.id||"").trim().toUpperCase();
+  if(!window.canOpenBranch(code))return denyScope();
+  ACTIVE_BRANCH={...branch,id:code,code};
   $("branchPageTitle").textContent="فرع "+(branch.name||code);
   $("branchPageRole").textContent=CURRENT_PROFILE?roleLabel(CURRENT_PROFILE.role):"";
-  const peopleRes=await sb.from("profiles").select("id,full_name,email,role,branch_code,supervisor_email,is_active").eq("branch_code",code).eq("is_active",true);
-  const people=peopleRes.error?[]:(peopleRes.data||[]);
-  const clientRes=await sb.from("clients").select("id,assigned_user_id,assigned_employee,days_overdue,paid_amount,overdue_amount,branch_code").eq("branch_code",code);
-  const rows=clientRes.error?[]:(clientRes.data||[]);
-  const late=rows.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60&&num(c.overdue_amount)>0).length;
-  const due=rows.filter(c=>num(c.days_overdue)>0).length;
+  const people=await mfReadOperationalRows(sb,"employees","id,full_name,email,role,branch_code,team_id,supervisor_employee_id,is_active",q=>q.eq("branch_code",code).eq("is_active",true)).catch(e=>{console.warn("Branch employees unavailable",e);return []});
+  const monthStart=new Date().toISOString().slice(0,7)+"-01";
+  const cases=await mfReadOperationalRows(sb,"late_due","client_id,case_type,status,employee_id,team_id,period_start",q=>q.eq("branch_code",code).eq("period_start",monthStart).eq("status","open")).catch(e=>{console.warn("Branch Late/Due unavailable",e);return []});
   const bm=people.find(p=>String(p.role||"").toLowerCase()==="bm");
+  const als=people.filter(p=>String(p.role||"").toLowerCase()==="als");
   $("branchManagementSummary").innerHTML=`<div class="branchMini"><span>BM</span><b>${safe(bm?bm.full_name:"غير محدد")}</b></div>
-    <div class="branchMini"><span>Late</span><b>${late}</b></div><div class="branchMini"><span>Due</span><b>${due}</b></div>`;
-  const los=people.filter(p=>String(p.role||"").toLowerCase()==="lo");
-  const supervisor=(CURRENT_PROFILE&&["founder","als"].includes(CURRENT_PROFILE.role))?CURRENT_PROFILE:null;
-  const cards=los.map(lo=>{
-    const mine=rows.filter(c=>String(c.assigned_user_id||"")===String(lo.id));
-    const ml=mine.filter(c=>num(c.days_overdue)>=30&&num(c.days_overdue)<=60&&num(c.overdue_amount)>0).length;
-    const md=mine.filter(c=>num(c.days_overdue)>0).length;
-    return `<div class="nestedLo"><b>${safe(lo.full_name||lo.email||"LO")}</b><small>LO | Late: <span class="red">${ml}</span> | Due: <span class="yellow">${md}</span></small></div>`;
-  }).join("");
-  $("alsGrid").innerHTML=`<div class="alsCard"><div class="alsName">${safe(supervisor?supervisor.full_name:"فريق الفرع")}</div>
-    <div class="alsCounts"><span>Late: <b class="red">${late}</b></span><span>Due: <b class="yellow">${due}</b></span></div>
-    <div class="alsTeam"><div class="alsTeamTitle">الموظفين — LO</div>${cards||'<div class="empty">لا يوجد موظفون مربوطون بهذا الفرع</div>'}</div></div>`;
-  if($("standaloneLoSection"))$("standaloneLoSection").style.display="none";
+    <div class="branchMini"><span>Late</span><b>${cases.filter(c=>c.case_type==="late").length}</b></div>
+    <div class="branchMini"><span>Due</span><b>${cases.filter(c=>c.case_type==="due").length}</b></div>`;
+  $("alsGrid").innerHTML=als.map(a=>{
+    const teamLos=people.filter(p=>String(p.role||"").toLowerCase()==="lo"&&p.supervisor_employee_id===a.id);
+    const ownerIds=[a.id,...teamLos.map(p=>p.id)].filter(Boolean);
+    const belongs=c=>(!!a.team_id&&c.team_id===a.team_id)||ownerIds.includes(c.employee_id);
+    const al=cases.filter(c=>c.case_type==="late"&&belongs(c)).length;
+    const ad=cases.filter(c=>c.case_type==="due"&&belongs(c)).length;
+    const loCards=teamLos.map(lo=>{
+      const late=cases.filter(c=>c.employee_id===lo.id&&c.case_type==="late").length;
+      const due=cases.filter(c=>c.employee_id===lo.id&&c.case_type==="due").length;
+      return `<div class="nestedLo"><b>${safe(lo.full_name||lo.email||"LO")}</b><small>LO | Late: <span class="red">${late}</span> | Due: <span class="yellow">${due}</span></small></div>`;
+    }).join("");
+    return `<div class="alsCard"><div class="alsName">${safe(a.full_name||"ALS")}</div>
+      <div class="alsCounts"><span>Late: <b class="red">${al}</b></span><span>Due: <b class="yellow">${ad}</b></span></div>
+      <div class="alsTeam"><div class="alsTeamTitle">فريق الإشراف</div>${loCards||'<div class="empty">لا يوجد موظفو LO نشطون مرتبطون بهذا المشرف</div>'}</div></div>`;
+  }).join("")||'<div class="empty">لا يوجد مشرفون نشطون في هذا الفرع</div>';
+  const standalone=people.filter(p=>String(p.role||"").toLowerCase()==="lo"&&!p.supervisor_employee_id);
+  if($("standaloneLoSection"))$("standaloneLoSection").style.display=standalone.length?"block":"none";
+  if($("loGrid"))$("loGrid").innerHTML=standalone.map(p=>`<div class="nestedLo"><b>${safe(p.full_name||p.email||"LO")}</b><small>غير مربوط بمشرف</small></div>`).join("");
   $("branchesHub").style.display="none";$("branchPageModal").style.display="flex";
 };
 
@@ -2761,11 +2767,11 @@ window.loadBranches=async function(){
   if(!canBrowseBranches())return [];
   sb=await getSecureClient();if(!sb)return [];
   let rows=[];
-  const res=await sb.from("branches").select("id,code,name,is_active").eq("is_active",true).order("code");
-  if(!res.error&&Array.isArray(res.data))rows=res.data;
-  const codes=new Set((clients||[]).map(c=>String(c.branchCode||"").trim().toUpperCase()).filter(Boolean));
+  const res=await sb.from("branches").select("code,name,is_active").eq("is_active",true).order("code");
+  if(!res.error&&Array.isArray(res.data))rows=res.data.map(b=>({...b,id:b.code}));
+  const codes=new Set((clients||[]).map(c=>String(c.branchCode||c.branch_code||"").trim().toUpperCase()).filter(Boolean));
   if(CURRENT_PROFILE&&CURRENT_PROFILE.branch_code)codes.add(String(CURRENT_PROFILE.branch_code).trim().toUpperCase());
-  codes.forEach(code=>{if(!rows.some(b=>String(b.code||"").toUpperCase()===code))rows.push({id:code,code,name:code==="B1"?"AL-BALAD":code,is_active:true});});
+  codes.forEach(code=>{if(!rows.some(b=>String(b.code||"").toUpperCase()===code))rows.push({id:code,code,name:code,is_active:true});});
   if(roleIs("bm")){
     const own=String(CURRENT_PROFILE.branch_code||"").trim().toUpperCase();
     rows=rows.filter(b=>String(b.code||"").trim().toUpperCase()===own);
