@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20261113-ios-header-row";</script>
+<head><script>window.MF_NEXA_BUILD="20261113-ios-header-spacing";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -615,7 +615,8 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
   @media (max-width: 700px) {
     header {
       padding-top: max(58px, env(safe-area-inset-top, 0px)) !important;
-      padding-bottom: 16px !important;
+      /* Keep the account card below the absolute hamburger button on iPhone. */
+      padding-bottom: 72px !important;
     }
     #nexaHeaderIdentity {
       position: relative !important;
