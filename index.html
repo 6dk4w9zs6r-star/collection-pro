@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20261113-ios-header-safearea";</script>
+<head><script>window.MF_NEXA_BUILD="20261113-ios-header-row";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -610,18 +610,21 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 }
 </style>
 <style id="mfNexaIosHeaderPositionFix_20261113">
-/* iPhone only: keep the app header clear of the iOS standalone status area. */
+/* iPhone only: reserve a header row below the iOS status area. */
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 700px) {
     header {
-      padding-top: max(58px, calc(18px + env(safe-area-inset-top, 0px))) !important;
+      padding-top: max(58px, env(safe-area-inset-top, 0px)) !important;
+      padding-bottom: 16px !important;
     }
     #nexaHeaderIdentity {
+      position: relative !important;
       top: 0 !important;
-      margin-bottom: 32px !important;
+      min-height: 58px !important;
+      margin: 0 !important;
     }
     #menuBtn {
-      top: max(50px, calc(14px + env(safe-area-inset-top, 0px))) !important;
+      top: max(58px, env(safe-area-inset-top, 0px)) !important;
     }
   }
 }
