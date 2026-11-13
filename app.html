@@ -1,5 +1,5 @@
 <html lang="ar" dir="rtl">
-<head><script>window.MF_NEXA_BUILD="20260923-uat-session-r35";</script>
+<head><script>window.MF_NEXA_BUILD="20261113-ios-header-safearea";</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -607,6 +607,23 @@ body.lightTheme .mfPrimaryTile.ai,body.lightTheme .mfPrimaryTile.allocation{back
 @media screen and (max-width:360px){
   body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept b{font-size:11px!important}
   body:not(.secureLocked) #nexaHeaderIdentity .nexaHeaderDept span{font-size:10px!important}
+}
+</style>
+<style id="mfNexaIosHeaderPositionFix_20261113">
+/* iPhone only: keep the app header clear of the iOS standalone status area. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 700px) {
+    header {
+      padding-top: max(58px, calc(18px + env(safe-area-inset-top, 0px))) !important;
+    }
+    #nexaHeaderIdentity {
+      top: 0 !important;
+      margin-bottom: 32px !important;
+    }
+    #menuBtn {
+      top: max(50px, calc(14px + env(safe-area-inset-top, 0px))) !important;
+    }
+  }
 }
 </style>
 </head>
@@ -4225,7 +4242,7 @@ window.mfSaveCommunicationFinal=async function(){
 };
 
 // Register PWA service worker and keep session untouched by share/install operations.
-async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20260921-r32',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
+async function registerPwa(){if(!('serviceWorker' in navigator)||location.protocol==='file:')return;try{const reg=await navigator.serviceWorker.register('./sw.js?v=20261113-ios-header-safearea',{scope:'./',updateViaCache:'none'});await reg.update()}catch(e){console.warn('service worker',e?.message||e)}}
 
 const afterAuthOld=window.mfStage5AfterAuth;
 window.mfStage5AfterAuth=async function(){const r=await afterAuthOld?.apply(this,arguments);if(r===false)return false;await registerPwa();await subscribeNotificationsFinal();await subscribeCalls();setTimeout(mfHandleDeepLink,350);return true};
