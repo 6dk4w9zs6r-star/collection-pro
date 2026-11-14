@@ -2269,7 +2269,8 @@ async function roleAwareBootstrap(){
       c.dueAmount=num(row.remaining_amount);
       c.dueLateDays=num(row.days_overdue);
       c.installmentsDueCount=num(row.remaining_installments);
-      c.inDue=c.dueAmount>0;
+      c.dueCaseStatus=String(row.status||'').toLowerCase();
+      c.inDue=(!c.dueCaseStatus||c.dueCaseStatus==='open')&&c.dueAmount>0;
     }else if(row.case_type==='late'){
       c.arrears=num(row.remaining_amount);
       c.lateSourceOverdueAmount=num(row.remaining_amount);
@@ -3103,7 +3104,7 @@ function mfIsLate30to60(c){const status=String(c?.lateCaseStatus||'').toLowerCas
 function mfOpenAllocation(mode){
   mfAllocation={mode:mode||mfAllocation.mode||"late",branch:"",team:"",employee:""};mfRenderAllocation();mfOpen("mfAllocationModal");
 }
-function mfIsDue(c){const balance=c?.netToPay??c?.outstandingBalance??c?.outstanding_balance;return !!c&&num(c.dueAmount??c.due_amount)>0&&(balance==null||num(balance)>0)}
+function mfIsDue(c){const balance=c?.netToPay??c?.outstandingBalance??c?.outstanding_balance;return !!c&&(!c.dueCaseStatus||c.dueCaseStatus==='open')&&num(c.dueAmount??c.due_amount)>0&&(balance==null||num(balance)>0)}
 function mfAllocationRows(){return (clients||[]).filter(mfInScope).filter(c=>(mfAllocation.mode==="late"?mfIsLate30to60(c):mfIsDue(c))&&(!mfAllocation.branch||(c.branchCode||c.branch)===mfAllocation.branch)&&(!mfAllocation.team||String(c.teamId||"")===String(mfAllocation.team))&&(!mfAllocation.employee||(String(c.assignedUserId||"")===String(mfAllocation.employee)||String(c.employeeId||"")===String(mfAllocation.employee)||(!c.assignedUserId&&!c.employeeId&&norm(c.employee)===norm(mfAllocation.employee))))) }
 function mfAllocSet(level,value){mfAllocation[level]=value;if(level==="branch"){mfAllocation.team="";mfAllocation.employee=""}if(level==="team")mfAllocation.employee="";mfRenderAllocation()}
 function mfRenderAllocation(){
