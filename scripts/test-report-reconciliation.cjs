@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),path=req
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(process.env.REPORT_BASELINE||path.join(root,'index.html'),'utf8');
 const nodes={};const state={promises:[]};
-const s={meta:{payments:[],paidCustomers:{legacy:{name:'preserve'}}},clients:[],num:x=>Number(x)||0,norm:x=>String(x||'').toLowerCase(),mfInScope:c=>c.allowed!==false,mfClientKey:c=>String(c.id),mfArray:x=>x||[],mfMergedFollowups:()=>[],mfState:()=>state,$:id=>nodes[id]||(nodes[id]={classList:{add(){},remove(){}}}),money:x=>Number(x).toFixed(2),safe:x=>String(x??''),currentPaidTab:'all',mfVisibleEmployees:()=>[],mfAttr:String};s.window=s;vm.createContext(s);
+const s={meta:{payments:[],paidCustomers:{legacy:{name:'preserve'}}},clients:[],num:x=>Number(x)||0,norm:x=>String(x||'').toLowerCase(),mfInScope:c=>c.allowed!==false,mfClientKey:c=>String(c.id),mfArray:x=>x||[],mfMergedFollowups:()=>[],mfState:()=>state,$:id=>nodes[id]||(nodes[id]={classList:{add(){},remove(){}}}),money:x=>Number(x).toFixed(2),safe:x=>String(x??''),currentPaidTab:'all',mfVisibleEmployees:()=>[],mfBackendEmployeeDirectory:[],mfBackendTeamDirectory:[],mfAttr:String};s.window=s;vm.createContext(s);
 function load(start,end){vm.runInContext(html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start))),s);}
 if(!process.env.REPORT_BASELINE)load('function mfCollectedPayments(','function renderPaid(');
 load('function renderPaid(','function renderRepeat(');
